@@ -1,0 +1,14 @@
+### OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+### Project artifacts (large/reference)
+api.txt
+audio_station/
+*.pdf
+
+### Local secrets/config
+**/proxy.config.php
+

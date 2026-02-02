@@ -1,0 +1,1501 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <title>CarPlayer · Navidrome</title>
+    <style>
+      :root {
+        --bg: #0b0f17;
+        --panel: rgba(255, 255, 255, 0.06);
+        --panel2: rgba(255, 255, 255, 0.08);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.7);
+        --accent: #00c8b6;
+        --danger: #ff5d5d;
+        --green: #00c8b6;
+        --track: rgba(255, 255, 255, 0.14);
+        --buffer: rgba(255, 255, 255, 0.38);
+        --border: rgba(255, 255, 255, 0.14);
+        --radius: 18px;
+        --gap: 12px;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+        --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans";
+      }
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f6f7fb;
+          --panel: rgba(0, 0, 0, 0.04);
+          --panel2: rgba(0, 0, 0, 0.06);
+          --text: rgba(0, 0, 0, 0.88);
+          --muted: rgba(0, 0, 0, 0.62);
+          --border: rgba(0, 0, 0, 0.12);
+          --shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      html {
+        min-height: 100vh;
+        background: radial-gradient(1200px 600px at 20% 10%, rgba(0, 200, 182, 0.18), transparent 60%),
+          radial-gradient(900px 500px at 90% 20%, rgba(78, 110, 255, 0.12), transparent 55%), var(--bg);
+      }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        background: transparent;
+        color: var(--text);
+        overflow: hidden;
+      }
+      .wrap {
+        height: 100vh;
+        height: 100dvh;
+        padding: 8px;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: var(--gap);
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .title {
+        display: grid;
+        gap: 2px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: 0.2px;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.08);
+        color: var(--muted);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 340px 1fr 360px;
+        gap: var(--gap);
+        min-height: 0;
+        overflow: hidden;
+      }
+      @media (max-width: 1100px) {
+        .grid {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto 1fr;
+        }
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 12px;
+        min-height: 0;
+        overflow: hidden;
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin: 10px 0 6px;
+      }
+      input,
+      select,
+      button {
+        font: inherit;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 12px 12px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: var(--panel2);
+        color: var(--text);
+        outline: none;
+      }
+      input:focus,
+      select:focus {
+        border-color: rgba(0, 200, 182, 0.55);
+        box-shadow: 0 0 0 3px rgba(0, 200, 182, 0.16);
+      }
+      .btn {
+        width: 100%;
+        margin-top: 12px;
+        padding: 12px 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(0, 200, 182, 0.6);
+        background: rgba(0, 200, 182, 0.14);
+        color: var(--text);
+        font-weight: 650;
+        letter-spacing: 0.2px;
+      }
+      .btn.secondary {
+        border-color: var(--border);
+        background: var(--panel2);
+        font-weight: 600;
+      }
+      .btn:disabled {
+        opacity: 0.55;
+      }
+      .status {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .status.ok {
+        color: rgba(0, 200, 182, 0.95);
+      }
+      .status.bad {
+        color: var(--danger);
+      }
+      .tabs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .tab {
+        padding: 10px 10px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.08);
+        color: var(--text);
+        font-weight: 650;
+      }
+      .tab[aria-selected="true"] {
+        border-color: rgba(0, 200, 182, 0.6);
+        background: rgba(0, 200, 182, 0.14);
+      }
+      .list {
+        margin-top: 12px;
+        display: grid;
+        gap: 8px;
+        overflow: auto;
+        max-height: 100%;
+        padding-right: 6px;
+      }
+      .item {
+        display: grid;
+        grid-template-columns: 64px 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 10px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.06);
+      }
+      .item:active {
+        transform: translateY(1px);
+      }
+      .cover {
+        width: 64px;
+        height: 64px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        object-fit: cover;
+      }
+      .meta {
+        min-width: 0;
+      }
+      .name {
+        font-weight: 700;
+        font-size: 14px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .desc {
+        margin-top: 2px;
+        font-size: 12px;
+        color: var(--muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .cta {
+        padding: 10px 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(0, 200, 182, 0.6);
+        background: rgba(0, 200, 182, 0.14);
+        color: var(--text);
+        font-weight: 700;
+      }
+      .now {
+        display: grid;
+        gap: 10px;
+        min-height: 0;
+        grid-template-rows: auto auto auto auto auto 1fr;
+      }
+      .nowTop {
+        display: grid;
+        grid-template-columns: 96px 1fr;
+        gap: 12px;
+        align-items: center;
+      }
+      .coverBig {
+        width: 96px;
+        height: 96px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        object-fit: cover;
+      }
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .controls button {
+        padding: 14px 10px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.08);
+        color: var(--text);
+        font-weight: 800;
+        letter-spacing: 0.2px;
+      }
+      .controls button.primary {
+        border-color: rgba(0, 200, 182, 0.6);
+        background: rgba(0, 200, 182, 0.14);
+      }
+      .queue {
+        display: grid;
+        gap: 8px;
+        overflow: auto;
+        padding-right: 6px;
+      }
+      .qItem {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 10px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.06);
+      }
+      .qName {
+        font-weight: 700;
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .qDesc {
+        font-size: 11px;
+        color: var(--muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+      audio {
+        width: 100%;
+        height: 40px;
+      }
+
+      /* Ocultamos controles nativos: usamos barra propia */
+      audio::-webkit-media-controls {
+        display: none !important;
+      }
+      audio[controls]::-webkit-media-controls {
+        display: none !important;
+      }
+
+      .timeRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .progressWrap {
+        position: relative;
+        height: 18px;
+        border-radius: 999px;
+        background: var(--track);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        overflow: hidden;
+      }
+      .progressBuf,
+      .progressNow {
+        position: absolute;
+        inset: 0;
+        transform-origin: left center;
+        transform: scaleX(0);
+      }
+      .progressBuf {
+        background: var(--buffer);
+      }
+      .progressNow {
+        background: var(--green);
+      }
+      .seek {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+      }
+
+      /* En 1280×480 puede sobrar altura: deja que la columna izquierda haga scroll */
+      #leftCard {
+        overflow: auto;
+        padding-right: 10px;
+      }
+
+      /* Pantallas */
+      .screen {
+        height: 100%;
+        min-height: 0;
+      }
+      .screen[hidden] {
+        display: none !important;
+      }
+
+      /* Login */
+      .loginWrap {
+        height: 100%;
+        display: grid;
+        place-items: center;
+      }
+      .loginCard {
+        width: min(720px, 100%);
+        display: grid;
+        gap: 10px;
+      }
+
+      /* Player layout (objetivo: 1280×480) */
+      .playerGrid {
+        height: 100%;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 420px 1fr;
+        gap: var(--gap);
+      }
+      @media (max-width: 980px) {
+        .playerGrid {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr;
+        }
+      }
+      .artistsPane {
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+        gap: 10px;
+        min-height: 0;
+      }
+      .artistsPane > input {
+        align-self: start;
+      }
+      .artistsList {
+        overflow: auto;
+        padding-right: 6px;
+        display: grid;
+        gap: 8px;
+        align-content: start;
+        min-height: 0;
+      }
+      .rightPane {
+        display: grid;
+        grid-template-rows: 1fr auto;
+        gap: var(--gap);
+        min-height: 0;
+      }
+      .nowPanel {
+        display: grid;
+        grid-template-rows: auto auto auto 1fr;
+        gap: 10px;
+        min-height: 0;
+        position: relative;
+      }
+      .nowBg {
+        position: absolute;
+        inset: 0;
+        border-radius: var(--radius);
+        overflow: hidden;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 180ms ease;
+      }
+      .nowBg::before {
+        content: "";
+        position: absolute;
+        inset: -20px;
+        background-image: var(--cover-url, none);
+        background-size: cover;
+        background-position: center;
+        filter: blur(18px) saturate(1.05);
+        transform: scale(1.06);
+        opacity: 0.55;
+      }
+      .nowBg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(120% 90% at 20% 20%, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.78)),
+          linear-gradient(180deg, rgba(15, 18, 26, 0.25), rgba(15, 18, 26, 0.85));
+      }
+      .nowPanel > * {
+        position: relative;
+        z-index: 1;
+      }
+      .sideBtns {
+        display: grid;
+        gap: 10px;
+        justify-items: end;
+      }
+      .sideBtns .ghostBtn {
+        min-width: 140px;
+      }
+      .nowMeta {
+        display: grid;
+        grid-template-columns: 140px 1fr;
+        gap: 14px;
+        align-items: center;
+      }
+      .coverXL {
+        width: 140px;
+        height: 140px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        object-fit: cover;
+      }
+      .bigTitle {
+        font-weight: 900;
+        font-size: 22px;
+        line-height: 1.15;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .bigSub {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 14px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .controlsBar {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+      }
+      .controlsBar button {
+        padding: 18px 10px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.08);
+        color: var(--text);
+        font-weight: 900;
+        font-size: 16px;
+        letter-spacing: 0.2px;
+      }
+      .controlsBar button.primary {
+        border-color: rgba(0, 200, 182, 0.6);
+        background: rgba(0, 200, 182, 0.14);
+      }
+      .topBar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 2px;
+      }
+      .ghostBtn {
+        padding: 10px 12px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.06);
+        color: var(--text);
+        font-weight: 800;
+      }
+
+      .dangerFab {
+        position: fixed;
+        left: 10px;
+        bottom: 10px;
+        z-index: 30;
+        padding: 12px 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 93, 93, 0.65);
+        background: rgba(255, 93, 93, 0.18);
+        color: rgba(255, 255, 255, 0.95);
+        font-weight: 900;
+        letter-spacing: 0.2px;
+      }
+
+      /* Modal simple para álbumes */
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        display: grid;
+        place-items: center;
+        padding: 14px;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        z-index: 2000;
+      }
+      .modal[hidden] {
+        display: none !important;
+      }
+      .modalCard {
+        width: min(980px, 100%);
+        max-height: min(460px, 100%);
+        overflow: hidden;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 10px;
+        background: rgba(15, 18, 26, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        color: rgba(255, 255, 255, 0.92);
+      }
+      .modalList {
+        overflow: auto;
+        display: grid;
+        gap: 8px;
+        padding-right: 6px;
+      }
+
+      /* Más contraste dentro del modal */
+      .modalCard .item {
+        background: rgba(255, 255, 255, 0.10);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+      .modalCard .name {
+        color: rgba(255, 255, 255, 0.95);
+      }
+      .modalCard .desc,
+      .modalCard .pill {
+        color: rgba(255, 255, 255, 0.72);
+      }
+      .modalCard .cover {
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+      .modalCard .ghostBtn {
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.9);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="title">
+          <h1>CarPlayer · Navidrome</h1>
+          <div class="sub">UI para coche (1280×480). Artistas + reproducción.</div>
+        </div>
+        <div class="pill" id="originPill"></div>
+      </header>
+
+      <!-- LOGIN -->
+      <div class="screen" id="screenLogin">
+        <div class="loginWrap">
+          <section class="card loginCard">
+            <div class="topBar">
+              <div class="pill">Login</div>
+              <div class="pill mono" id="apiLine" style="opacity: 0.8"></div>
+            </div>
+
+            <label for="serverUrl">Servidor</label>
+            <input id="serverUrl" value="https://navimusic.dimoti.myds.me" />
+
+            <label for="mode">Modo conexión</label>
+            <select id="mode">
+              <option value="auto">Auto (detecta proxy.php)</option>
+              <option value="proxy">Proxy (proxy.php)</option>
+              <option value="direct">Directo (CORS permitido)</option>
+            </select>
+
+            <label for="username">Usuario</label>
+            <input id="username" autocomplete="username" />
+
+            <label for="password">Contraseña</label>
+            <input id="password" type="password" autocomplete="current-password" />
+
+            <label style="display:flex;align-items:center;gap:10px;margin-top:10px">
+              <input id="remember" type="checkbox" style="width:auto;margin:0;transform:scale(1.15)" />
+              <span style="font-size:12px;color:var(--muted)">Recordarme en este dispositivo</span>
+            </label>
+
+            <button class="btn" id="btnConnect">Conectar</button>
+            <button class="btn secondary" id="btnClear">Borrar sesión local</button>
+
+            <div class="status" id="status">Esperando…</div>
+          </section>
+        </div>
+      </div>
+
+      <!-- PLAYER -->
+      <div class="screen" id="screenPlayer" hidden>
+        <div class="playerGrid">
+          <section class="card artistsPane">
+            <div class="topBar">
+              <div class="pill">Artistas</div>
+              <button class="ghostBtn" id="btnClearArtists">Limpiar</button>
+            </div>
+            <input id="artistFilter" placeholder="Filtrar artista…" />
+            <div class="artistsList" id="artistsList"></div>
+          </section>
+
+          <section class="rightPane">
+            <section class="card nowPanel">
+              <div class="nowBg" id="nowBg"></div>
+              <div class="topBar">
+                <div class="pill" id="nowPill">Ahora suena</div>
+                <div class="sideBtns">
+                  <button class="ghostBtn" id="btnAlbums" disabled>Álbumes</button>
+                  <button class="ghostBtn" id="btnSongs" disabled>Canciones</button>
+                </div>
+              </div>
+
+              <div class="nowMeta">
+                <img class="coverXL" id="nowCover" alt="" />
+                <div>
+                  <div class="bigTitle" id="nowTitle">Nada reproduciendo</div>
+                  <div class="bigSub" id="nowSub">—</div>
+                </div>
+              </div>
+
+              <audio id="player" preload="none"></audio>
+              <div class="progressWrap" aria-label="Progreso">
+                <div class="progressBuf" id="bufBar"></div>
+                <div class="progressNow" id="nowBar"></div>
+                <input class="seek" id="seek" type="range" min="0" max="1000" value="0" />
+              </div>
+              <div class="timeRow">
+                <span class="mono" id="tNow">0:00</span>
+                <span class="mono" id="tDur">0:00</span>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="controlsBar">
+                <button id="btnPrev">◀◀</button>
+                <button class="primary" id="btnPlayPause">▶︎ / ❚❚</button>
+                <button id="btnNext">▶▶</button>
+              </div>
+            </section>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <button class="dangerFab" id="btnLogout">Salir</button>
+
+    <!-- Modal álbumes -->
+    <div class="modal" id="albumsModal" hidden>
+      <section class="card modalCard">
+        <div class="topBar">
+          <div class="pill" id="albumsTitle">Álbumes</div>
+          <button class="ghostBtn" id="btnCloseAlbums">Cerrar</button>
+        </div>
+        <div class="modalList" id="albumsList"></div>
+      </section>
+    </div>
+
+    <!-- Modal canciones -->
+    <div class="modal" id="songsModal" hidden>
+      <section class="card modalCard">
+        <div class="topBar">
+          <div class="pill" id="songsTitle">Canciones</div>
+          <button class="ghostBtn" id="btnCloseSongs">Cerrar</button>
+        </div>
+        <div class="modalList" id="songsList"></div>
+      </section>
+    </div>
+
+    <script>
+      const originPill = document.getElementById("originPill");
+      const statusEl = document.getElementById("status");
+      const apiLine = document.getElementById("apiLine");
+      const serverUrlEl = document.getElementById("serverUrl");
+      const modeEl = document.getElementById("mode");
+      const userEl = document.getElementById("username");
+      const passEl = document.getElementById("password");
+      const rememberEl = document.getElementById("remember");
+      const btnConnect = document.getElementById("btnConnect");
+      const btnClear = document.getElementById("btnClear");
+
+      const nowCover = document.getElementById("nowCover");
+      const nowBg = document.getElementById("nowBg");
+      const nowTitle = document.getElementById("nowTitle");
+      const nowSub = document.getElementById("nowSub");
+      const player = document.getElementById("player");
+      const btnPrev = document.getElementById("btnPrev");
+      const btnPlayPause = document.getElementById("btnPlayPause");
+      const btnNext = document.getElementById("btnNext");
+
+      const screenLogin = document.getElementById("screenLogin");
+      const screenPlayer = document.getElementById("screenPlayer");
+      const btnLogout = document.getElementById("btnLogout");
+      const btnClearArtists = document.getElementById("btnClearArtists");
+      const artistFilter = document.getElementById("artistFilter");
+      const artistsList = document.getElementById("artistsList");
+      const nowPill = document.getElementById("nowPill");
+      const btnAlbums = document.getElementById("btnAlbums");
+      const btnSongs = document.getElementById("btnSongs");
+
+      const bufBar = document.getElementById("bufBar");
+      const nowBar = document.getElementById("nowBar");
+      const seekEl = document.getElementById("seek");
+      const tNow = document.getElementById("tNow");
+      const tDur = document.getElementById("tDur");
+
+      const albumsModal = document.getElementById("albumsModal");
+      const albumsTitle = document.getElementById("albumsTitle");
+      const albumsList = document.getElementById("albumsList");
+      const btnCloseAlbums = document.getElementById("btnCloseAlbums");
+
+      const songsModal = document.getElementById("songsModal");
+      const songsTitle = document.getElementById("songsTitle");
+      const songsList = document.getElementById("songsList");
+      const btnCloseSongs = document.getElementById("btnCloseSongs");
+
+      originPill.textContent = `Origen: ${location.origin}`;
+      const PROXY_ENDPOINT = "proxy.php";
+
+      function setStatus(text, kind) {
+        statusEl.textContent = text;
+        statusEl.className = "status" + (kind ? ` ${kind}` : "");
+      }
+
+      function normalizeServer(input) {
+        const raw = (input || "").trim();
+        return raw.endsWith("/") ? raw.slice(0, -1) : raw;
+      }
+
+      function randSalt(len = 16) {
+        const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+        let out = "";
+        for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+        return out;
+      }
+
+      // Minimal MD5 (public domain) - enough for Subsonic token auth.
+      // Source adapted from common tiny implementations; kept inline to avoid extra deps.
+      function md5(str) {
+        function cmn(q, a, b, x, s, t) {
+          a = add32(add32(a, q), add32(x, t));
+          return add32((a << s) | (a >>> (32 - s)), b);
+        }
+        function ff(a, b, c, d, x, s, t) {
+          return cmn((b & c) | (~b & d), a, b, x, s, t);
+        }
+        function gg(a, b, c, d, x, s, t) {
+          return cmn((b & d) | (c & ~d), a, b, x, s, t);
+        }
+        function hh(a, b, c, d, x, s, t) {
+          return cmn(b ^ c ^ d, a, b, x, s, t);
+        }
+        function ii(a, b, c, d, x, s, t) {
+          return cmn(c ^ (b | ~d), a, b, x, s, t);
+        }
+        function md5cycle(x, k) {
+          let a = x[0],
+            b = x[1],
+            c = x[2],
+            d = x[3];
+
+          a = ff(a, b, c, d, k[0], 7, -680876936);
+          d = ff(d, a, b, c, k[1], 12, -389564586);
+          c = ff(c, d, a, b, k[2], 17, 606105819);
+          b = ff(b, c, d, a, k[3], 22, -1044525330);
+          a = ff(a, b, c, d, k[4], 7, -176418897);
+          d = ff(d, a, b, c, k[5], 12, 1200080426);
+          c = ff(c, d, a, b, k[6], 17, -1473231341);
+          b = ff(b, c, d, a, k[7], 22, -45705983);
+          a = ff(a, b, c, d, k[8], 7, 1770035416);
+          d = ff(d, a, b, c, k[9], 12, -1958414417);
+          c = ff(c, d, a, b, k[10], 17, -42063);
+          b = ff(b, c, d, a, k[11], 22, -1990404162);
+          a = ff(a, b, c, d, k[12], 7, 1804603682);
+          d = ff(d, a, b, c, k[13], 12, -40341101);
+          c = ff(c, d, a, b, k[14], 17, -1502002290);
+          b = ff(b, c, d, a, k[15], 22, 1236535329);
+
+          a = gg(a, b, c, d, k[1], 5, -165796510);
+          d = gg(d, a, b, c, k[6], 9, -1069501632);
+          c = gg(c, d, a, b, k[11], 14, 643717713);
+          b = gg(b, c, d, a, k[0], 20, -373897302);
+          a = gg(a, b, c, d, k[5], 5, -701558691);
+          d = gg(d, a, b, c, k[10], 9, 38016083);
+          c = gg(c, d, a, b, k[15], 14, -660478335);
+          b = gg(b, c, d, a, k[4], 20, -405537848);
+          a = gg(a, b, c, d, k[9], 5, 568446438);
+          d = gg(d, a, b, c, k[14], 9, -1019803690);
+          c = gg(c, d, a, b, k[3], 14, -187363961);
+          b = gg(b, c, d, a, k[8], 20, 1163531501);
+          a = gg(a, b, c, d, k[13], 5, -1444681467);
+          d = gg(d, a, b, c, k[2], 9, -51403784);
+          c = gg(c, d, a, b, k[7], 14, 1735328473);
+          b = gg(b, c, d, a, k[12], 20, -1926607734);
+
+          a = hh(a, b, c, d, k[5], 4, -378558);
+          d = hh(d, a, b, c, k[8], 11, -2022574463);
+          c = hh(c, d, a, b, k[11], 16, 1839030562);
+          b = hh(b, c, d, a, k[14], 23, -35309556);
+          a = hh(a, b, c, d, k[1], 4, -1530992060);
+          d = hh(d, a, b, c, k[4], 11, 1272893353);
+          c = hh(c, d, a, b, k[7], 16, -155497632);
+          b = hh(b, c, d, a, k[10], 23, -1094730640);
+          a = hh(a, b, c, d, k[13], 4, 681279174);
+          d = hh(d, a, b, c, k[0], 11, -358537222);
+          c = hh(c, d, a, b, k[3], 16, -722521979);
+          b = hh(b, c, d, a, k[6], 23, 76029189);
+          a = hh(a, b, c, d, k[9], 4, -640364487);
+          d = hh(d, a, b, c, k[12], 11, -421815835);
+          c = hh(c, d, a, b, k[15], 16, 530742520);
+          b = hh(b, c, d, a, k[2], 23, -995338651);
+
+          a = ii(a, b, c, d, k[0], 6, -198630844);
+          d = ii(d, a, b, c, k[7], 10, 1126891415);
+          c = ii(c, d, a, b, k[14], 15, -1416354905);
+          b = ii(b, c, d, a, k[5], 21, -57434055);
+          a = ii(a, b, c, d, k[12], 6, 1700485571);
+          d = ii(d, a, b, c, k[3], 10, -1894986606);
+          c = ii(c, d, a, b, k[10], 15, -1051523);
+          b = ii(b, c, d, a, k[1], 21, -2054922799);
+          a = ii(a, b, c, d, k[8], 6, 1873313359);
+          d = ii(d, a, b, c, k[15], 10, -30611744);
+          c = ii(c, d, a, b, k[6], 15, -1560198380);
+          b = ii(b, c, d, a, k[13], 21, 1309151649);
+          a = ii(a, b, c, d, k[4], 6, -145523070);
+          d = ii(d, a, b, c, k[11], 10, -1120210379);
+          c = ii(c, d, a, b, k[2], 15, 718787259);
+          b = ii(b, c, d, a, k[9], 21, -343485551);
+
+          x[0] = add32(a, x[0]);
+          x[1] = add32(b, x[1]);
+          x[2] = add32(c, x[2]);
+          x[3] = add32(d, x[3]);
+        }
+        function md5blk(s) {
+          const md5blks = [];
+          for (let i = 0; i < 64; i += 4) {
+            md5blks[i >> 2] =
+              s.charCodeAt(i) + (s.charCodeAt(i + 1) << 8) + (s.charCodeAt(i + 2) << 16) + (s.charCodeAt(i + 3) << 24);
+          }
+          return md5blks;
+        }
+        function md51(s) {
+          let n = s.length;
+          let state = [1732584193, -271733879, -1732584194, 271733878];
+          let i;
+          for (i = 64; i <= n; i += 64) {
+            md5cycle(state, md5blk(s.substring(i - 64, i)));
+          }
+          s = s.substring(i - 64);
+          const tail = new Array(16).fill(0);
+          for (i = 0; i < s.length; i++) tail[i >> 2] |= s.charCodeAt(i) << ((i % 4) << 3);
+          tail[i >> 2] |= 0x80 << ((i % 4) << 3);
+          if (i > 55) {
+            md5cycle(state, tail);
+            for (i = 0; i < 16; i++) tail[i] = 0;
+          }
+          tail[14] = n * 8;
+          md5cycle(state, tail);
+          return state;
+        }
+        function rhex(n) {
+          const s = "0123456789abcdef";
+          let j, out = "";
+          for (j = 0; j < 4; j++) out += s[(n >> (j * 8 + 4)) & 0x0f] + s[(n >> (j * 8)) & 0x0f];
+          return out;
+        }
+        function hex(x) {
+          for (let i = 0; i < x.length; i++) x[i] = rhex(x[i]);
+          return x.join("");
+        }
+        function add32(a, b) {
+          return (a + b) & 0xffffffff;
+        }
+        return hex(md51(str));
+      }
+
+      async function detectProxy() {
+        try {
+          const r = await fetch(`${PROXY_ENDPOINT}?ping=1`, { method: "GET", credentials: "omit" });
+          if (!r.ok) return { ok: false };
+          const j = await r.json();
+          return { ok: j?.ok === true, configured: j?.configured === true };
+        } catch {
+          return { ok: false };
+        }
+      }
+
+      function resolveMode(proxyProbe) {
+        const selected = modeEl.value || "auto";
+        if (selected === "direct") return { mode: "direct", useProxy: false };
+        if (selected === "proxy") return { mode: "proxy", useProxy: true };
+        if (proxyProbe?.ok && proxyProbe?.configured) return { mode: "proxy", useProxy: true };
+        return { mode: "direct", useProxy: false };
+      }
+
+      function wrapRestUrl(url, useProxy) {
+        if (!useProxy) return url;
+        const u = new URL(url, location.origin);
+        const target = `${u.pathname}${u.search}`;
+        return `${PROXY_ENDPOINT}?target=${encodeURIComponent(target)}`;
+      }
+
+      function baseParams(auth) {
+        return {
+          u: auth.u,
+          t: auth.t,
+          s: auth.s,
+          v: "1.16.1",
+          c: "carplayer",
+          f: "json",
+        };
+      }
+
+      function buildRestUrl(server, viewName, params) {
+        const base = normalizeServer(server);
+        const qs = new URLSearchParams();
+        Object.entries(params || {}).forEach(([k, v]) => {
+          if (v === undefined || v === null || v === "") return;
+          qs.set(k, String(v));
+        });
+        return `${base}/rest/${viewName}.view?${qs.toString()}`;
+      }
+
+      async function restJson(server, auth, viewName, params) {
+        const url = buildRestUrl(server, viewName, { ...baseParams(auth), ...(params || {}) });
+        const proxyProbe = await detectProxy();
+        const { useProxy } = resolveMode(proxyProbe);
+        const finalUrl = wrapRestUrl(url, useProxy);
+        apiLine.textContent = useProxy ? `${url} → ${finalUrl}` : url;
+
+        const resp = await fetch(finalUrl, { method: "GET" });
+        const text = await resp.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch {
+          throw new Error(`Respuesta no JSON (${resp.status})`);
+        }
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const sub = json["subsonic-response"];
+        if (!sub) throw new Error("Respuesta Subsonic inválida");
+        if (sub.status !== "ok") {
+          const msg = sub.error?.message || `error code ${sub.error?.code ?? "?"}`;
+          throw new Error(msg);
+        }
+        return sub;
+      }
+
+      function makeAuth(username, password) {
+        const salt = randSalt(12);
+        const token = md5(password + salt);
+        return { u: username, s: salt, t: token };
+      }
+
+      function showScreen(which) {
+        const isLogin = which === "login";
+        screenLogin.hidden = !isLogin;
+        screenPlayer.hidden = isLogin;
+        btnLogout.style.display = isLogin ? "none" : "inline-flex";
+      }
+
+      function coverUrl(server, auth, id, size = 256) {
+        return buildRestUrl(server, "getCoverArt", { ...baseParams(auth), id, size });
+      }
+
+      function streamUrl(server, auth, id) {
+        return buildRestUrl(server, "stream", { ...baseParams(auth), id });
+      }
+
+      let state = {
+        server: normalizeServer(serverUrlEl.value),
+        auth: null,
+        artists: [],
+        artistsFiltered: [],
+        selectedArtist: null,
+        selectedArtistAlbums: [],
+        artistAlbumsById: {},
+        queue: [],
+        queueIndex: -1,
+        lastCoverId: null,
+      };
+
+      function renderArtists(list) {
+        artistsList.innerHTML = "";
+        const items = list || [];
+        for (const a of items) {
+          const div = document.createElement("div");
+          div.className = "item";
+          div.innerHTML = `
+            <div class="cover" style="display:grid;place-items:center;font-weight:900">${escapeHtml((a.name || "?")[0])}</div>
+            <div class="meta">
+              <div class="name">${escapeHtml(a.name || "—")}</div>
+              <div class="desc">Toca para ver álbumes</div>
+            </div>
+            <button class="cta">Ver</button>
+          `;
+          const open = async () => {
+            try {
+              setStatus(`Cargando álbumes: ${a.name}…`);
+              await selectArtist(a.id, a.name, { openModal: true });
+              setStatus("OK.", "ok");
+            } catch (e) {
+              setStatus(`Error: ${String(e)}`, "bad");
+            }
+          };
+          div.querySelector("button").addEventListener("click", (e) => {
+            e.stopPropagation();
+            open();
+          });
+          div.addEventListener("click", () => open());
+          artistsList.appendChild(div);
+        }
+      }
+
+      function escapeHtml(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function fmtTime(seconds) {
+        const s = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0;
+        const m = Math.floor(s / 60);
+        const r = s % 60;
+        return `${m}:${String(r).padStart(2, "0")}`;
+      }
+
+      function setBar(el, ratio) {
+        const r = Number.isFinite(ratio) ? Math.max(0, Math.min(1, ratio)) : 0;
+        el.style.transform = `scaleX(${r})`;
+      }
+
+      function updateProgress() {
+        const dur = Number.isFinite(player.duration) && player.duration > 0 ? player.duration : 0;
+        const cur = Number.isFinite(player.currentTime) ? player.currentTime : 0;
+
+        tNow.textContent = fmtTime(cur);
+        tDur.textContent = fmtTime(dur);
+
+        if (!dur) {
+          setBar(nowBar, 0);
+          setBar(bufBar, 0);
+          seekEl.value = "0";
+          return;
+        }
+
+        setBar(nowBar, cur / dur);
+
+        let buf = 0;
+        try {
+          const b = player.buffered;
+          if (b && b.length) {
+            buf = b.end(b.length - 1);
+          }
+        } catch {
+          buf = 0;
+        }
+        setBar(bufBar, buf / dur);
+
+        if (!seekEl.matches(":active")) {
+          seekEl.value = String(Math.round((cur / dur) * 1000));
+        }
+      }
+
+      function setNow(track) {
+        if (!track) {
+          nowTitle.textContent = "Nada reproduciendo";
+          nowSub.textContent = "—";
+          nowCover.removeAttribute("src");
+          nowPill.textContent = "Ahora suena";
+          nowBg.style.opacity = "0";
+          nowBg.style.removeProperty("--cover-url");
+          return;
+        }
+        nowTitle.textContent = track.title || "—";
+        nowSub.textContent = `${track.artist || ""}${track.album ? " · " + track.album : ""}`;
+        nowPill.textContent = track.album ? `Álbum: ${track.album}` : "Ahora suena";
+        const coverId = track.coverArt || track.albumId || null;
+        state.lastCoverId = coverId;
+        if (coverId) {
+          const coverSrc = coverUrl(state.server, state.auth, coverId, 600);
+          nowCover.src = coverSrc;
+          nowBg.style.setProperty("--cover-url", `url("${coverSrc}")`);
+          nowBg.style.opacity = "1";
+        } else {
+          nowCover.removeAttribute("src");
+          nowBg.style.opacity = "0";
+          nowBg.style.removeProperty("--cover-url");
+        }
+      }
+
+      function playIndex(idx) {
+        if (idx < 0 || idx >= state.queue.length) return;
+        state.queueIndex = idx;
+        const track = state.queue[idx];
+        setNow(track);
+        const url = streamUrl(state.server, state.auth, track.id);
+        (async () => {
+          const proxyProbe = await detectProxy();
+          const { useProxy } = resolveMode(proxyProbe);
+          const finalUrl = wrapRestUrl(url, useProxy);
+          apiLine.textContent = useProxy ? `${url} → ${finalUrl}` : url;
+          player.src = finalUrl;
+          try {
+            await player.play();
+          } catch {
+            // ignore (autoplay restrictions)
+          }
+        })();
+      }
+
+      function playNext(delta) {
+        if (state.queue.length === 0) return;
+        let next = state.queueIndex + delta;
+        if (next < 0) next = 0;
+        if (next >= state.queue.length) next = state.queue.length - 1;
+        playIndex(next);
+      }
+
+      player.addEventListener("ended", () => {
+        if (state.queueIndex + 1 < state.queue.length) playIndex(state.queueIndex + 1);
+      });
+      player.addEventListener("timeupdate", updateProgress);
+      player.addEventListener("progress", updateProgress);
+      player.addEventListener("loadedmetadata", updateProgress);
+      player.addEventListener("durationchange", updateProgress);
+
+      seekEl.addEventListener("input", () => {
+        const dur = Number.isFinite(player.duration) && player.duration > 0 ? player.duration : 0;
+        if (!dur) return;
+        const v = Number(seekEl.value) / 1000;
+        setBar(nowBar, v);
+        tNow.textContent = fmtTime(dur * v);
+      });
+      seekEl.addEventListener("change", () => {
+        const dur = Number.isFinite(player.duration) && player.duration > 0 ? player.duration : 0;
+        if (!dur) return;
+        const v = Number(seekEl.value) / 1000;
+        player.currentTime = dur * v;
+        updateProgress();
+      });
+
+      btnPrev.addEventListener("click", () => playNext(-1));
+      btnNext.addEventListener("click", () => playNext(1));
+      btnPlayPause.addEventListener("click", async () => {
+        if (player.paused) {
+          try {
+            await player.play();
+          } catch {}
+        } else {
+          player.pause();
+        }
+      });
+
+      async function loadArtists() {
+        const sub = await restJson(state.server, state.auth, "getArtists", {});
+        const indexes = sub.artists?.index || [];
+        const artists = [];
+        for (const idx of indexes) {
+          for (const a of idx.artist || []) artists.push(a);
+        }
+        state.artists = artists;
+        state.artistsFiltered = artists;
+        renderArtists(artists);
+      }
+
+      async function getArtistAlbums(artistId) {
+        const cached = state.artistAlbumsById[artistId];
+        if (Array.isArray(cached)) return cached;
+        const sub = await restJson(state.server, state.auth, "getArtist", { id: artistId });
+        const albums = sub.artist?.album || [];
+        state.artistAlbumsById[artistId] = albums;
+        return albums;
+      }
+
+      async function playAlbum(albumId) {
+        const sub = await restJson(state.server, state.auth, "getAlbum", { id: albumId });
+        const songs = sub.album?.song || [];
+        state.queue = songs.map((s) => ({
+          id: s.id,
+          title: s.title,
+          artist: s.artist,
+          album: s.album,
+          albumId: s.albumId,
+          coverArt: s.coverArt,
+        }));
+        state.queueIndex = 0;
+        btnSongs.disabled = state.queue.length === 0;
+        btnSongs.textContent = state.queue.length ? `Canciones (${state.queue.length})` : "Canciones";
+        playIndex(0);
+      }
+
+      async function selectArtist(artistId, name, opts) {
+        state.selectedArtist = { id: artistId, name };
+        btnAlbums.disabled = true;
+        state.selectedArtistAlbums = [];
+
+        const albums = await getArtistAlbums(artistId);
+        state.selectedArtistAlbums = albums;
+        btnAlbums.disabled = albums.length === 0;
+        btnAlbums.textContent = albums.length ? `Álbumes (${albums.length})` : "Álbumes";
+        nowPill.textContent = `Artista: ${name}`;
+        if (opts?.openModal) openAlbumsModal();
+      }
+
+      function openAlbumsModal() {
+        const a = state.selectedArtist;
+        const albums = state.selectedArtistAlbums || [];
+        albumsTitle.textContent = a?.name ? `Álbumes · ${a.name}` : "Álbumes";
+        albumsList.innerHTML = "";
+        for (const al of albums) {
+          const div = document.createElement("div");
+          div.className = "item";
+          const imgSrc = al.coverArt ? coverUrl(state.server, state.auth, al.coverArt, 128) : "";
+          div.innerHTML = `
+            <img class="cover" alt="" src="${imgSrc}"/>
+            <div class="meta">
+              <div class="name">${escapeHtml(al.name || "—")}</div>
+              <div class="desc">${escapeHtml(a?.name || "")}</div>
+            </div>
+            <button class="cta">Play</button>
+          `;
+          div.querySelector("button").addEventListener("click", async (e) => {
+            e.stopPropagation();
+            try {
+              await playAlbum(al.id);
+              closeAlbumsModal();
+            } catch (err) {
+              setStatus(`Error: ${String(err)}`, "bad");
+            }
+          });
+          div.addEventListener("click", async () => {
+            try {
+              await playAlbum(al.id);
+              closeAlbumsModal();
+            } catch (err) {
+              setStatus(`Error: ${String(err)}`, "bad");
+            }
+          });
+          albumsList.appendChild(div);
+        }
+        albumsModal.hidden = false;
+      }
+
+      function closeAlbumsModal() {
+        albumsModal.hidden = true;
+      }
+
+      function openSongsModal() {
+        if (!state.queue || state.queue.length === 0) return;
+        const current = state.queue[state.queueIndex] || null;
+        songsTitle.textContent = current?.album ? `Canciones · ${current.album}` : "Canciones";
+        songsList.innerHTML = "";
+        state.queue.forEach((t, idx) => {
+          const div = document.createElement("div");
+          div.className = "item";
+          const active = idx === state.queueIndex;
+          div.innerHTML = `
+            <div class="cover" style="display:grid;place-items:center;font-weight:900">${active ? "▶" : String(idx + 1)}</div>
+            <div class="meta">
+              <div class="name">${escapeHtml(t.title || "—")}</div>
+              <div class="desc">${escapeHtml(t.artist || "")}</div>
+            </div>
+            <button class="cta">Play</button>
+          `;
+          div.querySelector("button").addEventListener("click", (e) => {
+            e.stopPropagation();
+            playIndex(idx);
+            closeSongsModal();
+          });
+          div.addEventListener("click", () => {
+            playIndex(idx);
+            closeSongsModal();
+          });
+          songsList.appendChild(div);
+        });
+        songsModal.hidden = false;
+      }
+
+      function closeSongsModal() {
+        songsModal.hidden = true;
+      }
+
+      btnAlbums.addEventListener("click", () => {
+        if (btnAlbums.disabled) return;
+        openAlbumsModal();
+      });
+      btnCloseAlbums.addEventListener("click", () => closeAlbumsModal());
+      albumsModal.addEventListener("click", (e) => {
+        if (e.target === albumsModal) closeAlbumsModal();
+      });
+
+      btnSongs.addEventListener("click", () => {
+        if (btnSongs.disabled) return;
+        openSongsModal();
+      });
+      btnCloseSongs.addEventListener("click", () => closeSongsModal());
+      songsModal.addEventListener("click", (e) => {
+        if (e.target === songsModal) closeSongsModal();
+      });
+
+      async function connect() {
+        const server = normalizeServer(serverUrlEl.value);
+        const username = (userEl.value || "").trim();
+        const password = passEl.value || "";
+        if (!server || !username || !password) {
+          setStatus("Falta servidor/usuario/contraseña.", "bad");
+          return;
+        }
+        setStatus("Conectando…");
+        btnConnect.disabled = true;
+
+        const auth = makeAuth(username, password);
+        try {
+          await restJson(server, auth, "ping", {});
+          state.server = server;
+          state.auth = auth;
+          localStorage.setItem("carplayer.navidrome.server", server);
+          localStorage.setItem("carplayer.navidrome.user", username);
+          localStorage.setItem("carplayer.navidrome.mode", modeEl.value);
+          localStorage.setItem("carplayer.navidrome.remember", rememberEl.checked ? "1" : "0");
+          if (rememberEl.checked) {
+            // Nota: esto guarda la contraseña en el navegador (solo este dispositivo).
+            // Recomiendo usar un usuario Navidrome dedicado para el coche.
+            localStorage.setItem("carplayer.navidrome.pass", password);
+          } else {
+            localStorage.removeItem("carplayer.navidrome.pass");
+          }
+          setStatus("OK. Conectado.", "ok");
+          showScreen("player");
+          await loadArtists();
+        } catch (e) {
+          setStatus(`Error: ${String(e)}`, "bad");
+        } finally {
+          btnConnect.disabled = false;
+        }
+      }
+
+      btnConnect.addEventListener("click", () => connect());
+      btnClear.addEventListener("click", () => {
+        localStorage.removeItem("carplayer.navidrome.server");
+        localStorage.removeItem("carplayer.navidrome.user");
+        localStorage.removeItem("carplayer.navidrome.mode");
+        localStorage.removeItem("carplayer.navidrome.pass");
+        localStorage.removeItem("carplayer.navidrome.remember");
+        setStatus("Borrado. Vuelve a conectar.", "");
+      });
+
+      (function prefill() {
+        const server = localStorage.getItem("carplayer.navidrome.server");
+        const user = localStorage.getItem("carplayer.navidrome.user");
+        const mode = localStorage.getItem("carplayer.navidrome.mode");
+        const pass = localStorage.getItem("carplayer.navidrome.pass");
+        const remember = localStorage.getItem("carplayer.navidrome.remember");
+        if (server) serverUrlEl.value = server;
+        if (user) userEl.value = user;
+        if (mode && ["auto", "proxy", "direct"].includes(mode)) modeEl.value = mode;
+        if (remember === "1") rememberEl.checked = true;
+        if (pass) passEl.value = pass;
+      })();
+
+      modeEl.addEventListener("change", () => {
+        localStorage.setItem("carplayer.navidrome.mode", modeEl.value);
+      });
+
+      btnLogout.addEventListener("click", () => {
+        state.auth = null;
+        state.queue = [];
+        state.queueIndex = -1;
+        state.selectedArtist = null;
+        state.selectedArtistAlbums = [];
+        state.artistAlbumsById = {};
+        btnAlbums.disabled = true;
+        btnAlbums.textContent = "Álbumes";
+        btnSongs.disabled = true;
+        btnSongs.textContent = "Canciones";
+        setNow(null);
+        player.pause();
+        player.removeAttribute("src");
+        updateProgress();
+        showScreen("login");
+        setStatus("Sesión cerrada.", "");
+      });
+
+      btnClearArtists.addEventListener("click", () => {
+        artistFilter.value = "";
+        applyArtistFilter();
+        artistsList.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      function applyArtistFilter() {
+        const q = (artistFilter.value || "").trim().toLowerCase();
+        if (!q) {
+          state.artistsFiltered = state.artists;
+        } else {
+          state.artistsFiltered = state.artists.filter((a) => (a.name || "").toLowerCase().includes(q));
+        }
+        renderArtists(state.artistsFiltered);
+      }
+
+      let filterTimer = null;
+      artistFilter.addEventListener("input", () => {
+        if (filterTimer) clearTimeout(filterTimer);
+        filterTimer = setTimeout(() => applyArtistFilter(), 120);
+      });
+
+      (async function showProxyHint() {
+        const probe = await detectProxy();
+        if (probe.ok && !probe.configured) {
+          setStatus("proxy.php existe, pero falta configurar proxy.config.php", "bad");
+        }
+      })();
+
+      showScreen("login");
+
+      // Auto-login si el usuario eligió "recordarme" y hay credenciales guardadas.
+      (function autoLoginIfRemembered() {
+        const remember = localStorage.getItem("carplayer.navidrome.remember") === "1";
+        const pass = localStorage.getItem("carplayer.navidrome.pass");
+        if (!remember || !pass) return;
+        if (!userEl.value || !serverUrlEl.value) return;
+        setStatus("Autoconectando…");
+        // Deja que la UI pinte antes de lanzar requests.
+        setTimeout(() => connect(), 50);
+      })();
+    </script>
+  </body>
+</html>

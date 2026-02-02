@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <title>CarPlayer · Login DSM</title>
+    <style>
+      :root {
+        --bg: #0b0f17;
+        --panel: rgba(255, 255, 255, 0.06);
+        --panel2: rgba(255, 255, 255, 0.08);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.7);
+        --accent: #00c8b6;
+        --danger: #ff5d5d;
+        --border: rgba(255, 255, 255, 0.14);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+        --radius: 18px;
+        --gap: 14px;
+        --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans", "Apple Color Emoji",
+          "Segoe UI Emoji";
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f6f7fb;
+          --panel: rgba(0, 0, 0, 0.04);
+          --panel2: rgba(0, 0, 0, 0.06);
+          --text: rgba(0, 0, 0, 0.88);
+          --muted: rgba(0, 0, 0, 0.62);
+          --border: rgba(0, 0, 0, 0.12);
+          --shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        background: radial-gradient(1200px 600px at 20% 10%, rgba(0, 200, 182, 0.18), transparent 60%),
+          radial-gradient(900px 500px at 90% 20%, rgba(78, 110, 255, 0.12), transparent 55%), var(--bg);
+        color: var(--text);
+      }
+
+      .wrap {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 22px 18px 26px;
+      }
+
+      header {
+        display: flex;
+        gap: 12px;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 14px;
+      }
+
+      h1 {
+        font-size: 20px;
+        margin: 0;
+        letter-spacing: 0.2px;
+      }
+
+      .sub {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 4px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--gap);
+      }
+
+      @media (min-width: 860px) {
+        .grid {
+          grid-template-columns: 360px 1fr;
+        }
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+        box-shadow: var(--shadow);
+      }
+
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      label {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        margin: 10px 0 6px;
+      }
+
+      input,
+      select,
+      button {
+        font: inherit;
+      }
+
+      input {
+        width: 100%;
+        padding: 14px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: var(--panel2);
+        color: var(--text);
+        outline: none;
+      }
+      input:focus {
+        border-color: rgba(0, 200, 182, 0.55);
+        box-shadow: 0 0 0 3px rgba(0, 200, 182, 0.16);
+      }
+
+      .btn {
+        width: 100%;
+        margin-top: 14px;
+        padding: 14px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(0, 200, 182, 0.6);
+        background: rgba(0, 200, 182, 0.14);
+        color: var(--text);
+        font-weight: 650;
+        letter-spacing: 0.2px;
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .btn[disabled] {
+        opacity: 0.55;
+      }
+
+      .btn-secondary {
+        margin-top: 10px;
+        border-color: var(--border);
+        background: var(--panel2);
+        font-weight: 600;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.08);
+        color: var(--muted);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .status {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .status.ok {
+        color: rgba(0, 200, 182, 0.95);
+      }
+      .status.bad {
+        color: var(--danger);
+      }
+
+      .hint {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .kv {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 8px 10px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+      }
+      .k {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .v {
+        font-size: 12px;
+      }
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div>
+          <h1>CarPlayer · Prueba de login (DSM WebAPI)</h1>
+          <div class="sub">Objetivo: confirmar que puedes obtener una sesión para luego llamar a Audio Station.</div>
+        </div>
+        <div class="pill" id="originPill"></div>
+      </header>
+
+      <div class="grid">
+        <section class="card">
+          <form id="loginForm">
+            <label for="basePath">Ruta base de DSM/Audio Station</label>
+            <input id="basePath" name="basePath" inputmode="text" autocomplete="off" value="/" />
+
+            <label for="useProxy">
+              Modo conexión
+              <span class="mono" style="opacity: 0.8">(recomendado si tu WebAPI está en otro subdominio)</span>
+            </label>
+            <select id="useProxy" name="useProxy">
+              <option value="auto">Auto (detecta proxy.php)</option>
+              <option value="proxy">Proxy (proxy.php)</option>
+              <option value="direct">Directo (/webapi en este host)</option>
+            </select>
+
+            <label for="account">Usuario</label>
+            <input id="account" name="account" inputmode="text" autocomplete="username" />
+
+            <label for="passwd">Contraseña</label>
+            <input id="passwd" name="passwd" type="password" autocomplete="current-password" />
+
+            <label for="session">Session (API Auth)</label>
+            <input id="session" name="session" inputmode="text" autocomplete="off" value="AudioStation" />
+
+            <button class="btn" id="loginBtn" type="submit">Login</button>
+            <button class="btn btn-secondary" id="logoutBtn" type="button">Logout (si hay sesión)</button>
+          </form>
+
+          <div class="hint">
+            Recomendación: usa un usuario DSM sin privilegios de admin, con acceso solo a Audio Station. Si tu reverse proxy
+            expone DSM “en la raíz” del subdominio (recomendado), usa <span class="mono">/</span>. Si lo expone bajo una
+            carpeta (por ejemplo <span class="mono">/music/</span>), pon esa ruta. Si tienes 2FA/SSO obligatorio, el login
+            puede requerir pasos extra (te saldrá en la respuesta).
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="row">
+            <div class="pill">Respuesta</div>
+            <div class="pill" id="apiUrlPill"></div>
+          </div>
+          <div class="status" id="statusLine">Esperando…</div>
+
+          <div class="kv" id="kv" style="display: none">
+            <div class="k">sid</div>
+            <div class="v mono" id="sidOut"></div>
+            <div class="k">synotoken</div>
+            <div class="v mono" id="synoTokenOut"></div>
+          </div>
+
+          <div style="margin-top: 12px">
+            <pre id="out">{}</pre>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const originPill = document.getElementById("originPill");
+      const apiUrlPill = document.getElementById("apiUrlPill");
+      const out = document.getElementById("out");
+      const statusLine = document.getElementById("statusLine");
+      const kv = document.getElementById("kv");
+      const sidOut = document.getElementById("sidOut");
+      const synoTokenOut = document.getElementById("synoTokenOut");
+      const loginBtn = document.getElementById("loginBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const useProxySel = document.getElementById("useProxy");
+
+      originPill.textContent = `Origen: ${location.origin}`;
+
+      const PROXY_ENDPOINT = "proxy.php";
+
+      function normalizeBasePath(input) {
+        const raw = (input || "").trim();
+        if (!raw) return "/";
+        if (raw === "/") return "/";
+        const withSlashes = raw.startsWith("/") ? raw : `/${raw}`;
+        return withSlashes.endsWith("/") ? withSlashes : `${withSlashes}/`;
+      }
+
+      function setStatus(text, kind) {
+        statusLine.textContent = text;
+        statusLine.className = "status" + (kind ? ` ${kind}` : "");
+      }
+
+      function pretty(value) {
+        try {
+          return JSON.stringify(value, null, 2);
+        } catch {
+          return String(value);
+        }
+      }
+
+      function setKv(sid, synotoken) {
+        if (!sid && !synotoken) {
+          kv.style.display = "none";
+          sidOut.textContent = "";
+          synoTokenOut.textContent = "";
+          return;
+        }
+        kv.style.display = "grid";
+        sidOut.textContent = sid || "";
+        synoTokenOut.textContent = synotoken || "";
+      }
+
+      function getStoredSid() {
+        const sid = localStorage.getItem("carplayer.sid");
+        return sid && sid.trim().length > 0 ? sid : null;
+      }
+
+      async function detectProxy() {
+        try {
+          const r = await fetch(`${PROXY_ENDPOINT}?ping=1`, { method: "GET", credentials: "omit" });
+          if (!r.ok) return { ok: false };
+          const j = await r.json();
+          return { ok: j?.ok === true, configured: j?.configured === true };
+        } catch {
+          return { ok: false };
+        }
+      }
+
+      function resolveMode(proxyProbe) {
+        const stored = localStorage.getItem("carplayer.mode");
+        if (stored && ["auto", "proxy", "direct"].includes(stored)) {
+          useProxySel.value = stored;
+        }
+
+        const selected = useProxySel.value || "auto";
+        if (selected === "direct") return { mode: "direct", useProxy: false };
+        if (selected === "proxy") return { mode: "proxy", useProxy: true };
+        // auto
+        if (proxyProbe?.ok && proxyProbe?.configured) return { mode: "proxy", useProxy: true };
+        return { mode: "direct", useProxy: false };
+      }
+
+      function wrapUrl(url, useProxy) {
+        if (!useProxy) return url;
+        const u = new URL(url, location.origin);
+        const target = `${u.pathname}${u.search}`;
+        return `${PROXY_ENDPOINT}?target=${encodeURIComponent(target)}`;
+      }
+
+      async function postForm(url, params) {
+        const body = new URLSearchParams();
+        Object.entries(params).forEach(([k, v]) => {
+          if (v === undefined || v === null) return;
+          body.set(k, String(v));
+        });
+
+        const proxyProbe = await detectProxy();
+        const { useProxy } = resolveMode(proxyProbe);
+        const finalUrl = wrapUrl(url, useProxy);
+        apiUrlPill.textContent = useProxy ? `${url} → ${finalUrl}` : url;
+
+        const resp = await fetch(finalUrl, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          },
+          body,
+        });
+
+        const text = await resp.text();
+        let json = null;
+        try {
+          json = JSON.parse(text);
+        } catch {
+          json = { parseError: true, raw: text };
+        }
+
+        return { httpStatus: resp.status, json };
+      }
+
+      async function getJson(url) {
+        const proxyProbe = await detectProxy();
+        const { useProxy } = resolveMode(proxyProbe);
+        const finalUrl = wrapUrl(url, useProxy);
+        apiUrlPill.textContent = useProxy ? `${url} → ${finalUrl}` : url;
+
+        const resp = await fetch(finalUrl, { method: "GET", credentials: "include" });
+        const text = await resp.text();
+        let json = null;
+        try {
+          json = JSON.parse(text);
+        } catch {
+          json = { parseError: true, raw: text };
+        }
+        return { httpStatus: resp.status, json };
+      }
+
+      async function probeBasePath(basePath) {
+        const candidates = [
+          `${basePath}webapi/entry.cgi?api=SYNO.API.Info&version=1&method=query`,
+          `${basePath}webapi/entry.cgi/SYNO.API.Info?version=1&method=query`,
+          `${basePath}webapi/query.cgi?api=SYNO.API.Info&version=1&method=query`,
+        ];
+
+        const results = [];
+        for (const url of candidates) {
+          try {
+            const r = await getJson(url);
+            const ok = r.httpStatus === 200 && r.json && r.json.success !== false && r.json.parseError !== true;
+            results.push({ url, ok, ...r });
+          } catch (e) {
+            results.push({ url, ok: false, httpStatus: 0, json: { error: String(e) } });
+          }
+        }
+
+        return results;
+      }
+
+      async function autodetectBasePath() {
+        const guesses = ["/", "/music/", "/dsm/", "/nas/", "/synology/", "/web/"];
+        const report = [];
+        for (const guess of guesses) {
+          const basePath = normalizeBasePath(guess);
+          const results = await probeBasePath(basePath);
+          report.push({ basePath, results });
+          if (results.some((r) => r.ok)) return { basePath, report };
+        }
+        return { basePath: null, report };
+      }
+
+      async function login({ basePath, account, passwd, session }) {
+        const params = {
+          version: 7,
+          method: "login",
+          account,
+          passwd,
+          session,
+          format: "sid",
+          enable_syno_token: "yes",
+          client: "carplayer",
+        };
+
+        const apiUrlA = `${basePath}webapi/entry.cgi?api=SYNO.API.Auth`;
+        const apiUrlB = `${basePath}webapi/entry.cgi/SYNO.API.Auth`;
+
+        const r1 = await postForm(apiUrlA, params);
+        if (r1.httpStatus !== 404) return r1;
+
+        return postForm(apiUrlB, params);
+      }
+
+      async function logout({ basePath, session }) {
+        const apiUrl = `${basePath}webapi/entry.cgi?api=SYNO.API.Auth`;
+
+        const sid = getStoredSid();
+        const params = {
+          version: 7,
+          method: "logout",
+          session,
+          ...(sid ? { _sid: sid } : {}),
+        };
+
+        return postForm(apiUrl, params);
+      }
+
+      document.getElementById("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        setKv(null, null);
+        setStatus("Enviando login…");
+        loginBtn.disabled = true;
+        logoutBtn.disabled = true;
+
+        const basePath = normalizeBasePath(document.getElementById("basePath").value);
+        const account = document.getElementById("account").value.trim();
+        const passwd = document.getElementById("passwd").value;
+        const session = document.getElementById("session").value.trim() || "AudioStation";
+
+        try {
+          const probe = await probeBasePath(basePath);
+          if (!probe.some((r) => r.ok)) {
+            out.textContent = pretty({
+              message:
+                "No parece existir la WebAPI en esta ruta. Revisa basePath o el reverse proxy. Resultado de sondeo:",
+              basePath,
+              probe,
+            });
+            setStatus("No se encontró WebAPI en esa ruta (sondeo).", "bad");
+            return;
+          }
+
+          const result = await login({ basePath, account, passwd, session });
+          out.textContent = pretty(result);
+
+          const success = result?.json?.success === true;
+          const sid = result?.json?.data?.sid || null;
+          const synotoken = result?.json?.data?.synotoken || null;
+
+          if (success) {
+            setStatus("Login OK.", "ok");
+            setKv(sid, synotoken);
+            if (sid) localStorage.setItem("carplayer.sid", sid);
+            if (synotoken) localStorage.setItem("carplayer.synotoken", synotoken);
+            localStorage.setItem("carplayer.basePath", basePath);
+            localStorage.setItem("carplayer.account", account);
+          } else {
+            setStatus("Login NO confirmado (mira la respuesta).", "bad");
+          }
+        } catch (err) {
+          out.textContent = pretty({ error: String(err) });
+          setStatus("Error de red o bloqueo del navegador.", "bad");
+        } finally {
+          loginBtn.disabled = false;
+          logoutBtn.disabled = false;
+        }
+      });
+
+      document.getElementById("logoutBtn").addEventListener("click", async () => {
+        setKv(null, null);
+        setStatus("Enviando logout…");
+        loginBtn.disabled = true;
+        logoutBtn.disabled = true;
+
+        const basePath = normalizeBasePath(document.getElementById("basePath").value);
+        const session = document.getElementById("session").value.trim() || "AudioStation";
+
+        try {
+          const result = await logout({ basePath, session });
+          out.textContent = pretty(result);
+          const success = result?.json?.success === true;
+          if (success) {
+            setStatus("Logout OK.", "ok");
+          } else {
+            setStatus("Logout NO confirmado (mira la respuesta).", "bad");
+          }
+        } catch (err) {
+          out.textContent = pretty({ error: String(err) });
+          setStatus("Error de red o bloqueo del navegador.", "bad");
+        } finally {
+          loginBtn.disabled = false;
+          logoutBtn.disabled = false;
+        }
+      });
+
+      (function prefill() {
+        const basePath = localStorage.getItem("carplayer.basePath");
+        const account = localStorage.getItem("carplayer.account");
+        const mode = localStorage.getItem("carplayer.mode");
+        const sid = getStoredSid();
+        if (basePath) document.getElementById("basePath").value = basePath;
+        if (account) document.getElementById("account").value = account;
+        if (mode && ["auto", "proxy", "direct"].includes(mode)) useProxySel.value = mode;
+        if (sid) setKv(sid, localStorage.getItem("carplayer.synotoken"));
+      })();
+
+      useProxySel.addEventListener("change", () => {
+        localStorage.setItem("carplayer.mode", useProxySel.value);
+      });
+
+      // Quick auto-detect button (added dynamically to keep HTML small)
+      (function mountDetectButton() {
+        const form = document.getElementById("loginForm");
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn btn-secondary";
+        btn.textContent = "Auto-detect basePath";
+        btn.addEventListener("click", async () => {
+          setStatus("Detectando ruta de WebAPI…");
+          loginBtn.disabled = true;
+          logoutBtn.disabled = true;
+          btn.disabled = true;
+          try {
+            const r = await autodetectBasePath();
+            out.textContent = pretty(r.report);
+            if (r.basePath) {
+              document.getElementById("basePath").value = r.basePath;
+              setStatus(`Encontrado basePath: ${r.basePath}`, "ok");
+            } else {
+              setStatus("No se detectó WebAPI en /music/ ni en /", "bad");
+            }
+          } catch (e) {
+            out.textContent = pretty({ error: String(e) });
+            setStatus("Error durante autodetección.", "bad");
+          } finally {
+            loginBtn.disabled = false;
+            logoutBtn.disabled = false;
+            btn.disabled = false;
+          }
+        });
+        form.appendChild(btn);
+      })();
+
+      (async function showProxyHint() {
+        const probe = await detectProxy();
+        if (probe.ok && !probe.configured) {
+          setStatus("proxy.php existe, pero falta configurar proxy.config.php", "bad");
+          out.textContent = pretty({
+            message: "Copia proxy.config.sample.php a proxy.config.php y define $DSM_BASE_URL.",
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
