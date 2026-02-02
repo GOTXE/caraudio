@@ -435,6 +435,43 @@
         min-height: 0;
         position: relative;
       }
+      .nowContent {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 16px;
+        align-items: center;
+      }
+      .songMenu {
+        display: grid;
+        gap: 8px;
+        max-height: 280px;
+        overflow: auto;
+        padding-right: 6px;
+      }
+      .songBtn {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
+        align-items: center;
+        text-align: left;
+        padding: 10px 10px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.06);
+        color: var(--text);
+        font-weight: 700;
+      }
+      .songBtn.active {
+        border-color: rgba(0, 200, 182, 0.6);
+        background: rgba(0, 200, 182, 0.14);
+      }
+      .songLine {
+        font-weight: 800;
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
       .nowBg {
         position: absolute;
         inset: 0;
@@ -675,18 +712,20 @@
             <section class="card nowPanel">
               <div class="nowBg" id="nowBg"></div>
               <div class="topBar">
-                <div class="pill" id="nowPill">Ahora suena</div>
                 <div class="sideBtns">
                   <button class="ghostBtn" id="btnAlbums" disabled>Álbumes</button>
                   <button class="ghostBtn" id="btnSongs" disabled>Canciones</button>
                 </div>
               </div>
 
-              <div class="nowMeta">
-                <img class="coverXL" id="nowCover" alt="" />
-                <div>
-                  <div class="bigTitle" id="nowTitle">Nada reproduciendo</div>
-                  <div class="bigSub" id="nowSub">—</div>
+              <div class="nowContent">
+                <div class="songMenu" id="songMenu"></div>
+                <div class="nowMeta">
+                  <img class="coverXL" id="nowCover" alt="" />
+                  <div>
+                    <div class="bigTitle" id="nowTitle">Nada reproduciendo</div>
+                    <div class="bigSub" id="nowSub">—</div>
+                  </div>
                 </div>
               </div>
 
@@ -722,7 +761,10 @@
       <section class="card modalCard">
         <div class="topBar">
           <div class="pill" id="albumsTitle">Álbumes</div>
-          <button class="ghostBtn" id="btnCloseAlbums">Cerrar</button>
+          <div style="display:flex;gap:10px;align-items:center">
+            <button class="ghostBtn" id="btnPlayAllAlbums">Reproducir todo</button>
+            <button class="ghostBtn" id="btnCloseAlbums">Cerrar</button>
+          </div>
         </div>
         <div class="modalList" id="albumsList"></div>
       </section>
@@ -767,9 +809,9 @@
       const btnClearArtists = document.getElementById("btnClearArtists");
       const artistFilter = document.getElementById("artistFilter");
       const artistsList = document.getElementById("artistsList");
-      const nowPill = document.getElementById("nowPill");
       const btnAlbums = document.getElementById("btnAlbums");
       const btnSongs = document.getElementById("btnSongs");
+      const songMenu = document.getElementById("songMenu");
 
       const bufBar = document.getElementById("bufBar");
       const nowBar = document.getElementById("nowBar");
@@ -780,6 +822,7 @@
       const albumsModal = document.getElementById("albumsModal");
       const albumsTitle = document.getElementById("albumsTitle");
       const albumsList = document.getElementById("albumsList");
+      const btnPlayAllAlbums = document.getElementById("btnPlayAllAlbums");
       const btnCloseAlbums = document.getElementById("btnCloseAlbums");
 
       const songsModal = document.getElementById("songsModal");
@@ -1049,6 +1092,7 @@
         selectedArtist: null,
         selectedArtistAlbums: [],
         artistAlbumsById: {},
+        artistSongsById: {},
         queue: [],
         queueIndex: -1,
         lastCoverId: null,
@@ -1148,14 +1192,12 @@
           nowTitle.textContent = "Nada reproduciendo";
           nowSub.textContent = "—";
           nowCover.removeAttribute("src");
-          nowPill.textContent = "Ahora suena";
           nowBg.style.opacity = "0";
           nowBg.style.removeProperty("--cover-url");
           return;
         }
         nowTitle.textContent = track.title || "—";
         nowSub.textContent = `${track.artist || ""}${track.album ? " · " + track.album : ""}`;
-        nowPill.textContent = track.album ? `Álbum: ${track.album}` : "Ahora suena";
         const coverId = track.coverArt || track.albumId || null;
         state.lastCoverId = coverId;
         if (coverId) {
@@ -1175,6 +1217,7 @@
         state.queueIndex = idx;
         const track = state.queue[idx];
         setNow(track);
+        renderSongMenu();
         maybePrefetchRandom();
         const url = streamUrl(state.server, state.auth, track.id);
         (async () => {
@@ -1366,6 +1409,7 @@
         btnSongs.disabled = state.queue.length === 0;
         btnSongs.textContent = state.queue.length ? `Canciones (${state.queue.length})` : "Canciones";
         state.randomMode = false;
+        renderSongMenu();
         if (state.shuffleEnabled) shuffleQueue(true);
         playIndex(0);
       }
@@ -1379,7 +1423,6 @@
         state.selectedArtistAlbums = albums;
         btnAlbums.disabled = albums.length === 0;
         btnAlbums.textContent = albums.length ? `Álbumes (${albums.length})` : "Álbumes";
-        nowPill.textContent = `Artista: ${name}`;
         if (opts?.openModal) openAlbumsModal();
       }
 
@@ -1388,6 +1431,7 @@
         const albums = state.selectedArtistAlbums || [];
         albumsTitle.textContent = a?.name ? `Álbumes · ${a.name}` : "Álbumes";
         albumsList.innerHTML = "";
+        btnPlayAllAlbums.disabled = albums.length === 0;
         for (const al of albums) {
           const div = document.createElement("div");
           div.className = "item";
@@ -1424,6 +1468,78 @@
 
       function closeAlbumsModal() {
         albumsModal.hidden = true;
+      }
+
+      async function playAllAlbums() {
+        const albums = state.selectedArtistAlbums || [];
+        if (!albums.length) return;
+        const artistId = state.selectedArtist?.id;
+        const cached = artistId ? state.artistSongsById[artistId] : null;
+        if (Array.isArray(cached) && cached.length) {
+          state.queue = cached;
+          state.queueIndex = 0;
+          btnSongs.disabled = state.queue.length === 0;
+          btnSongs.textContent = state.queue.length ? `Canciones (${state.queue.length})` : "Canciones";
+          state.randomMode = false;
+          renderSongMenu();
+          if (state.shuffleEnabled) shuffleQueue(true);
+          if (state.queue.length) playIndex(0);
+          closeAlbumsModal();
+          return;
+        }
+
+        setStatus(`Cargando ${albums.length} álbumes…`);
+        btnPlayAllAlbums.disabled = true;
+        const allSongs = [];
+        try {
+          const concurrency = 4;
+          let index = 0;
+          let done = 0;
+          const total = albums.length;
+
+          async function worker() {
+            while (index < total) {
+              const i = index++;
+              const al = albums[i];
+              const sub = await restJson(state.server, state.auth, "getAlbum", { id: al.id });
+              const songs = sub.album?.song || [];
+              for (const s of songs) {
+                allSongs.push({
+                  id: s.id,
+                  title: s.title,
+                  artist: s.artist,
+                  album: s.album,
+                  albumId: s.albumId,
+                  coverArt: s.coverArt,
+                });
+              }
+              done++;
+              setStatus(`Cargando álbumes… ${done}/${total}`);
+            }
+          }
+
+          const workers = Array.from({ length: concurrency }, () => worker());
+          await Promise.all(workers);
+
+          if (artistId) {
+            state.artistSongsById[artistId] = allSongs.slice();
+          }
+
+          state.queue = allSongs;
+          state.queueIndex = 0;
+          btnSongs.disabled = state.queue.length === 0;
+          btnSongs.textContent = state.queue.length ? `Canciones (${state.queue.length})` : "Canciones";
+          state.randomMode = false;
+          renderSongMenu();
+          if (state.shuffleEnabled) shuffleQueue(true);
+          if (state.queue.length) playIndex(0);
+          setStatus("OK.", "ok");
+          closeAlbumsModal();
+        } catch (e) {
+          setStatus(`Error: ${String(e)}`, "bad");
+        } finally {
+          btnPlayAllAlbums.disabled = false;
+        }
       }
 
       function openSongsModal() {
@@ -1465,6 +1581,7 @@
         if (btnAlbums.disabled) return;
         openAlbumsModal();
       });
+      btnPlayAllAlbums.addEventListener("click", () => playAllAlbums());
       btnCloseAlbums.addEventListener("click", () => closeAlbumsModal());
       albumsModal.addEventListener("click", (e) => {
         if (e.target === albumsModal) closeAlbumsModal();
@@ -1550,6 +1667,7 @@
         state.selectedArtist = null;
         state.selectedArtistAlbums = [];
         state.artistAlbumsById = {};
+        state.artistSongsById = {};
         btnAlbums.disabled = true;
         btnAlbums.textContent = "Álbumes";
         btnSongs.disabled = true;
@@ -1560,12 +1678,27 @@
         state.randomPrefetchAt = 0;
         setShuffleUI();
         setNow(null);
+        songMenu.innerHTML = "";
         player.pause();
         player.removeAttribute("src");
         updateProgress();
         showScreen("login");
         setStatus("Sesión cerrada.", "");
       });
+
+      function renderSongMenu() {
+        songMenu.innerHTML = "";
+        if (!state.queue || state.queue.length === 0) return;
+        state.queue.forEach((t, idx) => {
+          const btn = document.createElement("button");
+          btn.className = "songBtn" + (idx === state.queueIndex ? " active" : "");
+          btn.innerHTML = `
+            <div class="songLine">${idx + 1} - ${escapeHtml(t.title || "—")}</div>
+          `;
+          btn.addEventListener("click", () => playIndex(idx));
+          songMenu.appendChild(btn);
+        });
+      }
 
       btnClearArtists.addEventListener("click", () => {
         artistFilter.value = "";
