@@ -506,7 +506,7 @@
       }
       .controlsBar {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: repeat(4, 1fr);
         gap: 12px;
       }
       .controlsBar button {
@@ -702,6 +702,7 @@
 
             <section class="card">
               <div class="controlsBar">
+                <button id="btnShuffle">Aleatorio</button>
                 <button id="btnPrev">◀◀</button>
                 <button class="primary" id="btnPlayPause">▶︎ / ❚❚</button>
                 <button id="btnNext">▶▶</button>
@@ -753,6 +754,7 @@
       const nowTitle = document.getElementById("nowTitle");
       const nowSub = document.getElementById("nowSub");
       const player = document.getElementById("player");
+      const btnShuffle = document.getElementById("btnShuffle");
       const btnPrev = document.getElementById("btnPrev");
       const btnPlayPause = document.getElementById("btnPlayPause");
       const btnNext = document.getElementById("btnNext");
@@ -1048,6 +1050,10 @@
         queue: [],
         queueIndex: -1,
         lastCoverId: null,
+        shuffleEnabled: false,
+        randomMode: false,
+        randomLoading: false,
+        randomPrefetchAt: 0,
       };
 
       function renderArtists(list) {
@@ -1167,6 +1173,7 @@
         state.queueIndex = idx;
         const track = state.queue[idx];
         setNow(track);
+        maybePrefetchRandom();
         const url = streamUrl(state.server, state.auth, track.id);
         (async () => {
           const proxyProbe = await detectProxy();
@@ -1188,6 +1195,27 @@
         if (next < 0) next = 0;
         if (next >= state.queue.length) next = state.queue.length - 1;
         playIndex(next);
+      }
+
+      function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+      }
+
+      function shuffleQueue(keepCurrent = true) {
+        if (!state.queue || state.queue.length < 2) return;
+        if (!keepCurrent || state.queueIndex < 0) {
+          shuffleArray(state.queue);
+          state.queueIndex = 0;
+          return;
+        }
+        const current = state.queue[state.queueIndex];
+        const rest = state.queue.filter((_, i) => i !== state.queueIndex);
+        shuffleArray(rest);
+        state.queue = [current, ...rest];
+        state.queueIndex = 0;
       }
 
       player.addEventListener("ended", () => {
@@ -1222,6 +1250,81 @@
           } catch {}
         } else {
           player.pause();
+        }
+      });
+
+      async function loadRandomBlock(count = 20) {
+        const sub = await restJson(state.server, state.auth, "getRandomSongs", { size: count });
+        const songs = sub.randomSongs?.song || [];
+        const mapped = songs.map((s) => ({
+          id: s.id,
+          title: s.title,
+          artist: s.artist,
+          album: s.album,
+          albumId: s.albumId,
+          coverArt: s.coverArt,
+        }));
+        if (state.queue.length === 0) {
+          state.queue = mapped;
+          state.queueIndex = 0;
+          btnSongs.disabled = state.queue.length === 0;
+          btnSongs.textContent = state.queue.length ? `Canciones (${state.queue.length})` : "Canciones";
+          state.randomPrefetchAt = state.queue.length;
+          if (state.queue.length) playIndex(0);
+        } else {
+          state.queue = state.queue.concat(mapped);
+          btnSongs.disabled = state.queue.length === 0;
+          btnSongs.textContent = state.queue.length ? `Canciones (${state.queue.length})` : "Canciones";
+          state.randomPrefetchAt = state.queue.length;
+        }
+      }
+
+      async function maybePrefetchRandom() {
+        if (!state.shuffleEnabled || !state.randomMode) return;
+        if (state.randomLoading) return;
+        if (state.queue.length === 0) return;
+        const remaining = state.queue.length - 1 - state.queueIndex;
+        if (remaining > 5) return; // antes de la 15ª si tenemos bloques de 20
+        if (state.randomPrefetchAt && state.queue.length < state.randomPrefetchAt) return;
+        state.randomLoading = true;
+        try {
+          await loadRandomBlock(20);
+        } catch (e) {
+          // silencioso: si falla, intentará en el siguiente avance
+        } finally {
+          state.randomLoading = false;
+        }
+      }
+
+      function setShuffleUI() {
+        if (state.shuffleEnabled) {
+          btnShuffle.classList.add("primary");
+          btnShuffle.textContent = "Aleatorio ✓";
+        } else {
+          btnShuffle.classList.remove("primary");
+          btnShuffle.textContent = "Aleatorio";
+        }
+      }
+
+      btnShuffle.addEventListener("click", async () => {
+        state.shuffleEnabled = !state.shuffleEnabled;
+        setShuffleUI();
+        if (state.shuffleEnabled) {
+          if (state.queue.length > 0) {
+            shuffleQueue(true);
+            state.randomMode = false;
+          } else {
+            setStatus("Aleatorio: cargando 20 canciones…");
+            try {
+              state.randomMode = true;
+              await loadRandomBlock(20);
+              setStatus("OK.", "ok");
+            } catch (e) {
+              setStatus(`Error: ${String(e)}`, "bad");
+            }
+          }
+        } else {
+          state.randomMode = false;
         }
       });
 
@@ -1260,6 +1363,8 @@
         state.queueIndex = 0;
         btnSongs.disabled = state.queue.length === 0;
         btnSongs.textContent = state.queue.length ? `Canciones (${state.queue.length})` : "Canciones";
+        state.randomMode = false;
+        if (state.shuffleEnabled) shuffleQueue(true);
         playIndex(0);
       }
 
@@ -1447,6 +1552,11 @@
         btnAlbums.textContent = "Álbumes";
         btnSongs.disabled = true;
         btnSongs.textContent = "Canciones";
+        state.shuffleEnabled = false;
+        state.randomMode = false;
+        state.randomLoading = false;
+        state.randomPrefetchAt = 0;
+        setShuffleUI();
         setNow(null);
         player.pause();
         player.removeAttribute("src");
@@ -1496,6 +1606,8 @@
         // Deja que la UI pinte antes de lanzar requests.
         setTimeout(() => connect(), 50);
       })();
+
+      setShuffleUI();
     </script>
   </body>
 </html>
