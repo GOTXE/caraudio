@@ -718,13 +718,6 @@
             <label for="serverUrl">Servidor</label>
             <input id="serverUrl" value="https://navimusic.dimoti.myds.me" />
 
-            <label for="mode">Modo conexión</label>
-            <select id="mode">
-              <option value="auto">Auto (detecta proxy.php)</option>
-              <option value="proxy">Proxy (proxy.php)</option>
-              <option value="direct">Directo (CORS permitido)</option>
-            </select>
-
             <label for="username">Usuario</label>
             <input id="username" autocomplete="username" />
 
@@ -837,7 +830,6 @@
       const statusEl = document.getElementById("status");
       const apiLine = document.getElementById("apiLine");
       const serverUrlEl = document.getElementById("serverUrl");
-      const modeEl = document.getElementById("mode");
       const userEl = document.getElementById("username");
       const passEl = document.getElementById("password");
       const rememberEl = document.getElementById("remember");
@@ -884,7 +876,6 @@
       const btnCloseSongs = document.getElementById("btnCloseSongs");
 
       originPill.textContent = `Origen: ${location.origin}`;
-      const PROXY_ENDPOINT = "proxy.php";
 
       function setStatus(text, kind) {
         statusEl.textContent = text;
@@ -1044,32 +1035,6 @@
         return hex(md51(str));
       }
 
-      async function detectProxy() {
-        try {
-          const r = await fetch(`${PROXY_ENDPOINT}?ping=1`, { method: "GET", credentials: "omit" });
-          if (!r.ok) return { ok: false };
-          const j = await r.json();
-          return { ok: j?.ok === true, configured: j?.configured === true };
-        } catch {
-          return { ok: false };
-        }
-      }
-
-      function resolveMode(proxyProbe) {
-        const selected = modeEl.value || "auto";
-        if (selected === "direct") return { mode: "direct", useProxy: false };
-        if (selected === "proxy") return { mode: "proxy", useProxy: true };
-        if (proxyProbe?.ok && proxyProbe?.configured) return { mode: "proxy", useProxy: true };
-        return { mode: "direct", useProxy: false };
-      }
-
-      function wrapRestUrl(url, useProxy) {
-        if (!useProxy) return url;
-        const u = new URL(url, location.origin);
-        const target = `${u.pathname}${u.search}`;
-        return `${PROXY_ENDPOINT}?target=${encodeURIComponent(target)}`;
-      }
-
       function baseParams(auth) {
         return {
           u: auth.u,
@@ -1093,12 +1058,8 @@
 
       async function restJson(server, auth, viewName, params) {
         const url = buildRestUrl(server, viewName, { ...baseParams(auth), ...(params || {}) });
-        const proxyProbe = await detectProxy();
-        const { useProxy } = resolveMode(proxyProbe);
-        const finalUrl = wrapRestUrl(url, useProxy);
-        apiLine.textContent = useProxy ? `${url} → ${finalUrl}` : url;
-
-        const resp = await fetch(finalUrl, { method: "GET" });
+        apiLine.textContent = url;
+        const resp = await fetch(url, { method: "GET" });
         const text = await resp.text();
         let json;
         try {
@@ -1313,11 +1274,8 @@
         maybePrefetchRandom();
         const url = streamUrl(state.server, state.auth, track.id);
         (async () => {
-          const proxyProbe = await detectProxy();
-          const { useProxy } = resolveMode(proxyProbe);
-          const finalUrl = wrapRestUrl(url, useProxy);
-          apiLine.textContent = useProxy ? `${url} → ${finalUrl}` : url;
-          player.src = finalUrl;
+          apiLine.textContent = url;
+          player.src = url;
           try {
             await player.play();
           } catch {
@@ -1734,7 +1692,6 @@
           state.auth = auth;
           localStorage.setItem("carplayer.navidrome.server", server);
           localStorage.setItem("carplayer.navidrome.user", username);
-          localStorage.setItem("carplayer.navidrome.mode", modeEl.value);
           localStorage.setItem("carplayer.navidrome.remember", rememberEl.checked ? "1" : "0");
           if (rememberEl.checked) {
             // Nota: esto guarda la contraseña en el navegador (solo este dispositivo).
@@ -1757,7 +1714,6 @@
       btnClear.addEventListener("click", () => {
         localStorage.removeItem("carplayer.navidrome.server");
         localStorage.removeItem("carplayer.navidrome.user");
-        localStorage.removeItem("carplayer.navidrome.mode");
         localStorage.removeItem("carplayer.navidrome.pass");
         localStorage.removeItem("carplayer.navidrome.remember");
         setStatus("Borrado. Vuelve a conectar.", "");
@@ -1766,19 +1722,13 @@
       (function prefill() {
         const server = localStorage.getItem("carplayer.navidrome.server");
         const user = localStorage.getItem("carplayer.navidrome.user");
-        const mode = localStorage.getItem("carplayer.navidrome.mode");
         const pass = localStorage.getItem("carplayer.navidrome.pass");
         const remember = localStorage.getItem("carplayer.navidrome.remember");
         if (server) serverUrlEl.value = server;
         if (user) userEl.value = user;
-        if (mode && ["auto", "proxy", "direct"].includes(mode)) modeEl.value = mode;
         if (remember === "1") rememberEl.checked = true;
         if (pass) passEl.value = pass;
       })();
-
-      modeEl.addEventListener("change", () => {
-        localStorage.setItem("carplayer.navidrome.mode", modeEl.value);
-      });
 
       btnLogout.addEventListener("click", () => {
         state.auth = null;
@@ -1850,13 +1800,6 @@
         if (filterTimer) clearTimeout(filterTimer);
         filterTimer = setTimeout(() => applyListFilter(), 120);
       });
-
-      (async function showProxyHint() {
-        const probe = await detectProxy();
-        if (probe.ok && !probe.configured) {
-          setStatus("proxy.php existe, pero falta configurar proxy.config.php", "bad");
-        }
-      })();
 
       function setViewMode(mode) {
         state.viewMode = mode;

@@ -11,4 +11,5 @@ audio_station/
 carplayer-login-test/
 
 ### Local secrets/config
+# (Reservado si más adelante se reintroduce un backend/proxy)
 **/proxy.config.php
