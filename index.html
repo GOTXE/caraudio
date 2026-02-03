@@ -703,7 +703,7 @@
           <h1>CarPlayer · Navidrome</h1>
           <div class="sub">UI para coche (1280×480). Artistas + reproducción.</div>
         </div>
-        <div class="pill" id="originPill"></div>
+        <div></div>
       </header>
 
       <!-- LOGIN -->
@@ -831,7 +831,6 @@
     </div>
 
     <script>
-      const originPill = document.getElementById("originPill");
       const statusEl = document.getElementById("status");
       const apiLine = document.getElementById("apiLine");
       const serverUrlEl = document.getElementById("serverUrl");
@@ -880,8 +879,6 @@
       const songsList = document.getElementById("songsList");
       const btnCloseSongs = document.getElementById("btnCloseSongs");
 
-      // No mostramos el origen (dominio) para no “hardcodear”/exponer URLs del host.
-      originPill.textContent = "CarPlayer";
 
       function setStatus(text, kind) {
         statusEl.textContent = text;
