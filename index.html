@@ -147,6 +147,86 @@
       button {
         font: inherit;
       }
+
+      /* Feedback táctil/visual para botones */
+      button,
+      .btn,
+      .cta,
+      .ghostBtn,
+      .segBtn,
+      .tab,
+      .songBtn,
+      .dangerFab,
+      .controls button,
+      .controlsBar button {
+        cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        transition: transform 70ms ease, filter 120ms ease, background-color 120ms ease, border-color 120ms ease,
+          box-shadow 120ms ease;
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        button:hover,
+        .btn:hover,
+        .cta:hover,
+        .ghostBtn:hover,
+        .segBtn:hover,
+        .tab:hover,
+        .songBtn:hover,
+        .dangerFab:hover,
+        .controls button:hover,
+        .controlsBar button:hover {
+          filter: brightness(1.06);
+          box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+        }
+      }
+
+      button:active,
+      .btn:active,
+      .cta:active,
+      .ghostBtn:active,
+      .segBtn:active,
+      .tab:active,
+      .songBtn:active,
+      .dangerFab:active,
+      .controls button:active,
+      .controlsBar button:active {
+        transform: translateY(1px) scale(0.99);
+        filter: brightness(0.96);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+      }
+
+      button:focus-visible,
+      .btn:focus-visible,
+      .cta:focus-visible,
+      .ghostBtn:focus-visible,
+      .segBtn:focus-visible,
+      .tab:focus-visible,
+      .songBtn:focus-visible,
+      .dangerFab:focus-visible,
+      .controls button:focus-visible,
+      .controlsBar button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 200, 182, 0.18), 0 10px 22px rgba(0, 0, 0, 0.16);
+      }
+
+      button:disabled,
+      .btn:disabled,
+      .cta:disabled,
+      .ghostBtn:disabled,
+      .segBtn:disabled,
+      .tab:disabled,
+      .songBtn:disabled,
+      .dangerFab:disabled,
+      .controls button:disabled,
+      .controlsBar button:disabled {
+        cursor: not-allowed;
+        transform: none;
+        filter: none;
+        box-shadow: none;
+      }
       input,
       select {
         width: 100%;
@@ -424,6 +504,14 @@
         display: grid;
         gap: 10px;
       }
+      .loginCard input,
+      .loginCard select {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.09);
+      }
+      .loginCard input::placeholder {
+        color: rgba(255, 255, 255, 0.55);
+      }
 
       .inlineRow {
         display: flex;
@@ -435,6 +523,21 @@
         font-size: 12px;
         color: var(--muted);
         word-break: break-word;
+      }
+      .serverBtn {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        border-color: rgba(255, 93, 93, 0.7);
+        background: rgba(255, 93, 93, 0.2);
+        color: #ffebeb;
+      }
+      .serverBtn.ok {
+        border-color: rgba(0, 200, 182, 0.7);
+        background: rgba(0, 200, 182, 0.2);
+        color: #eafff9;
       }
 
       .modalTop {
@@ -640,6 +743,16 @@
         color: var(--text);
         font-weight: 800;
       }
+      .ghostBtn.serverBtn {
+        border-color: rgba(255, 93, 93, 0.7);
+        background: rgba(255, 93, 93, 0.25);
+        color: #ffebeb;
+      }
+      .ghostBtn.serverBtn.ok {
+        border-color: rgba(0, 200, 182, 0.7);
+        background: rgba(0, 200, 182, 0.25);
+        color: #eafff9;
+      }
 
       .dangerFab {
         position: fixed;
@@ -681,6 +794,15 @@
         border: 1px solid rgba(255, 255, 255, 0.22);
         color: rgba(255, 255, 255, 0.92);
       }
+      .modalCard input,
+      .modalCard select {
+        color: rgba(255, 255, 255, 0.95);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.22);
+      }
+      .modalCard input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+      }
       .modalList {
         overflow: auto;
         display: grid;
@@ -721,7 +843,7 @@
       <header>
         <div class="title">
           <h1>CarPlayer · Navidrome</h1>
-          <div class="sub">UI para coche (1280×480). Artistas + reproducción.</div>
+          <div class="sub">UI para coche.</div>
         </div>
         <div></div>
       </header>
@@ -731,14 +853,9 @@
         <div class="loginWrap">
           <section class="card loginCard">
             <div class="topBar">
-              <div class="pill">Login</div>
             </div>
 
-            <div class="inlineRow">
-              <div class="pill">Servidor</div>
-              <button class="ghostBtn" id="btnEditServer" type="button">Cambiar</button>
-            </div>
-            <div class="serverValue mono" id="serverOut">No configurado</div>
+            <button class="ghostBtn serverBtn" id="btnEditServer" type="button">Servidor no configurado</button>
 
 	            <label for="username">Usuario</label>
 	            <input id="username" autocomplete="username" autocapitalize="none" spellcheck="false" enterkeyhint="next" />
@@ -753,13 +870,7 @@
 	              enterkeyhint="done"
 	            />
 
-            <label style="display:flex;align-items:center;gap:10px;margin-top:10px">
-              <input id="remember" type="checkbox" style="width:auto;margin:0;transform:scale(1.15)" />
-              <span style="font-size:12px;color:var(--muted)">Recordarme en este dispositivo</span>
-            </label>
-
             <button class="btn" id="btnConnect">Conectar</button>
-            <button class="btn secondary" id="btnClear">Borrar sesión local</button>
 
             <div class="status" id="status">Esperando…</div>
           </section>
@@ -883,16 +994,13 @@
     <script>
       const statusEl = document.getElementById("status");
       const btnEditServer = document.getElementById("btnEditServer");
-      const serverOut = document.getElementById("serverOut");
       const serverModal = document.getElementById("serverModal");
       const serverUrlInput = document.getElementById("serverUrlInput");
       const btnServerCancel = document.getElementById("btnServerCancel");
       const btnServerSave = document.getElementById("btnServerSave");
       const userEl = document.getElementById("username");
       const passEl = document.getElementById("password");
-      const rememberEl = document.getElementById("remember");
       const btnConnect = document.getElementById("btnConnect");
-      const btnClear = document.getElementById("btnClear");
 
       const nowCover = document.getElementById("nowCover");
       const nowBg = document.getElementById("nowBg");
@@ -959,6 +1067,13 @@
         return v ? normalizeServer(v) : "";
       }
 
+      function updateServerButton(server) {
+        const s = normalizeServer(server || "");
+        const ok = !!s;
+        btnEditServer.classList.toggle("ok", ok);
+        btnEditServer.textContent = ok ? "Servidor configurado" : "Servidor no configurado";
+      }
+
       function setStoredServer(server) {
         const s = normalizeServer(server);
         if (!s) {
@@ -966,7 +1081,7 @@
         } else {
           localStorage.setItem("carplayer.navidrome.server", s);
         }
-        serverOut.textContent = s || "No configurado";
+        updateServerButton(s);
       }
 
       function openServerModal() {
@@ -1817,14 +1932,9 @@
           state.auth = auth;
           setStoredServer(server);
           localStorage.setItem("carplayer.navidrome.user", username);
-          localStorage.setItem("carplayer.navidrome.remember", rememberEl.checked ? "1" : "0");
-          if (rememberEl.checked) {
-            // Nota: esto guarda la contraseña en el navegador (solo este dispositivo).
-            // Recomiendo usar un usuario Navidrome dedicado para el coche.
-            localStorage.setItem("carplayer.navidrome.pass", password);
-          } else {
-            localStorage.removeItem("carplayer.navidrome.pass");
-          }
+          // Nota: esto guarda la contraseña en el navegador (solo este dispositivo).
+          // Recomiendo usar un usuario Navidrome dedicado para el coche.
+          localStorage.setItem("carplayer.navidrome.pass", password);
           setStatus("OK. Conectado.", "ok");
           showScreen("player");
           setViewMode("artists");
@@ -1846,23 +1956,12 @@
         e.preventDefault();
         connect();
       });
-      btnClear.addEventListener("click", () => {
-        localStorage.removeItem("carplayer.navidrome.user");
-        localStorage.removeItem("carplayer.navidrome.pass");
-        localStorage.removeItem("carplayer.navidrome.remember");
-        userEl.value = "";
-        passEl.value = "";
-        rememberEl.checked = false;
-        setStatus("Borrado. Vuelve a conectar.", "");
-      });
 
       (function prefill() {
         setStoredServer(getStoredServer());
         const user = localStorage.getItem("carplayer.navidrome.user");
         const pass = localStorage.getItem("carplayer.navidrome.pass");
-        const remember = localStorage.getItem("carplayer.navidrome.remember");
         if (user) userEl.value = user;
-        if (remember === "1") rememberEl.checked = true;
         if (pass) passEl.value = pass;
       })();
 
@@ -1971,9 +2070,8 @@
 
       // Auto-login si el usuario eligió "recordarme" y hay credenciales guardadas.
       (function autoLoginIfRemembered() {
-        const remember = localStorage.getItem("carplayer.navidrome.remember") === "1";
         const pass = localStorage.getItem("carplayer.navidrome.pass");
-        if (!remember || !pass) return;
+        if (!pass) return;
         if (!userEl.value || !getStoredServer()) return;
         setStatus("Autoconectando…");
         // Deja que la UI pinte antes de lanzar requests.
