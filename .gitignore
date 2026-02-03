@@ -9,6 +9,7 @@ api.txt
 audio_station/
 *.pdf
 carplayer-login-test/
+portada.jpg
 
 ### Local secrets/config
 # (Reservado si más adelante se reintroduce un backend/proxy)

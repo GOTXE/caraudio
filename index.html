@@ -64,6 +64,7 @@
       .wrap {
         height: 100vh;
         height: 100dvh;
+        height: var(--app-height, 100dvh);
         padding: 8px;
         display: grid;
         grid-template-rows: auto 1fr;
@@ -414,12 +415,31 @@
       .loginWrap {
         height: 100%;
         display: grid;
-        place-items: center;
+        place-items: start center;
+        padding-top: 12px;
+        overflow: auto;
       }
       .loginCard {
         width: min(720px, 100%);
         display: grid;
         gap: 10px;
+      }
+
+      .inlineRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .serverValue {
+        font-size: 12px;
+        color: var(--muted);
+        word-break: break-word;
+      }
+
+      .modalTop {
+        place-items: start center;
+        padding-top: 12px;
       }
 
       /* Player layout (objetivo: 1280×480) */
@@ -712,22 +732,26 @@
           <section class="card loginCard">
             <div class="topBar">
               <div class="pill">Login</div>
-              <div class="pill mono" id="apiLine" style="opacity: 0.8"></div>
             </div>
 
-            <label for="serverUrl">Servidor</label>
-            <input
-              id="serverUrl"
-              inputmode="url"
-              autocomplete="url"
-              placeholder="https://tu-navidrome.ejemplo"
-            />
+            <div class="inlineRow">
+              <div class="pill">Servidor</div>
+              <button class="ghostBtn" id="btnEditServer" type="button">Cambiar</button>
+            </div>
+            <div class="serverValue mono" id="serverOut">No configurado</div>
 
-            <label for="username">Usuario</label>
-            <input id="username" autocomplete="username" />
-
-            <label for="password">Contraseña</label>
-            <input id="password" type="password" autocomplete="current-password" />
+	            <label for="username">Usuario</label>
+	            <input id="username" autocomplete="username" autocapitalize="none" spellcheck="false" enterkeyhint="next" />
+	
+	            <label for="password">Contraseña</label>
+	            <input
+	              id="password"
+	              type="password"
+	              autocomplete="current-password"
+	              autocapitalize="none"
+	              spellcheck="false"
+	              enterkeyhint="done"
+	            />
 
             <label style="display:flex;align-items:center;gap:10px;margin-top:10px">
               <input id="remember" type="checkbox" style="width:auto;margin:0;transform:scale(1.15)" />
@@ -830,10 +854,40 @@
       </section>
     </div>
 
+    <!-- Modal servidor -->
+    <div class="modal modalTop" id="serverModal" hidden>
+      <section class="card modalCard" style="max-height: min(280px, 100%)">
+        <div class="topBar">
+          <div class="pill">Servidor Navidrome</div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <button class="ghostBtn" id="btnServerCancel">Cancelar</button>
+            <button class="ghostBtn" id="btnServerSave">Aceptar</button>
+          </div>
+        </div>
+
+	        <label for="serverUrlInput">URL</label>
+	        <input
+	          id="serverUrlInput"
+	          type="url"
+	          inputmode="url"
+	          autocomplete="url"
+	          autocapitalize="none"
+	          spellcheck="false"
+	          enterkeyhint="done"
+	          placeholder="https://tu-navidrome.ejemplo"
+	        />
+        <div class="serverValue">Ejemplo: <span class="mono">https://navidrome.tudominio.com</span></div>
+      </section>
+    </div>
+
     <script>
       const statusEl = document.getElementById("status");
-      const apiLine = document.getElementById("apiLine");
-      const serverUrlEl = document.getElementById("serverUrl");
+      const btnEditServer = document.getElementById("btnEditServer");
+      const serverOut = document.getElementById("serverOut");
+      const serverModal = document.getElementById("serverModal");
+      const serverUrlInput = document.getElementById("serverUrlInput");
+      const btnServerCancel = document.getElementById("btnServerCancel");
+      const btnServerSave = document.getElementById("btnServerSave");
       const userEl = document.getElementById("username");
       const passEl = document.getElementById("password");
       const rememberEl = document.getElementById("remember");
@@ -885,10 +939,75 @@
         statusEl.className = "status" + (kind ? ` ${kind}` : "");
       }
 
+      // Ajuste de altura real disponible (barra de direcciones + teclado en Android).
+      function setAppHeight() {
+        const h = window.visualViewport?.height || window.innerHeight;
+        document.documentElement.style.setProperty("--app-height", `${Math.round(h)}px`);
+      }
+      setAppHeight();
+      window.addEventListener("resize", setAppHeight);
+      window.visualViewport?.addEventListener("resize", setAppHeight);
+      window.visualViewport?.addEventListener("scroll", setAppHeight);
+
       function normalizeServer(input) {
         const raw = (input || "").trim();
         return raw.endsWith("/") ? raw.slice(0, -1) : raw;
       }
+
+      function getStoredServer() {
+        const v = localStorage.getItem("carplayer.navidrome.server");
+        return v ? normalizeServer(v) : "";
+      }
+
+      function setStoredServer(server) {
+        const s = normalizeServer(server);
+        if (!s) {
+          localStorage.removeItem("carplayer.navidrome.server");
+        } else {
+          localStorage.setItem("carplayer.navidrome.server", s);
+        }
+        serverOut.textContent = s || "No configurado";
+      }
+
+      function openServerModal() {
+        serverUrlInput.value = getStoredServer();
+        serverModal.hidden = false;
+        setTimeout(() => {
+          setAppHeight();
+          serverUrlInput.focus();
+        }, 0);
+      }
+
+      function closeServerModal() {
+        serverModal.hidden = true;
+      }
+
+      btnEditServer.addEventListener("click", () => openServerModal());
+      btnServerCancel.addEventListener("click", () => closeServerModal());
+      btnServerSave.addEventListener("click", () => {
+        const v = (serverUrlInput.value || "").trim();
+        if (!v) {
+          setStoredServer("");
+          closeServerModal();
+          return;
+        }
+        try {
+          const u = new URL(v);
+          if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error("Protocolo inválido");
+          setStoredServer(normalizeServer(`${u.origin}${u.pathname}`));
+          closeServerModal();
+        } catch {
+          setStatus("URL inválida. Ej: https://navidrome.tudominio.com", "bad");
+        }
+      });
+      serverUrlInput.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        btnServerSave.click();
+      });
+      serverModal.addEventListener("click", (e) => {
+        if (e.target === serverModal) closeServerModal();
+      });
 
       function randSalt(len = 16) {
         const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -1061,7 +1180,6 @@
 
       async function restJson(server, auth, viewName, params) {
         const url = buildRestUrl(server, viewName, { ...baseParams(auth), ...(params || {}) });
-        apiLine.textContent = url;
         const resp = await fetch(url, { method: "GET" });
         const text = await resp.text();
         let json;
@@ -1102,7 +1220,7 @@
       }
 
       let state = {
-        server: normalizeServer(serverUrlEl.value),
+        server: getStoredServer(),
         auth: null,
         artists: [],
         artistsFiltered: [],
@@ -1273,16 +1391,15 @@
         state.queueIndex = idx;
         const track = state.queue[idx];
         setNow(track);
-        renderSongMenu();
-        maybePrefetchRandom();
-        const url = streamUrl(state.server, state.auth, track.id);
-        (async () => {
-          apiLine.textContent = url;
-          player.src = url;
-          try {
-            await player.play();
-          } catch {
-            // ignore (autoplay restrictions)
+	        renderSongMenu();
+	        maybePrefetchRandom();
+	        const url = streamUrl(state.server, state.auth, track.id);
+	        (async () => {
+	          player.src = url;
+	          try {
+	            await player.play();
+	          } catch {
+	            // ignore (autoplay restrictions)
           }
         })();
       }
@@ -1678,11 +1795,16 @@
       });
 
       async function connect() {
-        const server = normalizeServer(serverUrlEl.value);
+        const server = getStoredServer();
         const username = (userEl.value || "").trim();
         const password = passEl.value || "";
-        if (!server || !username || !password) {
-          setStatus("Falta servidor/usuario/contraseña.", "bad");
+        if (!server) {
+          setStatus("Configura el servidor primero.", "bad");
+          openServerModal();
+          return;
+        }
+        if (!username || !password) {
+          setStatus("Falta usuario/contraseña.", "bad");
           return;
         }
         setStatus("Conectando…");
@@ -1693,7 +1815,7 @@
           await restJson(server, auth, "ping", {});
           state.server = server;
           state.auth = auth;
-          localStorage.setItem("carplayer.navidrome.server", server);
+          setStoredServer(server);
           localStorage.setItem("carplayer.navidrome.user", username);
           localStorage.setItem("carplayer.navidrome.remember", rememberEl.checked ? "1" : "0");
           if (rememberEl.checked) {
@@ -1714,24 +1836,49 @@
       }
 
       btnConnect.addEventListener("click", () => connect());
+      userEl.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        passEl.focus();
+      });
+      passEl.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        connect();
+      });
       btnClear.addEventListener("click", () => {
-        localStorage.removeItem("carplayer.navidrome.server");
         localStorage.removeItem("carplayer.navidrome.user");
         localStorage.removeItem("carplayer.navidrome.pass");
         localStorage.removeItem("carplayer.navidrome.remember");
+        userEl.value = "";
+        passEl.value = "";
+        rememberEl.checked = false;
         setStatus("Borrado. Vuelve a conectar.", "");
       });
 
       (function prefill() {
-        const server = localStorage.getItem("carplayer.navidrome.server");
+        setStoredServer(getStoredServer());
         const user = localStorage.getItem("carplayer.navidrome.user");
         const pass = localStorage.getItem("carplayer.navidrome.pass");
         const remember = localStorage.getItem("carplayer.navidrome.remember");
-        if (server) serverUrlEl.value = server;
         if (user) userEl.value = user;
         if (remember === "1") rememberEl.checked = true;
         if (pass) passEl.value = pass;
       })();
+
+      // Evita que el teclado tape el input (especialmente en navegadores “car”).
+      [userEl, passEl].forEach((el) => {
+        el.addEventListener("focus", () => {
+          setTimeout(() => {
+            setAppHeight();
+            try {
+              el.scrollIntoView({ block: "center", behavior: "smooth" });
+            } catch {
+              // ignore
+            }
+          }, 50);
+        });
+      });
 
       btnLogout.addEventListener("click", () => {
         state.auth = null;
@@ -1827,7 +1974,7 @@
         const remember = localStorage.getItem("carplayer.navidrome.remember") === "1";
         const pass = localStorage.getItem("carplayer.navidrome.pass");
         if (!remember || !pass) return;
-        if (!userEl.value || !serverUrlEl.value) return;
+        if (!userEl.value || !getStoredServer()) return;
         setStatus("Autoconectando…");
         // Deja que la UI pinte antes de lanzar requests.
         setTimeout(() => connect(), 50);

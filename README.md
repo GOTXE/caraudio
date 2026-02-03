@@ -17,8 +17,9 @@ Estado: **prueba / viabilidad (proof-of-concept)**. La UI y el flujo de reproduc
 
 No es obligatorio.
 
-- En la pantalla de login puedes poner el **Servidor**, usuario y contraseña.
-- Si quieres, puedes cambiar el valor por defecto del servidor editando el `value="https://..."` del input `Servidor`.
+- En la pantalla de login configura el **Servidor** (botón “Cambiar”), usuario y contraseña.
+- El servidor se guarda en el dispositivo (localStorage) para no tener que repetirlo.
+- Usa la URL base de Navidrome, por ejemplo `https://navidrome.tudominio.com` (o `https://tudominio.com/navidrome` si lo sirves bajo subruta).
 
 ## Seguridad
 
