@@ -8,7 +8,7 @@ Thumbs.db
 api.txt
 audio_station/
 *.pdf
+carplayer-login-test/
 
 ### Local secrets/config
 **/proxy.config.php
-
