@@ -109,10 +109,11 @@
         color: var(--text);
         font-weight: 800;
         font-size: 12px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       }
       .segBtn.active {
         border-color: rgba(0, 200, 182, 0.6);
-        background: rgba(0, 200, 182, 0.14);
+        background: linear-gradient(180deg, rgba(0, 200, 182, 0.28), rgba(0, 200, 182, 0.12));
       }
       .grid {
         display: grid;
@@ -248,10 +249,11 @@
         padding: 12px 12px;
         border-radius: 14px;
         border: 1px solid rgba(0, 200, 182, 0.6);
-        background: rgba(0, 200, 182, 0.14);
+        background: linear-gradient(180deg, rgba(0, 200, 182, 0.26), rgba(0, 200, 182, 0.12));
         color: var(--text);
         font-weight: 650;
         letter-spacing: 0.2px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.12);
       }
       .btn.secondary {
         border-color: var(--border);
@@ -346,9 +348,10 @@
         padding: 10px 12px;
         border-radius: 14px;
         border: 1px solid rgba(0, 200, 182, 0.6);
-        background: rgba(0, 200, 182, 0.14);
+        background: linear-gradient(180deg, rgba(0, 200, 182, 0.26), rgba(0, 200, 182, 0.12));
         color: var(--text);
         font-weight: 700;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.12);
       }
       .now {
         display: grid;
@@ -379,14 +382,16 @@
         padding: 14px 10px;
         border-radius: 16px;
         border: 1px solid var(--border);
-        background: rgba(0, 0, 0, 0.08);
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.04));
         color: var(--text);
         font-weight: 800;
         letter-spacing: 0.2px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       }
       .controls button.primary {
         border-color: rgba(0, 200, 182, 0.6);
-        background: rgba(0, 200, 182, 0.14);
+        background: linear-gradient(180deg, rgba(0, 200, 182, 0.3), rgba(0, 200, 182, 0.12));
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.12);
       }
       .queue {
         display: grid;
@@ -621,13 +626,15 @@
         padding: 10px 10px;
         border-radius: 14px;
         border: 1px solid var(--border);
-        background: rgba(0, 0, 0, 0.06);
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.04));
         color: var(--text);
         font-weight: 700;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.06);
       }
       .songBtn.active {
         border-color: rgba(0, 200, 182, 0.6);
-        background: rgba(0, 200, 182, 0.14);
+        background: linear-gradient(180deg, rgba(0, 200, 182, 0.3), rgba(0, 200, 182, 0.12));
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.12);
       }
       .songLine {
         font-weight: 800;
@@ -718,15 +725,23 @@
         padding: 18px 10px;
         border-radius: 18px;
         border: 1px solid var(--border);
-        background: rgba(0, 0, 0, 0.08);
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.04));
         color: var(--text);
         font-weight: 900;
         font-size: 16px;
         letter-spacing: 0.2px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       }
       .controlsBar button.primary {
         border-color: rgba(0, 200, 182, 0.6);
-        background: rgba(0, 200, 182, 0.14);
+        background: linear-gradient(180deg, rgba(0, 200, 182, 0.34), rgba(0, 200, 182, 0.16));
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+      }
+      .controlsBar button.playing {
+        border-color: rgba(0, 200, 182, 0.9);
+        background: linear-gradient(180deg, rgba(0, 200, 182, 0.65), rgba(0, 200, 182, 0.28));
+        color: #0b0f17;
+        box-shadow: 0 16px 28px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.35);
       }
       .topBar {
         display: flex;
@@ -742,6 +757,7 @@
         background: rgba(0, 0, 0, 0.06);
         color: var(--text);
         font-weight: 800;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       }
       .ghostBtn.serverBtn {
         border-color: rgba(255, 93, 93, 0.7);
@@ -756,16 +772,17 @@
 
       .dangerFab {
         position: fixed;
-        left: 10px;
-        bottom: 10px;
+        top: 10px;
+        right: 10px;
         z-index: 30;
         padding: 12px 14px;
         border-radius: 16px;
         border: 1px solid rgba(255, 93, 93, 0.65);
-        background: rgba(255, 93, 93, 0.18);
+        background: linear-gradient(180deg, rgba(255, 93, 93, 0.32), rgba(255, 93, 93, 0.16));
         color: rgba(255, 255, 255, 0.95);
         font-weight: 900;
         letter-spacing: 0.2px;
+        box-shadow: 0 12px 22px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
       }
 
       /* Modal simple para álbumes */
@@ -1476,6 +1493,11 @@
         }
       }
 
+      function updatePlayPauseUI() {
+        const playing = !player.paused && !player.ended;
+        btnPlayPause.classList.toggle("playing", playing);
+      }
+
       function setNow(track) {
         if (!track) {
           nowTitle.textContent = "Nada reproduciendo";
@@ -1550,7 +1572,10 @@
 
       player.addEventListener("ended", () => {
         if (state.queueIndex + 1 < state.queue.length) playIndex(state.queueIndex + 1);
+        updatePlayPauseUI();
       });
+      player.addEventListener("play", updatePlayPauseUI);
+      player.addEventListener("pause", updatePlayPauseUI);
       player.addEventListener("timeupdate", updateProgress);
       player.addEventListener("progress", updateProgress);
       player.addEventListener("loadedmetadata", updateProgress);
@@ -1581,6 +1606,7 @@
         } else {
           player.pause();
         }
+        updatePlayPauseUI();
       });
 
       async function loadRandomBlock(count = 20) {
