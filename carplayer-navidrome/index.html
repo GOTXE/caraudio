@@ -37,6 +37,14 @@
       * {
         box-sizing: border-box;
       }
+      /* Ocultar scrollbars globalmente */
+      * {
+        scrollbar-width: none;
+      }
+      *::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+      }
       html,
       body {
         height: 100%;
@@ -208,6 +216,11 @@
         overflow: auto;
         max-height: 100%;
         padding-right: 6px;
+        scrollbar-width: none;
+      }
+      .list::-webkit-scrollbar {
+        width: 0;
+        height: 0;
       }
       .item {
         display: grid;
@@ -299,6 +312,11 @@
         gap: 8px;
         overflow: auto;
         padding-right: 6px;
+        scrollbar-width: none;
+      }
+      .queue::-webkit-scrollbar {
+        width: 0;
+        height: 0;
       }
       .qItem {
         display: grid;
@@ -434,6 +452,11 @@
         gap: 8px;
         align-content: start;
         min-height: 0;
+        scrollbar-width: none;
+      }
+      .artistsList::-webkit-scrollbar {
+        width: 0;
+        height: 0;
       }
       .rightPane {
         display: grid;
@@ -460,6 +483,11 @@
         max-height: 280px;
         overflow: auto;
         padding-right: 6px;
+        scrollbar-width: none;
+      }
+      .songMenu::-webkit-scrollbar {
+        width: 0;
+        height: 0;
       }
       .songBtn {
         display: grid;
@@ -638,6 +666,11 @@
         display: grid;
         gap: 8px;
         padding-right: 6px;
+        scrollbar-width: none;
+      }
+      .modalList::-webkit-scrollbar {
+        width: 0;
+        height: 0;
       }
 
       /* Más contraste dentro del modal */
