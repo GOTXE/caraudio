@@ -2,6 +2,12 @@
 
 Cliente web “car mode” (1280×480) para Navidrome usando su API compatible **Subsonic** (`/rest/...`).
 
+## Contenido
+
+- UI: `index.html`
+- Proxy opcional (evitar CORS): `proxy.php`
+- Config ejemplo del proxy: `proxy.config.sample.php` → `proxy.config.php`
+
 ## URL del servidor
 
 - Tu Navidrome: `https://navimusic.dimoti.myds.me`
