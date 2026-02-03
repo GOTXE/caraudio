@@ -880,7 +880,8 @@
       const songsList = document.getElementById("songsList");
       const btnCloseSongs = document.getElementById("btnCloseSongs");
 
-      originPill.textContent = `Origen: ${location.origin}`;
+      // No mostramos el origen (dominio) para no “hardcodear”/exponer URLs del host.
+      originPill.textContent = "CarPlayer";
 
       function setStatus(text, kind) {
         statusEl.textContent = text;
