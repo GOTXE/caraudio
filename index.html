@@ -1491,11 +1491,26 @@
         if (!seekEl.matches(":active")) {
           seekEl.value = String(Math.round((cur / dur) * 1000));
         }
+
+        if ("mediaSession" in navigator && typeof navigator.mediaSession.setPositionState === "function" && dur) {
+          try {
+            navigator.mediaSession.setPositionState({
+              duration: dur,
+              position: cur,
+              playbackRate: player.playbackRate || 1,
+            });
+          } catch {
+            // ignore
+          }
+        }
       }
 
       function updatePlayPauseUI() {
         const playing = !player.paused && !player.ended;
         btnPlayPause.classList.toggle("playing", playing);
+        if ("mediaSession" in navigator) {
+          navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+        }
       }
 
       function setNow(track) {
@@ -1520,6 +1535,25 @@
           nowCover.removeAttribute("src");
           nowBg.style.opacity = "0";
           nowBg.style.removeProperty("--cover-url");
+        }
+
+        if ("mediaSession" in navigator) {
+          const art = coverId ? coverUrl(state.server, state.auth, coverId, 512) : null;
+          try {
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: track.title || "",
+              artist: track.artist || "",
+              album: track.album || "",
+              artwork: art
+                ? [
+                    { src: art, sizes: "512x512", type: "image/jpeg" },
+                    { src: art, sizes: "256x256", type: "image/jpeg" },
+                  ]
+                : [],
+            });
+          } catch {
+            // ignore
+          }
         }
       }
 
@@ -1608,6 +1642,37 @@
         }
         updatePlayPauseUI();
       });
+
+      if ("mediaSession" in navigator) {
+        try {
+          navigator.mediaSession.setActionHandler("play", async () => {
+            try {
+              await player.play();
+            } catch {}
+          });
+          navigator.mediaSession.setActionHandler("pause", () => player.pause());
+          navigator.mediaSession.setActionHandler("previoustrack", () => playNext(-1));
+          navigator.mediaSession.setActionHandler("nexttrack", () => playNext(1));
+          navigator.mediaSession.setActionHandler("seekto", (details) => {
+            if (details && Number.isFinite(details.seekTime)) {
+              player.currentTime = details.seekTime;
+              updateProgress();
+            }
+          });
+          navigator.mediaSession.setActionHandler("seekbackward", (details) => {
+            const delta = details && Number.isFinite(details.seekOffset) ? details.seekOffset : 10;
+            player.currentTime = Math.max(0, player.currentTime - delta);
+            updateProgress();
+          });
+          navigator.mediaSession.setActionHandler("seekforward", (details) => {
+            const delta = details && Number.isFinite(details.seekOffset) ? details.seekOffset : 10;
+            player.currentTime = Math.min(player.duration || player.currentTime + delta, player.currentTime + delta);
+            updateProgress();
+          });
+        } catch {
+          // ignore
+        }
+      }
 
       async function loadRandomBlock(count = 20) {
         const sub = await restJson(state.server, state.auth, "getRandomSongs", { size: count });
