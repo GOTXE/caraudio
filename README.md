@@ -8,7 +8,6 @@ Estado: **prueba / viabilidad (proof-of-concept)**. La UI y el flujo de reproduc
 
 - UI: `index.html`
 - Proxy opcional (evitar CORS): `proxy.php`
-- Config ejemplo del proxy: `proxy.config.sample.php` → `proxy.config.php` (no se commitea)
 
 ## Requisitos mínimos
 
@@ -21,7 +20,7 @@ Estado: **prueba / viabilidad (proof-of-concept)**. La UI y el flujo de reproduc
 No es obligatorio.
 
 - En la pantalla de login puedes poner el **Servidor**, usuario y contraseña.
-- Si quieres, puedes cambiar el valor por defecto del servidor editando el `value="https://..."` del input `Servidor`.
+- Tienes que  cambiar el valor por defecto del servidor editando el `value="https://..."` del input `Servidor`, en la linea 719 de index.html, para que apunte a tu Navidrome.
 
 ## Proxy: cuándo es necesario
 
