@@ -34,6 +34,26 @@
           --shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
         }
       }
+
+      html.theme-dark {
+        --bg: #0b0f17;
+        --panel: rgba(255, 255, 255, 0.05);
+        --panel2: rgba(255, 255, 255, 0.08);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.7);
+        --border: rgba(255, 255, 255, 0.14);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      }
+
+      html.theme-light {
+        --bg: #f4f7fb;
+        --panel: rgba(0, 0, 0, 0.035);
+        --panel2: rgba(0, 0, 0, 0.055);
+        --text: rgba(0, 0, 0, 0.9);
+        --muted: rgba(0, 0, 0, 0.62);
+        --border: rgba(0, 0, 0, 0.12);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+      }
       * {
         box-sizing: border-box;
       }
@@ -84,6 +104,9 @@
         margin: 0;
         font-size: 18px;
         letter-spacing: 0.2px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
       .sub {
         color: var(--muted);
@@ -100,6 +123,19 @@
         color: var(--muted);
         font-size: 12px;
         white-space: nowrap;
+      }
+      .iconBtn {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--panel2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        color: var(--text);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       }
       .segBtn {
         padding: 8px 12px;
@@ -859,7 +895,10 @@
     <div class="wrap">
       <header>
         <div class="title">
-          <h1>CarPlayer · Navidrome</h1>
+          <h1>
+            CarPlayer · Navidrome
+            <button class="iconBtn" id="themeToggle" aria-label="Cambiar tema" title="Cambiar tema">☾</button>
+          </h1>
           <div class="sub">UI para coche.</div>
         </div>
         <div></div>
@@ -1013,6 +1052,7 @@
     <script>
       const statusEl = document.getElementById("status");
       const btnEditServer = document.getElementById("btnEditServer");
+      const themeToggle = document.getElementById("themeToggle");
       const serverModal = document.getElementById("serverModal");
       const serverUrlInput = document.getElementById("serverUrlInput");
       const btnServerCancel = document.getElementById("btnServerCancel");
@@ -1067,6 +1107,34 @@
         statusEl.textContent = text;
         statusEl.className = "status" + (kind ? ` ${kind}` : "");
       }
+
+      function applyTheme(mode) {
+        const html = document.documentElement;
+        html.classList.remove("theme-dark", "theme-light");
+        if (mode === "dark") {
+          html.classList.add("theme-dark");
+          themeToggle.textContent = "☾";
+        } else {
+          html.classList.add("theme-light");
+          themeToggle.textContent = "☀︎";
+        }
+        localStorage.setItem("carplayer.navidrome.theme", mode);
+      }
+
+      (function initTheme() {
+        const saved = localStorage.getItem("carplayer.navidrome.theme");
+        if (saved === "dark" || saved === "light") {
+          applyTheme(saved);
+          return;
+        }
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        applyTheme(prefersDark ? "dark" : "light");
+      })();
+
+      themeToggle.addEventListener("click", () => {
+        const isDark = document.documentElement.classList.contains("theme-dark");
+        applyTheme(isDark ? "light" : "dark");
+      });
 
       // Ajuste de altura real disponible (barra de direcciones + teclado en Android).
       function setAppHeight() {
