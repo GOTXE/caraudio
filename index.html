@@ -718,7 +718,7 @@
       }
       .controlsBar {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
         gap: 12px;
       }
       .controlsBar button {
@@ -902,6 +902,7 @@
               <div style="display:flex;gap:8px;align-items:center">
                 <button class="segBtn active" id="btnViewArtists">Artistas</button>
                 <button class="segBtn" id="btnViewGenres">Géneros</button>
+                <button class="segBtn" id="btnViewAlbums">Álbumes</button>
               </div>
               <button class="ghostBtn" id="btnClearArtists">Limpiar</button>
             </div>
@@ -944,6 +945,7 @@
 
             <section class="card">
               <div class="controlsBar">
+                <button id="btnPlayAll">Reproducir todo</button>
                 <button id="btnShuffle">Aleatorio</button>
                 <button id="btnPrev">◀◀</button>
                 <button class="primary" id="btnPlayPause">▶︎ / ❚❚</button>
@@ -1028,6 +1030,7 @@
       const btnPrev = document.getElementById("btnPrev");
       const btnPlayPause = document.getElementById("btnPlayPause");
       const btnNext = document.getElementById("btnNext");
+      const btnPlayAll = document.getElementById("btnPlayAll");
 
       const screenLogin = document.getElementById("screenLogin");
       const screenPlayer = document.getElementById("screenPlayer");
@@ -1035,6 +1038,7 @@
       const btnClearArtists = document.getElementById("btnClearArtists");
       const btnViewArtists = document.getElementById("btnViewArtists");
       const btnViewGenres = document.getElementById("btnViewGenres");
+      const btnViewAlbums = document.getElementById("btnViewAlbums");
       const artistFilter = document.getElementById("artistFilter");
       const artistsList = document.getElementById("artistsList");
       const btnAlbums = document.getElementById("btnAlbums");
@@ -1362,6 +1366,8 @@
         artistSongsById: {},
         selectedGenre: null,
         selectedGenreAlbums: [],
+        albums: [],
+        albumsFiltered: [],
         genres: [],
         genresFiltered: [],
         viewMode: "artists",
@@ -1436,6 +1442,38 @@
             open();
           });
           div.addEventListener("click", () => open());
+          artistsList.appendChild(div);
+        }
+      }
+
+      function renderAlbums(list) {
+        artistsList.innerHTML = "";
+        const items = list || [];
+        for (const al of items) {
+          const div = document.createElement("div");
+          div.className = "item";
+          const imgSrc = al.coverArt ? coverUrl(state.server, state.auth, al.coverArt, 128) : "";
+          div.innerHTML = `
+            <img class="cover" alt="" src="${imgSrc}"/>
+            <div class="meta">
+              <div class="name">${escapeHtml(al.name || "—")}</div>
+              <div class="desc">${escapeHtml(al.artist || "")}</div>
+            </div>
+            <button class="cta">Reproducir</button>
+          `;
+          const play = async () => {
+            try {
+              await playAlbum(al.id);
+              setStatus("OK.", "ok");
+            } catch (e) {
+              setStatus(`Error: ${String(e)}`, "bad");
+            }
+          };
+          div.querySelector("button").addEventListener("click", (e) => {
+            e.stopPropagation();
+            play();
+          });
+          div.addEventListener("click", () => play());
           artistsList.appendChild(div);
         }
       }
@@ -1643,6 +1681,10 @@
         updatePlayPauseUI();
       });
 
+      btnPlayAll.addEventListener("click", async () => {
+        await playAllRandom();
+      });
+
       if ("mediaSession" in navigator) {
         try {
           navigator.mediaSession.setActionHandler("play", async () => {
@@ -1769,6 +1811,18 @@
         renderGenres(genres);
       }
 
+      async function loadAlbums() {
+        const sub = await restJson(state.server, state.auth, "getAlbumList2", {
+          type: "alphabeticalByName",
+          size: 200,
+          offset: 0,
+        });
+        const albums = sub.albumList2?.album || [];
+        state.albums = albums;
+        state.albumsFiltered = albums;
+        renderAlbums(albums);
+      }
+
       async function getArtistAlbums(artistId) {
         const cached = state.artistAlbumsById[artistId];
         if (Array.isArray(cached)) return cached;
@@ -1796,6 +1850,21 @@
         renderSongMenu();
         if (state.shuffleEnabled) shuffleQueue(true);
         playIndex(0);
+      }
+
+      async function playAllRandom() {
+        setStatus("Aleatorio: cargando 20 canciones…");
+        state.shuffleEnabled = true;
+        setShuffleUI();
+        state.randomMode = true;
+        state.queue = [];
+        state.queueIndex = -1;
+        try {
+          await loadRandomBlock(20);
+          setStatus("OK.", "ok");
+        } catch (e) {
+          setStatus(`Error: ${String(e)}`, "bad");
+        }
       }
 
       async function selectArtist(artistId, name, opts) {
@@ -2078,6 +2147,10 @@
         state.selectedArtistAlbums = [];
         state.artistAlbumsById = {};
         state.artistSongsById = {};
+        state.selectedGenre = null;
+        state.selectedGenreAlbums = [];
+        state.albums = [];
+        state.albumsFiltered = [];
         btnAlbums.disabled = true;
         btnAlbums.textContent = "Álbumes";
         btnSongs.disabled = true;
@@ -2125,6 +2198,13 @@
             state.genresFiltered = state.genres.filter((g) => (g.value || g.name || "").toLowerCase().includes(q));
           }
           renderGenres(state.genresFiltered);
+        } else if (state.viewMode === "albums") {
+          if (!q) {
+            state.albumsFiltered = state.albums;
+          } else {
+            state.albumsFiltered = state.albums.filter((a) => (a.name || "").toLowerCase().includes(q));
+          }
+          renderAlbums(state.albumsFiltered);
         } else {
           if (!q) {
             state.artistsFiltered = state.artists;
@@ -2145,10 +2225,14 @@
         state.viewMode = mode;
         btnViewArtists.classList.toggle("active", mode === "artists");
         btnViewGenres.classList.toggle("active", mode === "genres");
+        btnViewAlbums.classList.toggle("active", mode === "albums");
         artistFilter.value = "";
-        artistFilter.placeholder = mode === "genres" ? "Filtrar género…" : "Filtrar artista…";
+        artistFilter.placeholder =
+          mode === "genres" ? "Filtrar género…" : mode === "albums" ? "Filtrar álbum…" : "Filtrar artista…";
         if (mode === "genres") {
           loadGenres().catch((e) => setStatus(String(e), "bad"));
+        } else if (mode === "albums") {
+          loadAlbums().catch((e) => setStatus(String(e), "bad"));
         } else {
           loadArtists().catch((e) => setStatus(String(e), "bad"));
         }
@@ -2156,6 +2240,7 @@
 
       btnViewArtists.addEventListener("click", () => setViewMode("artists"));
       btnViewGenres.addEventListener("click", () => setViewMode("genres"));
+      btnViewAlbums.addEventListener("click", () => setViewMode("albums"));
 
       showScreen("login");
 
