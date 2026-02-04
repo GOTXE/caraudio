@@ -4,12 +4,9 @@ Thumbs.db
 .vscode/
 .idea/
 
-### Project artifacts (large/reference)
-api.txt
-audio_station/
-*.pdf
-carplayer-login-test/
-portada.jpg
+# No sync
+tech_docs/
+
 
 ### Local secrets/config
 # (Reservado si más adelante se reintroduce un backend/proxy)
