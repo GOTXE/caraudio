@@ -137,6 +137,15 @@
         color: var(--text);
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       }
+      .segBtn.iconOnly {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+      }
       .segBtn {
         padding: 8px 12px;
         border-radius: 999px;
@@ -942,8 +951,9 @@
                 <button class="segBtn active" id="btnViewArtists">Artistas</button>
                 <button class="segBtn" id="btnViewGenres">Géneros</button>
                 <button class="segBtn" id="btnViewAlbums">Álbumes</button>
+                <button class="segBtn" id="btnViewPlaylists">Listas</button>
               </div>
-              <button class="ghostBtn" id="btnClearArtists">Limpiar</button>
+              <button class="segBtn iconOnly" id="btnClearArtists" title="Limpiar" aria-label="Limpiar">🧹</button>
             </div>
             <input id="artistFilter" placeholder="Filtrar artista…" />
             <div class="artistsList" id="artistsList"></div>
@@ -1079,6 +1089,7 @@
       const btnViewArtists = document.getElementById("btnViewArtists");
       const btnViewGenres = document.getElementById("btnViewGenres");
       const btnViewAlbums = document.getElementById("btnViewAlbums");
+      const btnViewPlaylists = document.getElementById("btnViewPlaylists");
       const artistFilter = document.getElementById("artistFilter");
       const artistsList = document.getElementById("artistsList");
       const btnAlbums = document.getElementById("btnAlbums");
@@ -1436,6 +1447,8 @@
         selectedGenreAlbums: [],
         albums: [],
         albumsFiltered: [],
+        playlists: [],
+        playlistsFiltered: [],
         genres: [],
         genresFiltered: [],
         viewMode: "artists",
@@ -1532,6 +1545,53 @@
           const play = async () => {
             try {
               await playAlbum(al.id);
+              setStatus("OK.", "ok");
+            } catch (e) {
+              setStatus(`Error: ${String(e)}`, "bad");
+            }
+          };
+          div.querySelector("button").addEventListener("click", (e) => {
+            e.stopPropagation();
+            play();
+          });
+          div.addEventListener("click", () => play());
+          artistsList.appendChild(div);
+        }
+      }
+
+      function renderPlaylists(list) {
+        artistsList.innerHTML = "";
+        const items = list || [];
+        for (const p of items) {
+          const div = document.createElement("div");
+          div.className = "item";
+          div.innerHTML = `
+            <div class="cover" style="display:grid;place-items:center;font-weight:900">♪</div>
+            <div class="meta">
+              <div class="name">${escapeHtml(p.name || "—")}</div>
+              <div class="desc">${p.songCount ? `${p.songCount} canciones` : ""}</div>
+            </div>
+            <button class="cta">Reproducir</button>
+          `;
+          const play = async () => {
+            try {
+              const sub = await restJson(state.server, state.auth, "getPlaylist", { id: p.id });
+              const entries = sub.playlist?.entry || [];
+              state.queue = entries.map((s) => ({
+                id: s.id,
+                title: s.title,
+                artist: s.artist,
+                album: s.album,
+                albumId: s.albumId,
+                coverArt: s.coverArt,
+              }));
+              state.queueIndex = 0;
+              btnSongs.disabled = state.queue.length === 0;
+              btnSongs.textContent = state.queue.length ? `Canciones (${state.queue.length})` : "Canciones";
+              state.randomMode = false;
+              renderSongMenu();
+              if (state.shuffleEnabled) shuffleQueue(true);
+              if (state.queue.length) playIndex(0);
               setStatus("OK.", "ok");
             } catch (e) {
               setStatus(`Error: ${String(e)}`, "bad");
@@ -1891,6 +1951,14 @@
         renderAlbums(albums);
       }
 
+      async function loadPlaylists() {
+        const sub = await restJson(state.server, state.auth, "getPlaylists", {});
+        const playlists = sub.playlists?.playlist || [];
+        state.playlists = playlists;
+        state.playlistsFiltered = playlists;
+        renderPlaylists(playlists);
+      }
+
       async function getArtistAlbums(artistId) {
         const cached = state.artistAlbumsById[artistId];
         if (Array.isArray(cached)) return cached;
@@ -2219,6 +2287,8 @@
         state.selectedGenreAlbums = [];
         state.albums = [];
         state.albumsFiltered = [];
+        state.playlists = [];
+        state.playlistsFiltered = [];
         btnAlbums.disabled = true;
         btnAlbums.textContent = "Álbumes";
         btnSongs.disabled = true;
@@ -2273,6 +2343,13 @@
             state.albumsFiltered = state.albums.filter((a) => (a.name || "").toLowerCase().includes(q));
           }
           renderAlbums(state.albumsFiltered);
+        } else if (state.viewMode === "playlists") {
+          if (!q) {
+            state.playlistsFiltered = state.playlists;
+          } else {
+            state.playlistsFiltered = state.playlists.filter((p) => (p.name || "").toLowerCase().includes(q));
+          }
+          renderPlaylists(state.playlistsFiltered);
         } else {
           if (!q) {
             state.artistsFiltered = state.artists;
@@ -2294,13 +2371,22 @@
         btnViewArtists.classList.toggle("active", mode === "artists");
         btnViewGenres.classList.toggle("active", mode === "genres");
         btnViewAlbums.classList.toggle("active", mode === "albums");
+        btnViewPlaylists.classList.toggle("active", mode === "playlists");
         artistFilter.value = "";
         artistFilter.placeholder =
-          mode === "genres" ? "Filtrar género…" : mode === "albums" ? "Filtrar álbum…" : "Filtrar artista…";
+          mode === "genres"
+            ? "Filtrar género…"
+            : mode === "albums"
+            ? "Filtrar álbum…"
+            : mode === "playlists"
+            ? "Filtrar lista…"
+            : "Filtrar artista…";
         if (mode === "genres") {
           loadGenres().catch((e) => setStatus(String(e), "bad"));
         } else if (mode === "albums") {
           loadAlbums().catch((e) => setStatus(String(e), "bad"));
+        } else if (mode === "playlists") {
+          loadPlaylists().catch((e) => setStatus(String(e), "bad"));
         } else {
           loadArtists().catch((e) => setStatus(String(e), "bad"));
         }
@@ -2309,6 +2395,7 @@
       btnViewArtists.addEventListener("click", () => setViewMode("artists"));
       btnViewGenres.addEventListener("click", () => setViewMode("genres"));
       btnViewAlbums.addEventListener("click", () => setViewMode("albums"));
+      btnViewPlaylists.addEventListener("click", () => setViewMode("playlists"));
 
       showScreen("login");
 
