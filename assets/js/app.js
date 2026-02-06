@@ -16,7 +16,7 @@ import {
 import { checkForUpdate, escapeHtml } from "./modules/ui.js";
 import { coverUrl, makeAuth, restJson, streamUrl } from "./modules/navidrome.js";
 import { formatTime, mapSongsToQueue, toTrack } from "./modules/player.js";
-import { getWhatsNewForVersion } from "./modules/whats-new.js";
+import { getWhatsNewForVersion, getWhatsNewSections } from "./modules/whats-new.js";
 
 const statusEl = document.getElementById("status");
       const btnEditServer = document.getElementById("btnEditServer");
@@ -1012,13 +1012,20 @@ const statusEl = document.getElementById("status");
       function openWhatsNewModal() {
         whatsNewTitle.textContent = `Mejoras en ${APP_VERSION}`;
         whatsNewList.innerHTML = "";
-        const items = getWhatsNewForVersion(APP_VERSION);
-        const list = items.length ? items : ["No hay novedades registradas para esta version."];
-        for (const item of list) {
-          const row = document.createElement("div");
-          row.className = "whatsNewItem";
-          row.textContent = item;
-          whatsNewList.appendChild(row);
+        const sections = getWhatsNewSections(APP_VERSION);
+        for (const section of sections) {
+          const title = document.createElement("div");
+          title.className = "whatsNewSectionTitle";
+          title.textContent = section.version;
+          whatsNewList.appendChild(title);
+
+          const items = Array.isArray(section.items) && section.items.length ? section.items : ["Sin detalles."];
+          for (const item of items) {
+            const row = document.createElement("div");
+            row.className = "whatsNewItem";
+            row.textContent = item;
+            whatsNewList.appendChild(row);
+          }
         }
         whatsNewModal.hidden = false;
       }

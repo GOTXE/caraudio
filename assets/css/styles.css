@@ -1038,3 +1038,15 @@
         line-height: 1.35;
         font-size: 13px;
       }
+      .whatsNewSectionTitle {
+        align-self: flex-start;
+        margin-top: 8px;
+        margin-bottom: 2px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 12px;
+        letter-spacing: 0.2px;
+      }
