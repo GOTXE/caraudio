@@ -1,0 +1,19 @@
+# Changelog
+
+Formato inspirado en "Keep a Changelog". Este proyecto sigue SemVer en `0.x` con tags `vX.Y.Z-(alpha|beta|rc).N`.
+
+## [Unreleased]
+- Nuevo modal de novedades para usuario final con apertura automatica una vez por version.
+- Titulo en modal: "Mejoras en v..." y contenido explicado en lenguaje de uso.
+- Estilo del modal con perimetro de luz difusa y scroll sin barra visible.
+- Nuevo boton "Novedades" en cabecera para abrir el modal manualmente.
+- Caratula fallback con `music-player.svg` tambien para artistas, generos y listas sin portada.
+- Posicion por defecto del layout actualizada: listas a la derecha y reproductor a la izquierda.
+
+## [v0.1.0-alpha.2] - 2026-02-06
+- Muestra la version actual en el header y avisa si hay un tag mas nuevo disponible (badge con brillo).
+- README: badge con el tag actual.
+
+## [v0.1.0-alpha.1] - 2026-02-06
+- Primer tag publico para pruebas.
+- Caratula por defecto para evitar icono de imagen rota.
