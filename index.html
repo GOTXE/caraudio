@@ -91,7 +91,10 @@
               <div class="nowContent">
                 <div class="songMenu" id="songMenu"></div>
                 <div class="nowMeta">
-                  <img class="coverXL" id="nowCover" alt="" src="./assets/img/music-player.svg" />
+                  <div class="coverWrap">
+                    <div class="pauseHint" id="pauseHint" hidden>PAUSA</div>
+                    <img class="coverXL" id="nowCover" alt="" src="./assets/img/music-player.svg" />
+                  </div>
                   <div>
                     <div class="bigTitle" id="nowTitle">Nada reproduciendo</div>
                     <div class="bigSub" id="nowSub">—</div>
@@ -100,13 +103,10 @@
               </div>
 
               <audio id="player" preload="none"></audio>
-              <div class="progressArea" aria-label="Progreso">
-                <div class="pauseHint" id="pauseHint" hidden>PAUSA</div>
-                <div class="progressWrap">
-                  <div class="progressBuf" id="bufBar"></div>
-                  <div class="progressNow" id="nowBar"></div>
-                  <input class="seek" id="seek" type="range" min="0" max="1000" value="0" />
-                </div>
+              <div class="progressWrap" aria-label="Progreso">
+                <div class="progressBuf" id="bufBar"></div>
+                <div class="progressNow" id="nowBar"></div>
+                <input class="seek" id="seek" type="range" min="0" max="1000" value="0" />
               </div>
               <div class="timeRow">
                 <span class="mono" id="tNow">0:00</span>
