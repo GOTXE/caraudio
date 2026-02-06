@@ -28,6 +28,8 @@ const statusEl = document.getElementById("status");
       const UPDATE_REPO = document.querySelector('meta[name="update-repo"]')?.content || "";
       const serverModal = document.getElementById("serverModal");
       const serverUrlInput = document.getElementById("serverUrlInput");
+      const serverCheck = document.getElementById("serverCheck");
+      const serverCheckText = document.getElementById("serverCheckText");
       const btnServerCancel = document.getElementById("btnServerCancel");
       const btnServerSave = document.getElementById("btnServerSave");
       const userEl = document.getElementById("username");
@@ -136,9 +138,70 @@ const statusEl = document.getElementById("status");
         btnEditServer.textContent = ok ? "Servidor configurado" : "Servidor no configurado";
       }
 
+      let serverProbeTimer = null;
+      let lastProbe = { url: "", state: "idle", kind: "idle" };
+
+      function setServerCheck(state, text) {
+        if (!serverCheck || !serverCheckText) return;
+        serverCheck.dataset.state = state;
+        serverCheckText.textContent = text;
+      }
+
+      async function probeServerUrl(input) {
+        const raw = String(input || "").trim();
+        if (!raw) {
+          lastProbe = { url: "", state: "idle", kind: "idle" };
+          setServerCheck("idle", "Sin comprobar");
+          return lastProbe;
+        }
+
+        let normalized;
+        try {
+          if (!/^https?:\/\//i.test(raw)) throw new Error("missing scheme");
+          const u = new URL(raw);
+          if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error("bad proto");
+          normalized = normalizeServer(`${u.origin}${u.pathname}`);
+        } catch {
+          lastProbe = { url: raw, state: "bad", kind: "invalid" };
+          setServerCheck("bad", raw.includes("://") ? "URL invalida" : "Falta https://");
+          return lastProbe;
+        }
+
+        setServerCheck("checking", "Comprobando…");
+        try {
+          const pingUrl = `${normalized}/rest/ping.view?f=json&c=carplayer&v=1.16.1`;
+          const ctrl = new AbortController();
+          const t = setTimeout(() => ctrl.abort(), 2500);
+          const res = await fetch(pingUrl, { method: "GET", signal: ctrl.signal });
+          clearTimeout(t);
+
+          // 401/403 tambien significa que el endpoint existe (faltan credenciales), pero la URL es correcta.
+          if (res.status === 404) {
+            lastProbe = { url: normalized, state: "bad", kind: "not_found" };
+            setServerCheck("bad", "No encontrado (404). Revisa dominio o subruta");
+            return lastProbe;
+          }
+          if (res.ok || res.status === 401 || res.status === 403) {
+            lastProbe = { url: normalized, state: "ok", kind: "ok" };
+            setServerCheck("ok", "OK");
+            return lastProbe;
+          }
+
+          lastProbe = { url: normalized, state: "warn", kind: "http" };
+          setServerCheck("warn", `Respuesta HTTP ${res.status} (no bloqueante)`);
+          return lastProbe;
+        } catch {
+          lastProbe = { url: normalized, state: "warn", kind: "network" };
+          setServerCheck("warn", "No se pudo comprobar (DNS/CORS/offline)");
+          return lastProbe;
+        }
+      }
+
       function openServerModal() {
         serverUrlInput.value = getStoredServer();
         serverModal.hidden = false;
+        setServerCheck("idle", "Sin comprobar");
+        if (serverUrlInput.value) probeServerUrl(serverUrlInput.value);
         setTimeout(() => {
           setAppHeight();
           serverUrlInput.focus();
@@ -162,12 +225,22 @@ const statusEl = document.getElementById("status");
         try {
           const parsed = new URL(value);
           if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error("Protocolo inválido");
-          const normalized = setStoredServer(normalizeServer(`${parsed.origin}${parsed.pathname}`));
-          updateServerButton(normalized);
+          const normalized = normalizeServer(`${parsed.origin}${parsed.pathname}`);
+          // Si la comprobacion reciente detecto 404, no guardar para evitar errores por URL mal escrita.
+          if (lastProbe.kind === "not_found" && lastProbe.url === normalizeServer(normalized)) {
+            setStatus("La URL no existe (ping 404). Revisa dominio o subruta.", "bad");
+            return;
+          }
+          const stored = setStoredServer(normalized);
+          updateServerButton(stored);
           closeServerModal();
         } catch {
           setStatus("URL inválida. Ej: https://navidrome.tudominio.com", "bad");
         }
+      });
+      serverUrlInput.addEventListener("input", () => {
+        if (serverProbeTimer) clearTimeout(serverProbeTimer);
+        serverProbeTimer = setTimeout(() => probeServerUrl(serverUrlInput.value), 400);
       });
       serverUrlInput.addEventListener("keydown", (event) => {
         if (event.key !== "Enter") return;
@@ -937,9 +1010,9 @@ const statusEl = document.getElementById("status");
       }
 
       function openWhatsNewModal() {
-        const items = getWhatsNewForVersion(APP_VERSION);
         whatsNewTitle.textContent = `Mejoras en ${APP_VERSION}`;
         whatsNewList.innerHTML = "";
+        const items = getWhatsNewForVersion(APP_VERSION);
         const list = items.length ? items : ["No hay novedades registradas para esta version."];
         for (const item of list) {
           const row = document.createElement("div");

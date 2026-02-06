@@ -607,6 +607,37 @@
         color: var(--muted);
         word-break: break-word;
       }
+      .serverCheck {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.75);
+        margin-top: 6px;
+      }
+      .serverCheck .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+      }
+      .serverCheck[data-state="checking"] .dot {
+        background: rgba(255, 210, 110, 0.55);
+        box-shadow: 0 0 0 1px rgba(255, 210, 110, 0.18), 0 0 14px rgba(255, 210, 110, 0.18);
+      }
+      .serverCheck[data-state="warn"] .dot {
+        background: rgba(255, 210, 110, 0.7);
+        box-shadow: 0 0 0 1px rgba(255, 210, 110, 0.22), 0 0 14px rgba(255, 210, 110, 0.22);
+      }
+      .serverCheck[data-state="ok"] .dot {
+        background: rgba(0, 200, 182, 0.85);
+        box-shadow: 0 0 0 1px rgba(0, 200, 182, 0.22), 0 0 16px rgba(0, 200, 182, 0.24);
+      }
+      .serverCheck[data-state="bad"] .dot {
+        background: rgba(255, 93, 93, 0.75);
+        box-shadow: 0 0 0 1px rgba(255, 93, 93, 0.18), 0 0 14px rgba(255, 93, 93, 0.18);
+      }
       .serverBtn {
         width: 100%;
         display: inline-flex;
