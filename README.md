@@ -16,6 +16,11 @@ Estado: **prueba / viabilidad (proof-of-concept)**. La UI y el flujo de reproduc
 ## Contenido
 
 - UI: `index.html`
+- Cambios: `CHANGELOG.md`
+
+## Mantenimiento
+
+- Cada nueva funcionalidad visible para usuario debe añadirse tambien en `assets/js/modules/whats-new.js`.
 
 ## Requisitos mínimos
 
