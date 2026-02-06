@@ -2,6 +2,12 @@
 // Cada nueva funcionalidad visible para usuario debe quedar registrada aqui por version/tag.
 // (Se actualiza normalmente al preparar el PR/release que entra en produccion.)
 const WHATS_NEW_BY_VERSION = {
+  "v0.1.0-alpha.4": [
+    "Nuevo comprobador de URL del servidor: puntito verde/amarillo/rojo para evitar errores al configurar Navidrome.",
+    "Bloqueo en caso de URL mal escrita: si el ping devuelve 404, no se guarda la URL.",
+    "Modal de Novedades mejorado: ahora muestra las mejoras agrupadas por version/tag.",
+    "Botones de modales con mejor feedback al pulsar.",
+  ],
   "v0.1.0-alpha.3": [
     "Nuevo selector de posicion de listas: ahora puedes cambiar entre Izq y Der.",
     "Nuevo ajuste de seguridad: 'Recordar credenciales' para decidir si guardar la contrasena.",
