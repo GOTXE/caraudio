@@ -4,8 +4,7 @@ Thumbs.db
 .vscode/
 .idea/
 
-# No sync
-tech_docs/
+# Docs (se versionan)
 
 
 ### Local secrets/config
