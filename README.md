@@ -6,7 +6,7 @@ Quieres escuchar tu música de Navidrome en el coche con una interfaz sencilla y
 
 Música que has comprado y tienes guardada a buen recaudo en tu servidor Navidrome, sin depender de servicios de streaming.
 
-![CarPlayer](imgs/1.jpg)
+![CarPlayer](imgs/1.webp)
 
 ## Descripción
 Cliente web “car mode” (1280×480) para Navidrome usando la API compatible **Subsonic** (`/rest/...`).
