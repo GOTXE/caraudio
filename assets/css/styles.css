@@ -530,6 +530,39 @@
         color: var(--muted);
         font-size: 12px;
       }
+      .progressArea {
+        position: relative;
+      }
+      .pauseHint {
+        position: absolute;
+        left: 50%;
+        top: -18px;
+        transform: translateX(-50%);
+        font-weight: 1000;
+        letter-spacing: 1.4px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.88);
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55), 0 0 16px rgba(0, 200, 182, 0.22);
+        animation: pausePulse 1.25s ease-in-out infinite;
+        pointer-events: none;
+        user-select: none;
+        white-space: nowrap;
+      }
+      .theme-light .pauseHint {
+        color: rgba(8, 14, 24, 0.72);
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 12px rgba(0, 200, 182, 0.14);
+      }
+      @keyframes pausePulse {
+        0% {
+          opacity: 0.28;
+        }
+        50% {
+          opacity: 0.95;
+        }
+        100% {
+          opacity: 0.28;
+        }
+      }
       .progressWrap {
         position: relative;
         height: 18px;

@@ -100,10 +100,13 @@
               </div>
 
               <audio id="player" preload="none"></audio>
-              <div class="progressWrap" aria-label="Progreso">
-                <div class="progressBuf" id="bufBar"></div>
-                <div class="progressNow" id="nowBar"></div>
-                <input class="seek" id="seek" type="range" min="0" max="1000" value="0" />
+              <div class="progressArea" aria-label="Progreso">
+                <div class="pauseHint" id="pauseHint" hidden>PAUSA</div>
+                <div class="progressWrap">
+                  <div class="progressBuf" id="bufBar"></div>
+                  <div class="progressNow" id="nowBar"></div>
+                  <input class="seek" id="seek" type="range" min="0" max="1000" value="0" />
+                </div>
               </div>
               <div class="timeRow">
                 <span class="mono" id="tNow">0:00</span>
@@ -113,11 +116,11 @@
 
             <section class="card">
               <div class="controlsBar">
-                <button id="btnPlayAll">Reproducir todo</button>
-                <button id="btnShuffle">Aleatorio</button>
                 <button id="btnPrev">◀◀</button>
                 <button class="primary" id="btnPlayPause">▶︎ / ❚❚</button>
                 <button id="btnNext">▶▶</button>
+                <button id="btnShuffle">Aleatorio</button>
+                <button id="btnPlayAll">Reproducir todo</button>
               </div>
             </section>
           </section>

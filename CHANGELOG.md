@@ -3,7 +3,8 @@
 Formato inspirado en "Keep a Changelog". Este proyecto sigue SemVer en `0.x` con tags `vX.Y.Z-(alpha|beta|rc).N`.
 
 ## [Unreleased]
-- TBD
+- Reorden de controles: Atras, Play/Pause, Adelante, Aleatorio, Reproducir todo.
+- Indicador "PAUSA" centrado sobre la barra de progreso cuando esta en pausa.
 
 ## [v0.1.0-alpha.4] - 2026-02-06
 - Modal "Servidor Navidrome": indicador visual (verde/amarillo/rojo) para comprobar la URL antes de guardarla.
