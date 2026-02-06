@@ -10,3 +10,6 @@ Thumbs.db
 ### Local secrets/config
 # (Reservado si más adelante se reintroduce un backend/proxy)
 **/proxy.config.php
+
+# Privado (no sincronizar)
+tech_docs/
