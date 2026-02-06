@@ -3,6 +3,9 @@
 Formato inspirado en "Keep a Changelog". Este proyecto sigue SemVer en `0.x` con tags `vX.Y.Z-(alpha|beta|rc).N`.
 
 ## [Unreleased]
+- TBD
+
+## [v0.1.0-alpha.3] - 2026-02-06
 - Nuevo modal de novedades para usuario final con apertura automatica una vez por version.
 - Titulo en modal: "Mejoras en v..." y contenido explicado en lenguaje de uso.
 - Estilo del modal con perimetro de luz difusa y scroll sin barra visible.
