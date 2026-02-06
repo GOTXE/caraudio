@@ -1,4 +1,4 @@
-# W.I.P. `v0.1.0-alpha.5` [![tag](https://img.shields.io/badge/TAG-v0.1.0--alpha.5-00c8b6)](https://github.com/GOTXE/caraudio/releases/tag/v0.1.0-alpha.5)
+# W.I.P. [![tag](https://img.shields.io/badge/TAG-v0.1.0--alpha.5-00c8b6)](https://github.com/GOTXE/caraudio/releases/tag/v0.1.0-alpha.5)
 
 # CarPlayer · Navidrome (UI para coche)
 
