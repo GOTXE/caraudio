@@ -145,6 +145,7 @@ const statusEl = document.getElementById("status");
         if (!serverCheck || !serverCheckText) return;
         serverCheck.dataset.state = state;
         serverCheckText.textContent = text;
+        serverCheck.title = text || "";
       }
 
       async function probeServerUrl(input) {
