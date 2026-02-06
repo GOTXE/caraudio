@@ -533,7 +533,7 @@
       .pauseHint {
         position: absolute;
         left: 50%;
-        top: -22px;
+        top: -34px;
         transform: translateX(-50%);
         font-weight: 1000;
         letter-spacing: 2.2px;
