@@ -156,7 +156,13 @@
     <div class="modal modalTop" id="serverModal" hidden>
       <section class="card modalCard" style="max-height: min(280px, 100%)">
         <div class="topBar">
-          <div class="pill">Servidor Navidrome</div>
+          <div class="modalTitleRow">
+            <div class="pill">Servidor Navidrome</div>
+            <div class="serverCheck" id="serverCheck" data-state="idle" aria-live="polite" title="Sin comprobar">
+              <span class="dot" aria-hidden="true"></span>
+              <span id="serverCheckText">Sin comprobar</span>
+            </div>
+          </div>
           <div style="display:flex;gap:10px;align-items:center">
             <button class="ghostBtn" id="btnServerCancel">Cancelar</button>
             <button class="ghostBtn" id="btnServerSave">Aceptar</button>
@@ -172,9 +178,8 @@
 	          autocapitalize="none"
 	          spellcheck="false"
 	          enterkeyhint="done"
-	          placeholder="https://tu-navidrome.ejemplo"
+	          placeholder="https://navidrome.tudominio.com"
 	        />
-        <div class="serverValue">Ejemplo: <span class="mono">https://navidrome.tudominio.com</span></div>
       </section>
     </div>
 
