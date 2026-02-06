@@ -69,6 +69,7 @@ const statusEl = document.getElementById("status");
       const bufBar = document.getElementById("bufBar");
       const nowBar = document.getElementById("nowBar");
       const seekEl = document.getElementById("seek");
+      const pauseHint = document.getElementById("pauseHint");
       const tNow = document.getElementById("tNow");
       const tDur = document.getElementById("tDur");
 
@@ -495,6 +496,11 @@ const statusEl = document.getElementById("status");
       function updatePlayPauseUI() {
         const playing = !player.paused && !player.ended;
         btnPlayPause.classList.toggle("playing", playing);
+        if (pauseHint) {
+          const hasTrack = !!(state.queue && state.queue.length && state.queueIndex >= 0 && state.queue[state.queueIndex]);
+          const showPause = hasTrack && player.paused && !player.ended;
+          pauseHint.hidden = !showPause;
+        }
         if ("mediaSession" in navigator) {
           navigator.mediaSession.playbackState = playing ? "playing" : "paused";
         }

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark light" />
-    <meta name="app-version" content="v0.1.0-alpha.4" />
+    <meta name="app-version" content="v0.1.0-alpha.5" />
     <meta name="update-repo" content="GOTXE/caraudio" />
     <title>CarPlayer · Navidrome</title>
     <link rel="stylesheet" href="./assets/css/styles.css" />
@@ -91,7 +91,10 @@
               <div class="nowContent">
                 <div class="songMenu" id="songMenu"></div>
                 <div class="nowMeta">
-                  <img class="coverXL" id="nowCover" alt="" src="./assets/img/music-player.svg" />
+                  <div class="coverWrap">
+                    <div class="pauseHint" id="pauseHint" hidden>PAUSA</div>
+                    <img class="coverXL" id="nowCover" alt="" src="./assets/img/music-player.svg" />
+                  </div>
                   <div>
                     <div class="bigTitle" id="nowTitle">Nada reproduciendo</div>
                     <div class="bigSub" id="nowSub">—</div>
@@ -113,11 +116,11 @@
 
             <section class="card">
               <div class="controlsBar">
-                <button id="btnPlayAll">Reproducir todo</button>
-                <button id="btnShuffle">Aleatorio</button>
                 <button id="btnPrev">◀◀</button>
                 <button class="primary" id="btnPlayPause">▶︎ / ❚❚</button>
                 <button id="btnNext">▶▶</button>
+                <button id="btnShuffle">Aleatorio</button>
+                <button id="btnPlayAll">Reproducir todo</button>
               </div>
             </section>
           </section>
