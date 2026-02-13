@@ -92,10 +92,10 @@ const btnViewArtists = document.getElementById("btnViewArtists");
 const btnViewGenres = document.getElementById("btnViewGenres");
 const btnViewAlbums = document.getElementById("btnViewAlbums");
 const btnViewPlaylists = document.getElementById("btnViewPlaylists");
-const btnViewFavorites = document.getElementById("btnViewFavorites");
-const btnViewMostPlayed = document.getElementById("btnViewMostPlayed");
 const artistFilter = document.getElementById("artistFilter");
 const artistsList = document.getElementById("artistsList");
+const btnPlayMostPlayed = document.getElementById("btnPlayMostPlayed");
+const btnPlayFavorites = document.getElementById("btnPlayFavorites");
 const btnAlbums = document.getElementById("btnAlbums");
 const btnSongs = document.getElementById("btnSongs");
 const btnPaneSide = document.getElementById("btnPaneSide");
@@ -834,6 +834,21 @@ function syncSongsButton() {
   btnSongs.textContent = state.queue.length ? `Canciones (${state.queue.length})` : "Canciones";
 }
 
+function queueAndPlayTracks(tracks) {
+  const list = markSongsStarred((tracks || []).map((track) => toTrack(track)));
+  state.queue = list;
+  state.queueIndex = 0;
+  state.randomMode = false;
+  syncSongsButton();
+  renderSongMenu();
+  if (state.shuffleEnabled) shuffleQueue(true);
+  if (state.queue.length) {
+    playIndex(0);
+    return true;
+  }
+  return false;
+}
+
 function markQueueStarred() {
   state.queue = (state.queue || []).map((track) => ({
     ...track,
@@ -1039,6 +1054,18 @@ async function loadFavorites() {
   renderSongsCatalog(mapped, "No hay favoritas");
 }
 
+async function playFavoritesNow() {
+  const sub = await getStarred2(state.server, state.auth);
+  const songs = sub.starred2?.song || [];
+  state.favoriteSongs = markSongsStarred(mapSongsToQueue(songs));
+  state.favoriteSongsFiltered = state.favoriteSongs;
+  if (!queueAndPlayTracks(state.favoriteSongs)) {
+    setStatus("No hay favoritas para reproducir.", "bad");
+    return;
+  }
+  setStatus(`Favoritas: ${state.favoriteSongs.length} canciones`, "ok");
+}
+
 async function buildMostPlayedFromServer() {
   if (state.mostPlayedLoading) return;
   state.mostPlayedLoading = true;
@@ -1124,6 +1151,15 @@ async function loadMostPlayed() {
 
   await buildMostPlayedFromServer();
   renderSongsCatalog(state.mostPlayedSongs, "No hay reproducciones");
+}
+
+async function playMostPlayedNow() {
+  await loadMostPlayed();
+  if (!queueAndPlayTracks(state.mostPlayedSongs)) {
+    setStatus("No hay canciones en más reproducidas.", "bad");
+    return;
+  }
+  setStatus(`Más reproducidas: ${state.mostPlayedSongs.length} canciones`, "ok");
 }
 
 async function getArtistAlbums(artistId) {
@@ -1548,8 +1584,6 @@ async function setViewMode(mode) {
   btnViewGenres.classList.toggle("active", mode === "genres");
   btnViewAlbums.classList.toggle("active", mode === "albums");
   btnViewPlaylists.classList.toggle("active", mode === "playlists");
-  btnViewFavorites.classList.toggle("active", mode === "favorites");
-  btnViewMostPlayed.classList.toggle("active", mode === "mostPlayed");
   artistFilter.value = "";
   artistFilter.placeholder =
     mode === "genres"
@@ -1558,9 +1592,7 @@ async function setViewMode(mode) {
         ? "Filtrar album..."
         : mode === "playlists"
           ? "Filtrar lista..."
-          : mode === "favorites" || mode === "mostPlayed"
-            ? "Filtrar cancion..."
-            : "Filtrar artista...";
+          : "Filtrar artista...";
 
   if (mode === "genres") {
     await loadGenres();
@@ -1568,10 +1600,6 @@ async function setViewMode(mode) {
     await loadAlbums();
   } else if (mode === "playlists") {
     await loadPlaylists();
-  } else if (mode === "favorites") {
-    await loadFavorites();
-  } else if (mode === "mostPlayed") {
-    await loadMostPlayed();
   } else {
     await loadArtists();
   }
@@ -1805,8 +1833,22 @@ function wireEvents() {
   btnViewGenres.addEventListener("click", () => setViewMode("genres").catch((e) => setStatus(String(e), "bad")));
   btnViewAlbums.addEventListener("click", () => setViewMode("albums").catch((e) => setStatus(String(e), "bad")));
   btnViewPlaylists.addEventListener("click", () => setViewMode("playlists").catch((e) => setStatus(String(e), "bad")));
-  btnViewFavorites.addEventListener("click", () => setViewMode("favorites").catch((e) => setStatus(String(e), "bad")));
-  btnViewMostPlayed.addEventListener("click", () => setViewMode("mostPlayed").catch((e) => setStatus(String(e), "bad")));
+  btnPlayMostPlayed.addEventListener("click", async () => {
+    try {
+      setStatus("Cargando más reproducidas...");
+      await playMostPlayedNow();
+    } catch (e) {
+      setStatus(`Error: ${String(e)}`, "bad");
+    }
+  });
+  btnPlayFavorites.addEventListener("click", async () => {
+    try {
+      setStatus("Cargando favoritas...");
+      await playFavoritesNow();
+    } catch (e) {
+      setStatus(`Error: ${String(e)}`, "bad");
+    }
+  });
 
   btnOpenMenu.addEventListener("click", () => {
     syncThemeButtons();
