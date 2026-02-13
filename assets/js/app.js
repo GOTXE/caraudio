@@ -30,6 +30,8 @@ const DEFAULT_COVER = "./assets/img/music-player.svg";
 const COVER_SIZE_LIST = 96;
 const COVER_SIZE_NOW = 320;
 const MOST_PLAYED_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const COVER_FAIL_RETRY_MS = 30 * 1000;
+const COVER_CACHE_MAX_ITEMS = 1200;
 
 const TIMEZONE_REFERENCE_CITIES = {
   "Atlantic/Canary": { key: "las_palmas", label: "Las Palmas", lat: 28.1235, lon: -15.4363 },
@@ -154,6 +156,7 @@ let autoThemeTimer = null;
 let sunriseCache = { key: "", sunrise: null, sunset: null };
 let serverProbeTimer = null;
 let lastProbe = { url: "", state: "idle", kind: "idle" };
+const coverLoadCache = new Map();
 
 let state = {
   server: getStoredServer(),
@@ -797,6 +800,28 @@ function clearNowCover() {
   nowBg.style.removeProperty("--cover-url");
 }
 
+function makeCoverCacheKey(coverId, size) {
+  return `${state.server || ""}|${state.user || ""}|${coverId || ""}|${size || 0}`;
+}
+
+function getCoverCacheState(key) {
+  const cached = coverLoadCache.get(key);
+  if (!cached) return null;
+  if (!cached.ok && Date.now() - cached.at > COVER_FAIL_RETRY_MS) {
+    coverLoadCache.delete(key);
+    return null;
+  }
+  return cached.ok;
+}
+
+function setCoverCacheState(key, ok) {
+  if (!key) return;
+  coverLoadCache.set(key, { ok: !!ok, at: Date.now() });
+  if (coverLoadCache.size <= COVER_CACHE_MAX_ITEMS) return;
+  const oldestKey = coverLoadCache.keys().next().value;
+  if (oldestKey) coverLoadCache.delete(oldestKey);
+}
+
 function stopCoverRetry() {
   if (!state.coverRetryTimer) return;
   clearInterval(state.coverRetryTimer);
@@ -839,11 +864,20 @@ function applyDeferredCover(imgEl, coverId, size) {
   imgEl.src = DEFAULT_COVER;
   if (!coverId) return;
   const src = coverUrl(state.server, state.auth, coverId, size);
+  const cacheKey = makeCoverCacheKey(coverId, size);
+  const cached = getCoverCacheState(cacheKey);
+  if (cached === true) {
+    imgEl.src = src;
+    return;
+  }
+  if (cached === false) return;
   const probe = new Image();
   probe.onload = () => {
+    setCoverCacheState(cacheKey, true);
     imgEl.src = src;
   };
   probe.onerror = () => {
+    setCoverCacheState(cacheKey, false);
     imgEl.src = DEFAULT_COVER;
   };
   probe.src = src;
@@ -860,7 +894,17 @@ async function applyTrackCover(track, options) {
 
   for (const id of ids) {
     const src = coverUrl(state.server, state.auth, id, COVER_SIZE_NOW);
-    const ok = await preloadImage(src);
+    const cacheKey = makeCoverCacheKey(id, COVER_SIZE_NOW);
+    const cached = getCoverCacheState(cacheKey);
+    let ok;
+    if (cached === true) {
+      ok = true;
+    } else if (cached === false) {
+      ok = false;
+    } else {
+      ok = await preloadImage(src);
+      setCoverCacheState(cacheKey, ok);
+    }
     if (!ok) continue;
     if (requestId !== state.nowCoverRequestId) return null;
     nowCover.src = src;
