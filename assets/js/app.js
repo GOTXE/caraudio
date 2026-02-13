@@ -193,6 +193,9 @@ let state = {
   scrobbleSubmissionSent: false,
   mostPlayedLoading: false,
   nowCoverRequestId: 0,
+  quickActionLoading: "",
+  coverRetryTimer: null,
+  coverRetryTrackId: "",
 };
 
 function setStatus(text, kind) {
@@ -758,7 +761,13 @@ function updatePlayPauseUI() {
   btnPlayPause.classList.toggle("playing", playing);
   if (pauseHint) {
     const hasTrack = !!(state.queue && state.queue.length && state.queueIndex >= 0 && state.queue[state.queueIndex]);
-    pauseHint.hidden = !(hasTrack && player.paused && !player.ended);
+    if (state.quickActionLoading) {
+      pauseHint.textContent = "CARGANDO";
+      pauseHint.hidden = false;
+    } else {
+      pauseHint.textContent = "PAUSA";
+      pauseHint.hidden = !(hasTrack && player.paused && !player.ended);
+    }
   }
   if ("mediaSession" in navigator) {
     navigator.mediaSession.playbackState = playing ? "playing" : "paused";
@@ -788,6 +797,28 @@ function clearNowCover() {
   nowBg.style.removeProperty("--cover-url");
 }
 
+function stopCoverRetry() {
+  if (!state.coverRetryTimer) return;
+  clearInterval(state.coverRetryTimer);
+  state.coverRetryTimer = null;
+  state.coverRetryTrackId = "";
+}
+
+function startCoverRetry(track) {
+  if (!track?.id) return;
+  stopCoverRetry();
+  state.coverRetryTrackId = track.id;
+  state.coverRetryTimer = setInterval(async () => {
+    if (!state.coverRetryTrackId || state.coverRetryTrackId !== track.id) {
+      stopCoverRetry();
+      return;
+    }
+    if (player.paused || player.ended) return;
+    const loaded = await applyTrackCover(track, { keepRequestId: true });
+    if (loaded) stopCoverRetry();
+  }, 3500);
+}
+
 function getTrackCoverIds(track) {
   const out = [];
   if (track?.coverArt) out.push(track.coverArt);
@@ -804,8 +835,9 @@ function preloadImage(url) {
   });
 }
 
-async function applyTrackCover(track) {
-  const requestId = ++state.nowCoverRequestId;
+async function applyTrackCover(track, options) {
+  const opts = options || {};
+  const requestId = opts.keepRequestId ? state.nowCoverRequestId : ++state.nowCoverRequestId;
   const ids = getTrackCoverIds(track);
   if (!ids.length) {
     clearNowCover();
@@ -823,11 +855,12 @@ async function applyTrackCover(track) {
     return src;
   }
 
-  if (requestId === state.nowCoverRequestId) clearNowCover();
+  if (requestId === state.nowCoverRequestId && !opts.keepRequestId) clearNowCover();
   return null;
 }
 
 function setNow(track) {
+  stopCoverRetry();
   if (!track) {
     nowTitle.textContent = "Nada reproduciendo";
     nowSub.textContent = "-";
@@ -840,9 +873,14 @@ function setNow(track) {
   nowSub.textContent = `${track.artist || ""}${track.album ? " · " + track.album : ""}`;
   const coverId = track.coverArt || track.albumId || null;
   state.lastCoverId = coverId;
-  applyTrackCover(track).catch(() => {
-    clearNowCover();
-  });
+  applyTrackCover(track)
+    .then((loaded) => {
+      if (!loaded) startCoverRetry(track);
+    })
+    .catch(() => {
+      clearNowCover();
+      startCoverRetry(track);
+    });
   updateFavoriteButton(track);
   updateNowActionButtons(track);
 
@@ -888,6 +926,17 @@ function queueAndPlayTracks(tracks, options) {
     return true;
   }
   return false;
+}
+
+function setQuickActionLoading(action) {
+  state.quickActionLoading = action || "";
+  const most = state.quickActionLoading === "most";
+  const fav = state.quickActionLoading === "fav";
+  btnPlayMostPlayed.classList.toggle("loading", most);
+  btnPlayFavorites.classList.toggle("loading", fav);
+  btnPlayMostPlayed.disabled = most || fav;
+  btnPlayFavorites.disabled = most || fav;
+  updatePlayPauseUI();
 }
 
 function markQueueStarred() {
@@ -1096,6 +1145,7 @@ async function loadFavorites() {
 }
 
 async function playFavoritesNow() {
+  setQuickActionLoading("fav");
   const sub = await getStarred2(state.server, state.auth);
   const songs = sub.starred2?.song || [];
   state.favoriteSongs = markSongsStarred(mapSongsToQueue(songs));
@@ -1103,6 +1153,7 @@ async function playFavoritesNow() {
   state.shuffleEnabled = true;
   setShuffleUI();
   if (!queueAndPlayTracks(state.favoriteSongs, { shuffleStart: true })) {
+    setQuickActionLoading("");
     setStatus("No hay favoritas para reproducir.", "bad");
     return;
   }
@@ -1197,10 +1248,12 @@ async function loadMostPlayed() {
 }
 
 async function playMostPlayedNow() {
+  setQuickActionLoading("most");
   await loadMostPlayed();
   state.shuffleEnabled = true;
   setShuffleUI();
   if (!queueAndPlayTracks(state.mostPlayedSongs, { shuffleStart: true })) {
+    setQuickActionLoading("");
     setStatus("No hay canciones en más reproducidas.", "bad");
     return;
   }
@@ -1496,6 +1549,8 @@ function closeServerModal() {
 }
 
 function resetPlayerState() {
+  setQuickActionLoading("");
+  stopCoverRetry();
   state.queue = [];
   state.queueIndex = -1;
   state.selectedArtist = null;
@@ -1801,7 +1856,10 @@ function wireEvents() {
     if (state.queueIndex + 1 < state.queue.length) playIndex(state.queueIndex + 1);
     updatePlayPauseUI();
   });
-  player.addEventListener("play", updatePlayPauseUI);
+  player.addEventListener("play", () => {
+    setQuickActionLoading("");
+    updatePlayPauseUI();
+  });
   player.addEventListener("pause", updatePlayPauseUI);
   player.addEventListener("timeupdate", updateProgress);
   player.addEventListener("progress", updateProgress);
@@ -1888,6 +1946,7 @@ function wireEvents() {
       setStatus("Cargando más reproducidas...");
       await playMostPlayedNow();
     } catch (e) {
+      setQuickActionLoading("");
       setStatus(`Error: ${String(e)}`, "bad");
     }
   });
@@ -1896,6 +1955,7 @@ function wireEvents() {
       setStatus("Cargando favoritas...");
       await playFavoritesNow();
     } catch (e) {
+      setQuickActionLoading("");
       setStatus(`Error: ${String(e)}`, "bad");
     }
   });

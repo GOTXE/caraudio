@@ -938,6 +938,11 @@
         width: 180px;
         text-align: center;
       }
+      .sideBtns .ghostBtn.loading {
+        border-color: rgba(0, 200, 182, 0.78);
+        background: linear-gradient(180deg, rgba(0, 200, 182, 0.36), rgba(0, 200, 182, 0.14));
+        box-shadow: 0 0 0 1px rgba(0, 200, 182, 0.16), 0 10px 20px rgba(0, 0, 0, 0.16), 0 0 18px rgba(0, 200, 182, 0.18);
+      }
       .sideBtns .ghostBtn.isMuted {
         border-color: rgba(255, 255, 255, 0.18);
         background: linear-gradient(180deg, rgba(130, 138, 156, 0.22), rgba(95, 103, 120, 0.16));
