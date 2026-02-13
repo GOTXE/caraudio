@@ -293,6 +293,13 @@ function showScreen(which) {
   const isLogin = which === "login";
   screenLogin.hidden = !isLogin;
   screenPlayer.hidden = isLogin;
+  if (btnOpenMenu) btnOpenMenu.hidden = isLogin;
+  if (headerUser) headerUser.hidden = isLogin || !state.user;
+  if (isLogin) {
+    if (menuModal) menuModal.hidden = true;
+    if (profilesModal) profilesModal.hidden = true;
+    if (autoThemeModal) autoThemeModal.hidden = true;
+  }
   if (isLogin) {
     setHeaderUserLabel("");
   } else {
