@@ -767,12 +767,12 @@ function updatePlayPauseUI() {
 function updateFavoriteButton(track) {
   if (!track || !track.id) {
     btnFavoriteSong.classList.remove("active");
-    btnFavoriteSong.textContent = "♡ Favorita";
+    btnFavoriteSong.textContent = "♡";
     return;
   }
   const isStarred = state.starredIds.has(track.id) || !!track.starred;
   btnFavoriteSong.classList.toggle("active", isStarred);
-  btnFavoriteSong.textContent = isStarred ? "❤ Favorita" : "♡ Favorita";
+  btnFavoriteSong.textContent = isStarred ? "♥" : "♡";
 }
 
 function updateNowActionButtons(track) {

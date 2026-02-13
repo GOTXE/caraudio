@@ -957,6 +957,35 @@
         display: grid;
         place-items: center;
       }
+      .coverFavBtn {
+        position: absolute;
+        right: -56px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 52px;
+        height: 52px;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+        color: rgba(230, 240, 255, 0.88);
+        font-size: 36px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
+      .coverFavBtn:hover,
+      .coverFavBtn:focus-visible,
+      .coverFavBtn:active {
+        background: transparent;
+        box-shadow: none;
+        filter: none;
+        transform: translateY(-50%) scale(1.02);
+      }
+      .coverFavBtn.active {
+        color: rgba(0, 200, 182, 0.96);
+      }
       .coverXL {
         width: clamp(200px, 30vw, 300px);
         height: clamp(200px, 30vw, 300px);
@@ -1041,11 +1070,6 @@
         border-color: rgba(0, 200, 182, 0.62);
         background: linear-gradient(180deg, rgba(0, 200, 182, 0.28), rgba(0, 200, 182, 0.12));
         box-shadow: 0 0 0 1px rgba(0, 200, 182, 0.16), 0 10px 20px rgba(0, 0, 0, 0.16), 0 0 18px rgba(0, 200, 182, 0.16);
-      }
-      #btnFavoriteSong.active {
-        border-color: rgba(0, 200, 182, 0.78);
-        background: linear-gradient(180deg, rgba(0, 200, 182, 0.40), rgba(0, 200, 182, 0.18));
-        color: #eafff9;
       }
       .ghostBtn.serverBtn {
         border-color: rgba(255, 93, 93, 0.7);
