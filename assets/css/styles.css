@@ -122,6 +122,9 @@
         gap: 8px;
         justify-self: end;
       }
+      .headerRight [hidden] {
+        display: none !important;
+      }
       .headerUser {
         padding: 6px 10px;
         border-radius: 999px;
