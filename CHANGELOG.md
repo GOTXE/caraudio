@@ -3,7 +3,7 @@
 Formato inspirado en "Keep a Changelog". Este proyecto sigue SemVer en `0.x` con tags `vX.Y.Z-(alpha|beta|rc).N`.
 
 ## [Unreleased]
-- Nuevo menu hamburguesa con ajustes de tema, posicion de panel y cambio de usuario.
+- Nuevo panel de ajustes con tema, posicion de panel y cambio de usuario.
 - Tema con tres modos: Dia, Noche y Auto.
 - Modo Auto configurable por zona horaria IANA y ciudad opcional de referencia para orto/ocaso.
 - Filtro de canciones Favoritas (usuario actual) con accion de marcado desde la reproduccion.

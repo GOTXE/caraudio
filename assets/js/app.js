@@ -126,6 +126,7 @@ const whatsNewList = document.getElementById("whatsNewList");
 const btnCloseWhatsNew = document.getElementById("btnCloseWhatsNew");
 
 const btnOpenMenu = document.getElementById("btnOpenMenu");
+const headerUser = document.getElementById("headerUser");
 const menuModal = document.getElementById("menuModal");
 const btnCloseMenu = document.getElementById("btnCloseMenu");
 const btnThemeDay = document.getElementById("btnThemeDay");
@@ -230,29 +231,79 @@ function syncThemeButtons() {
   btnThemeNight.classList.toggle("active", mode === "night");
   btnThemeAuto.classList.toggle("active", mode === "auto");
   const autoCfg = getAutoThemeSettings();
-  themeAutoHint.textContent = `Auto: ${autoCfg.timeZone || "sin zona"}${autoCfg.cityKey ? ` · ${autoCfg.cityKey}` : " · horario fijo"}`;
+  const city = autoCfg.cityKey || "sin ciudad";
+  themeAutoHint.textContent = `Auto: ${autoCfg.timeZone || "UTC"} · ${city}`;
 }
 
 function getTimeZonesList() {
-  if (typeof Intl.supportedValuesOf === "function") {
-    try {
-      const values = Intl.supportedValuesOf("timeZone");
-      if (Array.isArray(values) && values.length) return values;
-    } catch {
-      // ignore
-    }
-  }
-  return [
+  const zones = [
     "UTC",
     "Atlantic/Canary",
     "Europe/Madrid",
     "Europe/London",
+    "Europe/Lisbon",
+    "Europe/Paris",
+    "Europe/Berlin",
+    "Europe/Rome",
+    "Europe/Athens",
+    "America/Anchorage",
+    "America/Phoenix",
     "America/New_York",
     "America/Chicago",
+    "America/Denver",
     "America/Los_Angeles",
+    "America/Mexico_City",
+    "America/Bogota",
+    "America/Lima",
+    "America/Sao_Paulo",
+    "America/Argentina/Buenos_Aires",
+    "Africa/Casablanca",
+    "Asia/Jerusalem",
+    "Asia/Dubai",
+    "Asia/Kolkata",
+    "Asia/Shanghai",
     "Asia/Tokyo",
+    "Asia/Seoul",
+    "Australia/Perth",
     "Australia/Sydney",
+    "Pacific/Auckland",
   ];
+  try {
+    const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    if (localTz && !zones.includes(localTz)) zones.unshift(localTz);
+  } catch {
+    // ignore
+  }
+  return zones;
+}
+
+function setHeaderUserLabel(username) {
+  if (!headerUser) return;
+  const value = String(username || "").trim();
+  if (!value) {
+    headerUser.hidden = true;
+    headerUser.textContent = "@—";
+    return;
+  }
+  headerUser.hidden = false;
+  headerUser.textContent = `@${value}`;
+}
+
+function showScreen(which) {
+  const isLogin = which === "login";
+  screenLogin.hidden = !isLogin;
+  screenPlayer.hidden = isLogin;
+  if (isLogin) {
+    setHeaderUserLabel("");
+  } else {
+    setHeaderUserLabel(state.user);
+  }
+}
+
+function getTimeZoneOptionFallback(zones, configured) {
+  if (configured && zones.includes(configured)) return configured;
+  if (zones.includes("UTC")) return "UTC";
+  return zones[0] || "UTC";
 }
 
 function parseTimeToMinutes(value, fallback) {
@@ -428,12 +479,6 @@ function applyListPaneSide(side) {
   if (!playerGrid || !btnPaneSide) return;
   playerGrid.dataset.listPane = side;
   btnPaneSide.textContent = side === "right" ? "Listas: Der" : "Listas: Izq";
-}
-
-function showScreen(which) {
-  const isLogin = which === "login";
-  screenLogin.hidden = !isLogin;
-  screenPlayer.hidden = isLogin;
 }
 
 function renderProfiles() {
@@ -1306,7 +1351,7 @@ function fillAutoThemeModal() {
     option.textContent = zone;
     autoThemeTimezone.appendChild(option);
   }
-  autoThemeTimezone.value = zones.includes(cfg.timeZone) ? cfg.timeZone : "UTC";
+  autoThemeTimezone.value = getTimeZoneOptionFallback(zones, cfg.timeZone);
   refreshAutoThemeCityOptions(autoThemeTimezone.value, cfg.cityKey);
   autoThemeDayStart.value = cfg.dayStart || "07:00";
   autoThemeNightStart.value = cfg.nightStart || "19:00";
@@ -1422,6 +1467,7 @@ async function connectWithCredentials({ server, username, password, silent = fal
     state.server = normalizedServer;
     state.auth = auth;
     state.user = user;
+    setHeaderUserLabel(user);
     const remember = !!rememberCredsEl?.checked;
     setRememberCreds(remember);
     const storedServer = setStoredServer(normalizedServer);
@@ -1857,6 +1903,7 @@ function init() {
 
   renderProfiles();
   showScreen("login");
+  setHeaderUserLabel("");
 
   checkForUpdate({ currentTag: APP_VERSION, repo: UPDATE_REPO, currentEl: verCurrent, latestEl: verLatest });
   const seen = getWhatsNewSeenVersion();

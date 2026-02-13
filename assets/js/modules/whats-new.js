@@ -3,16 +3,15 @@
 // (Se actualiza normalmente al preparar el PR/release que entra en produccion.)
 const WHATS_NEW_BY_VERSION = {
   "v0.1.0-alpha.6": [
-    "Nueva cabecera y branding: Music Skin ND.",
-    "Nuevo menu hamburguesa para ajustes y cambio de usuario.",
-    "Tema con tres modos: Dia, Noche y Auto configurable.",
-    "Modo Auto con zona horaria y ciudad de referencia opcional (fallback por horario).",
-    "Nuevo sistema de perfiles para cambiar de usuario sin cerrar sesion manual.",
-    "Nuevos filtros de canciones: Favoritas y Mas reproducidas.",
-    "Boton de favorita en reproduccion (starred nativo de Navidrome).",
-    "Reproducciones reportadas a Navidrome con scrobble.",
-    "Caratulas optimizadas para acelerar carga.",
-    "Cola de canciones: la pista activa se autoenfoca al cambiar.",
+    "Interfaz: nueva cabecera con branding Music Skin ND y usuario activo en header.",
+    "Interfaz: panel de ajustes centralizado para tema, posicion de listas y cambio de usuario.",
+    "Tema y visual: selector de tema con modos Dia, Noche y Auto.",
+    "Tema y visual: modo Auto configurable por zona horaria y ciudad de referencia opcional.",
+    "Reproduccion: boton de favorita sobre la pista en curso y filtro de canciones favoritas.",
+    "Reproduccion: nuevo filtro de canciones mas reproducidas del usuario actual.",
+    "Integracion Navidrome: reproducciones notificadas con scrobble para actualizar estadisticas.",
+    "Rendimiento: caratulas optimizadas para mejorar velocidad de carga.",
+    "Usabilidad: auto-scroll de cola para mantener visible la cancion activa.",
   ],
   "v0.1.0-alpha.5": [
     "Controles reordenados: Atras, Play/Pause, Adelante, Aleatorio, Reproducir todo.",

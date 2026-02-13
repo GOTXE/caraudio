@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark light" />
-    <meta name="app-version" content="v0.1.0-alpha.5" />
+    <meta name="app-version" content="v0.1.0-alpha.6" />
     <meta name="update-repo" content="GOTXE/caraudio" />
     <title>Music Skin ND</title>
     <link rel="stylesheet" href="./assets/css/styles.css" />
@@ -24,6 +24,7 @@
           <button class="ghostBtn whatsNewBtn" id="btnWhatsNew" title="Ver novedades">Novedades</button>
         </div>
         <div class="headerRight">
+          <span class="headerUser mono" id="headerUser" hidden>@—</span>
           <button class="iconBtn" id="btnOpenMenu" aria-label="Abrir menú" title="Menú">☰</button>
         </div>
       </header>
@@ -66,7 +67,7 @@
         <div class="playerGrid" id="playerGrid" data-list-pane="right">
           <section class="card artistsPane">
             <div class="topBar">
-              <div style="display:flex;gap:8px;align-items:center">
+              <div class="viewTabs">
                 <button class="segBtn active" id="btnViewArtists">Artistas</button>
                 <button class="segBtn" id="btnViewGenres">Géneros</button>
                 <button class="segBtn" id="btnViewAlbums">Álbumes</button>
@@ -246,7 +247,7 @@
 
     <!-- Modal tema auto -->
     <div class="modal modalTop" id="autoThemeModal" hidden>
-      <section class="card modalCard" style="max-height: min(520px, 100%)">
+      <section class="card modalCard autoThemeCard">
         <div class="topBar">
           <div class="pill">Tema automático</div>
           <div style="display:flex;gap:10px;align-items:center">
