@@ -538,14 +538,14 @@ function renderArtists(list) {
   for (const a of list || []) {
     const div = document.createElement("div");
     div.className = "item";
-    const imgSrc = a.coverArt ? coverUrl(state.server, state.auth, a.coverArt, COVER_SIZE_LIST) : DEFAULT_COVER;
     div.innerHTML = `
-      <img class="cover" alt="" src="${imgSrc}"/>
+      <img class="cover" alt="" src="${DEFAULT_COVER}"/>
       <div class="meta">
         <div class="name">${escapeHtml(a.name || "-")}</div>
       </div>
       <button class="cta">Ver</button>
     `;
+    applyDeferredCover(div.querySelector("img.cover"), a.coverArt, COVER_SIZE_LIST);
     const open = async () => {
       try {
         setStatus(`Cargando albumes: ${a.name}...`);
@@ -569,17 +569,17 @@ function renderGenres(list) {
   for (const g of list || []) {
     const div = document.createElement("div");
     div.className = "item";
-    const imgSrc = g.coverArt ? coverUrl(state.server, state.auth, g.coverArt, COVER_SIZE_LIST) : DEFAULT_COVER;
     const name = g.value || g.name || "-";
     const count = g.albumCount || g.songCount || 0;
     div.innerHTML = `
-      <img class="cover" alt="" src="${imgSrc}"/>
+      <img class="cover" alt="" src="${DEFAULT_COVER}"/>
       <div class="meta">
         <div class="name">${escapeHtml(name)}</div>
         <div class="desc">${count ? `${count} ${g.albumCount ? "albumes" : "canciones"}` : ""}</div>
       </div>
       <button class="cta">Ver</button>
     `;
+    applyDeferredCover(div.querySelector("img.cover"), g.coverArt, COVER_SIZE_LIST);
     const open = async () => {
       try {
         setStatus(`Cargando genero: ${name}...`);
@@ -603,15 +603,15 @@ function renderAlbums(list) {
   for (const al of list || []) {
     const div = document.createElement("div");
     div.className = "item";
-    const imgSrc = al.coverArt ? coverUrl(state.server, state.auth, al.coverArt, COVER_SIZE_LIST) : DEFAULT_COVER;
     div.innerHTML = `
-      <img class="cover" alt="" src="${imgSrc}"/>
+      <img class="cover" alt="" src="${DEFAULT_COVER}"/>
       <div class="meta">
         <div class="name">${escapeHtml(al.name || "-")}</div>
         <div class="desc">${escapeHtml(al.artist || "")}</div>
       </div>
       <button class="cta">Reproducir</button>
     `;
+    applyDeferredCover(div.querySelector("img.cover"), al.coverArt, COVER_SIZE_LIST);
     const play = async () => {
       try {
         await playAlbum(al.id);
@@ -634,15 +634,15 @@ function renderPlaylists(list) {
   for (const p of list || []) {
     const div = document.createElement("div");
     div.className = "item";
-    const imgSrc = p.coverArt ? coverUrl(state.server, state.auth, p.coverArt, COVER_SIZE_LIST) : DEFAULT_COVER;
     div.innerHTML = `
-      <img class="cover" alt="" src="${imgSrc}"/>
+      <img class="cover" alt="" src="${DEFAULT_COVER}"/>
       <div class="meta">
         <div class="name">${escapeHtml(p.name || "-")}</div>
         <div class="desc">${p.songCount ? `${p.songCount} canciones` : ""}</div>
       </div>
       <button class="cta">Reproducir</button>
     `;
+    applyDeferredCover(div.querySelector("img.cover"), p.coverArt, COVER_SIZE_LIST);
     const play = async () => {
       try {
         const sub = await restJson(state.server, state.auth, "getPlaylist", { id: p.id });
@@ -682,16 +682,16 @@ function renderSongsCatalog(list, emptyText) {
   items.forEach((track, index) => {
     const div = document.createElement("div");
     div.className = "item";
-    const imgSrc = track.coverArt ? coverUrl(state.server, state.auth, track.coverArt, COVER_SIZE_LIST) : DEFAULT_COVER;
     const stars = track.playCount ? ` · ${track.playCount} plays` : "";
     div.innerHTML = `
-      <img class="cover" alt="" src="${imgSrc}"/>
+      <img class="cover" alt="" src="${DEFAULT_COVER}"/>
       <div class="meta">
         <div class="name">${escapeHtml(track.title || "-")}</div>
         <div class="desc">${escapeHtml(track.artist || "")}${stars}</div>
       </div>
       <button class="cta">Play</button>
     `;
+    applyDeferredCover(div.querySelector("img.cover"), track.coverArt, COVER_SIZE_LIST);
     const play = () => {
       state.queue = items.slice();
       state.queueIndex = index;
@@ -822,7 +822,6 @@ function startCoverRetry(track) {
 function getTrackCoverIds(track) {
   const out = [];
   if (track?.coverArt) out.push(track.coverArt);
-  if (track?.albumId) out.push(track.albumId);
   return [...new Set(out)];
 }
 
@@ -833,6 +832,21 @@ function preloadImage(url) {
     img.onerror = () => resolve(false);
     img.src = url;
   });
+}
+
+function applyDeferredCover(imgEl, coverId, size) {
+  if (!imgEl) return;
+  imgEl.src = DEFAULT_COVER;
+  if (!coverId) return;
+  const src = coverUrl(state.server, state.auth, coverId, size);
+  const probe = new Image();
+  probe.onload = () => {
+    imgEl.src = src;
+  };
+  probe.onerror = () => {
+    imgEl.src = DEFAULT_COVER;
+  };
+  probe.src = src;
 }
 
 async function applyTrackCover(track, options) {
@@ -871,7 +885,7 @@ function setNow(track) {
   }
   nowTitle.textContent = track.title || "-";
   nowSub.textContent = `${track.artist || ""}${track.album ? " · " + track.album : ""}`;
-  const coverId = track.coverArt || track.albumId || null;
+  const coverId = track.coverArt || null;
   state.lastCoverId = coverId;
   applyTrackCover(track)
     .then((loaded) => {
@@ -885,7 +899,7 @@ function setNow(track) {
   updateNowActionButtons(track);
 
   if ("mediaSession" in navigator) {
-    const art = coverId ? coverUrl(state.server, state.auth, coverId, COVER_SIZE_NOW) : null;
+    const art = track.coverArt ? coverUrl(state.server, state.auth, track.coverArt, COVER_SIZE_NOW) : null;
     try {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: track.title || "",
@@ -1342,15 +1356,15 @@ function openAlbumsModal() {
   for (const al of albums) {
     const div = document.createElement("div");
     div.className = "item";
-    const imgSrc = al.coverArt ? coverUrl(state.server, state.auth, al.coverArt, COVER_SIZE_LIST) : DEFAULT_COVER;
     div.innerHTML = `
-      <img class="cover" alt="" src="${imgSrc}"/>
+      <img class="cover" alt="" src="${DEFAULT_COVER}"/>
       <div class="meta">
         <div class="name">${escapeHtml(al.name || "-")}</div>
         <div class="desc">${escapeHtml(a?.name || "")}</div>
       </div>
       <button class="cta">Play</button>
     `;
+    applyDeferredCover(div.querySelector("img.cover"), al.coverArt, COVER_SIZE_LIST);
     div.querySelector("button").addEventListener("click", async (e) => {
       e.stopPropagation();
       await playAlbum(al.id);
