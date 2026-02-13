@@ -1135,21 +1135,21 @@ async function loadPlaylists() {
   renderPlaylists(playlists);
 }
 
-async function loadFavorites() {
+async function loadFavorites(options) {
+  const opts = options || {};
   const sub = await getStarred2(state.server, state.auth);
   const songs = sub.starred2?.song || [];
   const mapped = markSongsStarred(mapSongsToQueue(songs));
   state.favoriteSongs = mapped;
   state.favoriteSongsFiltered = mapped;
-  renderSongsCatalog(mapped, "No hay favoritas");
+  if (opts.render !== false) {
+    renderSongsCatalog(mapped, "No hay favoritas");
+  }
 }
 
 async function playFavoritesNow() {
   setQuickActionLoading("fav");
-  const sub = await getStarred2(state.server, state.auth);
-  const songs = sub.starred2?.song || [];
-  state.favoriteSongs = markSongsStarred(mapSongsToQueue(songs));
-  state.favoriteSongsFiltered = state.favoriteSongs;
+  await loadFavorites({ render: false });
   state.shuffleEnabled = true;
   setShuffleUI();
   if (!queueAndPlayTracks(state.favoriteSongs, { shuffleStart: true })) {
@@ -1223,7 +1223,8 @@ async function buildMostPlayedFromServer() {
   }
 }
 
-async function loadMostPlayed() {
+async function loadMostPlayed(options) {
+  const opts = options || {};
   const cacheKey = getMostPlayedCacheStorageKey();
   if (cacheKey) {
     const raw = localStorage.getItem(cacheKey);
@@ -1234,7 +1235,9 @@ async function loadMostPlayed() {
           const songs = markSongsStarred(parsed.songs.map((song) => toTrack(song)));
           state.mostPlayedSongs = songs;
           state.mostPlayedSongsFiltered = songs;
-          renderSongsCatalog(songs, "No hay reproducciones");
+          if (opts.render !== false) {
+            renderSongsCatalog(songs, "No hay reproducciones");
+          }
           return;
         }
       } catch {
@@ -1244,12 +1247,14 @@ async function loadMostPlayed() {
   }
 
   await buildMostPlayedFromServer();
-  renderSongsCatalog(state.mostPlayedSongs, "No hay reproducciones");
+  if (opts.render !== false) {
+    renderSongsCatalog(state.mostPlayedSongs, "No hay reproducciones");
+  }
 }
 
 async function playMostPlayedNow() {
   setQuickActionLoading("most");
-  await loadMostPlayed();
+  await loadMostPlayed({ render: false });
   state.shuffleEnabled = true;
   setShuffleUI();
   if (!queueAndPlayTracks(state.mostPlayedSongs, { shuffleStart: true })) {
