@@ -768,6 +768,12 @@ function updateFavoriteButton(track) {
   btnFavoriteSong.textContent = isStarred ? "❤ Favorita" : "♡ Favorita";
 }
 
+function updateNowActionButtons(track) {
+  const hasTrack = !!(track && track.id);
+  btnAlbums.classList.toggle("isMuted", !hasTrack);
+  btnSongs.classList.toggle("isMuted", !hasTrack);
+}
+
 function setNow(track) {
   if (!track) {
     nowTitle.textContent = "Nada reproduciendo";
@@ -776,6 +782,7 @@ function setNow(track) {
     nowBg.style.opacity = "0";
     nowBg.style.removeProperty("--cover-url");
     updateFavoriteButton(null);
+    updateNowActionButtons(null);
     return;
   }
   nowTitle.textContent = track.title || "-";
@@ -793,6 +800,7 @@ function setNow(track) {
     nowBg.style.removeProperty("--cover-url");
   }
   updateFavoriteButton(track);
+  updateNowActionButtons(track);
 
   if ("mediaSession" in navigator) {
     const art = coverId ? coverUrl(state.server, state.auth, coverId, COVER_SIZE_NOW) : null;
