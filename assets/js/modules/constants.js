@@ -17,13 +17,11 @@ export const DEFAULTS = {
   listPaneSide: "right",
   rememberCreds: false,
   quality: "low",
-  themeMode: "auto",
+  themeMode: "day",
   autoTheme: {
     timeZone: "UTC",
     dayStart: "07:00",
     nightStart: "19:00",
-    cityKey: "",
-    lat: null,
-    lon: null,
+    configured: false,
   },
 };

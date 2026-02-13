@@ -33,28 +33,6 @@ const MOST_PLAYED_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const COVER_FAIL_RETRY_MS = 30 * 1000;
 const COVER_CACHE_MAX_ITEMS = 1200;
 
-const TIMEZONE_REFERENCE_CITIES = {
-  "Atlantic/Canary": { key: "las_palmas", label: "Las Palmas", lat: 28.1235, lon: -15.4363 },
-  "Europe/Madrid": { key: "madrid", label: "Madrid", lat: 40.4168, lon: -3.7038 },
-  "Europe/London": { key: "london", label: "London", lat: 51.5074, lon: -0.1278 },
-  "Europe/Paris": { key: "paris", label: "Paris", lat: 48.8566, lon: 2.3522 },
-  "Europe/Berlin": { key: "berlin", label: "Berlin", lat: 52.52, lon: 13.405 },
-  "America/New_York": { key: "new_york", label: "New York", lat: 40.7128, lon: -74.006 },
-  "America/Chicago": { key: "chicago", label: "Chicago", lat: 41.8781, lon: -87.6298 },
-  "America/Denver": { key: "denver", label: "Denver", lat: 39.7392, lon: -104.9903 },
-  "America/Los_Angeles": { key: "los_angeles", label: "Los Angeles", lat: 34.0522, lon: -118.2437 },
-  "America/Mexico_City": { key: "mexico_city", label: "Mexico City", lat: 19.4326, lon: -99.1332 },
-  "America/Sao_Paulo": { key: "sao_paulo", label: "Sao Paulo", lat: -23.5505, lon: -46.6333 },
-  "America/Buenos_Aires": { key: "buenos_aires", label: "Buenos Aires", lat: -34.6037, lon: -58.3816 },
-  "Asia/Tokyo": { key: "tokyo", label: "Tokyo", lat: 35.6762, lon: 139.6503 },
-  "Asia/Seoul": { key: "seoul", label: "Seoul", lat: 37.5665, lon: 126.978 },
-  "Asia/Shanghai": { key: "shanghai", label: "Shanghai", lat: 31.2304, lon: 121.4737 },
-  "Asia/Singapore": { key: "singapore", label: "Singapore", lat: 1.3521, lon: 103.8198 },
-  "Asia/Kolkata": { key: "new_delhi", label: "New Delhi", lat: 28.6139, lon: 77.209 },
-  "Australia/Sydney": { key: "sydney", label: "Sydney", lat: -33.8688, lon: 151.2093 },
-  "Pacific/Auckland": { key: "auckland", label: "Auckland", lat: -36.8509, lon: 174.7645 },
-};
-
 const statusEl = document.getElementById("status");
 const btnEditServer = document.getElementById("btnEditServer");
 const btnWhatsNew = document.getElementById("btnWhatsNew");
@@ -145,7 +123,6 @@ const btnAddProfile = document.getElementById("btnAddProfile");
 
 const autoThemeModal = document.getElementById("autoThemeModal");
 const autoThemeTimezone = document.getElementById("autoThemeTimezone");
-const autoThemeCity = document.getElementById("autoThemeCity");
 const autoThemeDayStart = document.getElementById("autoThemeDayStart");
 const autoThemeNightStart = document.getElementById("autoThemeNightStart");
 const btnAutoThemeCancel = document.getElementById("btnAutoThemeCancel");
@@ -153,7 +130,6 @@ const btnAutoThemeSave = document.getElementById("btnAutoThemeSave");
 
 let filterTimer = null;
 let autoThemeTimer = null;
-let sunriseCache = { key: "", sunrise: null, sunset: null };
 let serverProbeTimer = null;
 let lastProbe = { url: "", state: "idle", kind: "idle" };
 const coverLoadCache = new Map();
@@ -238,8 +214,13 @@ function syncThemeButtons() {
   btnThemeNight.classList.toggle("active", mode === "night");
   btnThemeAuto.classList.toggle("active", mode === "auto");
   const autoCfg = getAutoThemeSettings();
-  const city = autoCfg.cityKey || "sin ciudad";
-  themeAutoHint.textContent = `Auto: ${autoCfg.timeZone || "UTC"} · ${city}`;
+  if (mode === "auto") {
+    themeAutoHint.hidden = false;
+    themeAutoHint.textContent = `Auto: ${autoCfg.timeZone || "UTC"}`;
+  } else {
+    themeAutoHint.hidden = true;
+    themeAutoHint.textContent = "";
+  }
 }
 
 function getTimeZonesList() {
@@ -328,17 +309,6 @@ function parseTimeToMinutes(value, fallback) {
   return h * 60 + m;
 }
 
-function getDateInTimeZone(date, timeZone) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return `${map.year}-${map.month}-${map.day}`;
-}
-
 function getMinutesInTimeZone(date, timeZone) {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone,
@@ -348,29 +318,6 @@ function getMinutesInTimeZone(date, timeZone) {
   }).formatToParts(date);
   const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return Number(map.hour || 0) * 60 + Number(map.minute || 0);
-}
-
-async function getSunriseSunset({ lat, lon, timeZone }) {
-  if (!Number.isFinite(lat) || !Number.isFinite(lon) || !timeZone) return null;
-  const dateStr = getDateInTimeZone(new Date(), timeZone);
-  const key = `${lat}:${lon}:${dateStr}`;
-  if (sunriseCache.key === key && sunriseCache.sunrise && sunriseCache.sunset) {
-    return { sunrise: sunriseCache.sunrise, sunset: sunriseCache.sunset };
-  }
-  try {
-    const query = new URLSearchParams({ lat: String(lat), lng: String(lon), date: dateStr, formatted: "0" });
-    const response = await fetch(`https://api.sunrise-sunset.org/json?${query.toString()}`);
-    if (!response.ok) return null;
-    const json = await response.json();
-    if (!json?.results?.sunrise || !json?.results?.sunset) return null;
-    const sunrise = new Date(json.results.sunrise);
-    const sunset = new Date(json.results.sunset);
-    if (!Number.isFinite(sunrise.getTime()) || !Number.isFinite(sunset.getTime())) return null;
-    sunriseCache = { key, sunrise, sunset };
-    return { sunrise, sunset };
-  } catch {
-    return null;
-  }
 }
 
 async function applyThemeMode({ showAutoInfo = false } = {}) {
@@ -388,16 +335,6 @@ async function applyThemeMode({ showAutoInfo = false } = {}) {
 
   const cfg = getAutoThemeSettings();
   const tz = cfg.timeZone || "UTC";
-
-  if (Number.isFinite(cfg.lat) && Number.isFinite(cfg.lon)) {
-    const sun = await getSunriseSunset({ lat: cfg.lat, lon: cfg.lon, timeZone: tz });
-    if (sun) {
-      const now = Date.now();
-      applyTheme(now >= sun.sunrise.getTime() && now < sun.sunset.getTime() ? "light" : "dark");
-      syncThemeButtons();
-      return;
-    }
-  }
 
   const nowMinutes = getMinutesInTimeZone(new Date(), tz);
   const dayStart = parseTimeToMinutes(cfg.dayStart, 7 * 60);
@@ -492,7 +429,7 @@ function setAppHeight() {
 function applyListPaneSide(side) {
   if (!playerGrid || !btnPaneSide) return;
   playerGrid.dataset.listPane = side;
-  btnPaneSide.textContent = side === "right" ? "Listas: Der" : "Listas: Izq";
+  btnPaneSide.textContent = side === "right" ? "Dercha" : "Izquierda";
 }
 
 function renderProfiles() {
@@ -1564,27 +1501,8 @@ function fillAutoThemeModal() {
     autoThemeTimezone.appendChild(option);
   }
   autoThemeTimezone.value = getTimeZoneOptionFallback(zones, cfg.timeZone);
-  refreshAutoThemeCityOptions(autoThemeTimezone.value, cfg.cityKey);
   autoThemeDayStart.value = cfg.dayStart || "07:00";
   autoThemeNightStart.value = cfg.nightStart || "19:00";
-}
-
-function refreshAutoThemeCityOptions(timeZone, selectedKey) {
-  autoThemeCity.innerHTML = "";
-  const none = document.createElement("option");
-  none.value = "";
-  none.textContent = "Sin ciudad (usar horario)";
-  autoThemeCity.appendChild(none);
-
-  const ref = TIMEZONE_REFERENCE_CITIES[timeZone];
-  if (ref) {
-    const option = document.createElement("option");
-    option.value = ref.key;
-    option.textContent = ref.label;
-    autoThemeCity.appendChild(option);
-  }
-
-  if (selectedKey) autoThemeCity.value = selectedKey;
 }
 
 function openAutoThemeModal() {
@@ -2049,6 +1967,11 @@ function wireEvents() {
     scheduleAutoThemeRecheck();
   });
   btnThemeAuto.addEventListener("click", () => {
+    const cfg = getAutoThemeSettings();
+    if (!cfg.configured) {
+      openAutoThemeModal();
+      return;
+    }
     setThemeMode("auto");
     applyThemeMode({ showAutoInfo: true }).catch(() => {
       // ignore
@@ -2076,21 +1999,14 @@ function wireEvents() {
     setStatus("Introduce credenciales del nuevo usuario.");
   });
 
-  autoThemeTimezone.addEventListener("change", () => {
-    refreshAutoThemeCityOptions(autoThemeTimezone.value, "");
-  });
   btnAutoThemeCancel.addEventListener("click", () => closeAutoThemeModal());
   btnAutoThemeSave.addEventListener("click", () => {
     const tz = autoThemeTimezone.value || "UTC";
-    const cityKey = autoThemeCity.value || "";
-    const ref = TIMEZONE_REFERENCE_CITIES[tz];
     const settings = {
       timeZone: tz,
-      cityKey,
-      lat: cityKey && ref && ref.key === cityKey ? ref.lat : null,
-      lon: cityKey && ref && ref.key === cityKey ? ref.lon : null,
       dayStart: autoThemeDayStart.value || "07:00",
       nightStart: autoThemeNightStart.value || "19:00",
+      configured: true,
     };
     setAutoThemeSettings(settings);
     setThemeMode("auto");

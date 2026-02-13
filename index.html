@@ -218,11 +218,11 @@
               <button class="segBtn" id="btnThemeAuto">Auto</button>
               <button class="ghostBtn" id="btnThemeAutoConfig" title="Configurar auto">Configurar</button>
             </div>
-            <div class="menuHint mono" id="themeAutoHint"></div>
+            <div class="menuHint mono" id="themeAutoHint" hidden></div>
           </div>
           <div class="menuRow">
             <div class="menuLabel">Panel listas</div>
-            <button class="ghostBtn" id="btnPaneSide" title="Cambiar posición de listas">Listas: Der</button>
+            <button class="ghostBtn" id="btnPaneSide" title="Cambiar posición de listas">Dercha</button>
           </div>
           <div class="menuRow">
             <div class="menuLabel">Usuario</div>
@@ -251,21 +251,23 @@
       <section class="card modalCard autoThemeCard">
         <div class="topBar">
           <div class="pill">Tema automático</div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <button class="ghostBtn" id="btnAutoThemeCancel">Cancelar</button>
-            <button class="ghostBtn" id="btnAutoThemeSave">Guardar</button>
-          </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="ghostBtn" id="btnAutoThemeCancel">Cancelar</button>
+          <button class="ghostBtn" id="btnAutoThemeSave">Guardar</button>
         </div>
-        <label for="autoThemeTimezone">Zona horaria</label>
-        <select id="autoThemeTimezone"></select>
-        <label for="autoThemeCity">Ciudad de referencia (opcional)</label>
-        <select id="autoThemeCity"></select>
-        <label for="autoThemeDayStart">Inicio de día (fallback)</label>
+      </div>
+      <label for="autoThemeTimezone">Zona horaria</label>
+      <select id="autoThemeTimezone"></select>
+      <div class="autoTimeGridLabels">
+        <label for="autoThemeDayStart">Día</label>
+        <label for="autoThemeNightStart">Noche</label>
+      </div>
+      <div class="autoTimeGridInputs">
         <input id="autoThemeDayStart" type="time" value="07:00" />
-        <label for="autoThemeNightStart">Inicio de noche (fallback)</label>
         <input id="autoThemeNightStart" type="time" value="19:00" />
-      </section>
-    </div>
+      </div>
+    </section>
+  </div>
 
     <script type="module" src="./assets/js/app.js"></script>
   </body>
