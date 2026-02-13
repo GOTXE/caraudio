@@ -834,14 +834,18 @@ function syncSongsButton() {
   btnSongs.textContent = state.queue.length ? `Canciones (${state.queue.length})` : "Canciones";
 }
 
-function queueAndPlayTracks(tracks) {
+function queueAndPlayTracks(tracks, options) {
+  const opts = options || {};
   const list = markSongsStarred((tracks || []).map((track) => toTrack(track)));
   state.queue = list;
+  if (opts.shuffleStart && state.queue.length > 1) {
+    shuffleArray(state.queue);
+  }
   state.queueIndex = 0;
   state.randomMode = false;
   syncSongsButton();
   renderSongMenu();
-  if (state.shuffleEnabled) shuffleQueue(true);
+  if (state.shuffleEnabled && !opts.shuffleStart) shuffleQueue(true);
   if (state.queue.length) {
     playIndex(0);
     return true;
@@ -1059,7 +1063,9 @@ async function playFavoritesNow() {
   const songs = sub.starred2?.song || [];
   state.favoriteSongs = markSongsStarred(mapSongsToQueue(songs));
   state.favoriteSongsFiltered = state.favoriteSongs;
-  if (!queueAndPlayTracks(state.favoriteSongs)) {
+  state.shuffleEnabled = true;
+  setShuffleUI();
+  if (!queueAndPlayTracks(state.favoriteSongs, { shuffleStart: true })) {
     setStatus("No hay favoritas para reproducir.", "bad");
     return;
   }
@@ -1155,7 +1161,9 @@ async function loadMostPlayed() {
 
 async function playMostPlayedNow() {
   await loadMostPlayed();
-  if (!queueAndPlayTracks(state.mostPlayedSongs)) {
+  state.shuffleEnabled = true;
+  setShuffleUI();
+  if (!queueAndPlayTracks(state.mostPlayedSongs, { shuffleStart: true })) {
     setStatus("No hay canciones en más reproducidas.", "bad");
     return;
   }
