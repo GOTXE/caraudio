@@ -201,3 +201,21 @@ export function coverUrl(server, auth, id, size = 256) {
 export function streamUrl(server, auth, id) {
   return buildRestUrl(server, "stream", { ...baseParams(auth), id });
 }
+
+export async function star(server, auth, id) {
+  return restJson(server, auth, "star", { id });
+}
+
+export async function unstar(server, auth, id) {
+  return restJson(server, auth, "unstar", { id });
+}
+
+export async function getStarred2(server, auth) {
+  return restJson(server, auth, "getStarred2", {});
+}
+
+export async function scrobble(server, auth, id, { submission = false, time } = {}) {
+  const payload = { id, submission: submission ? "true" : "false" };
+  if (Number.isFinite(time) && time > 0) payload.time = Math.floor(time);
+  return restJson(server, auth, "scrobble", payload);
+}
