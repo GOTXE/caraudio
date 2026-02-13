@@ -192,6 +192,7 @@ let state = {
   scrobbleNowSent: false,
   scrobbleSubmissionSent: false,
   mostPlayedLoading: false,
+  nowCoverRequestId: 0,
 };
 
 function setStatus(text, kind) {
@@ -781,13 +782,56 @@ function updateNowActionButtons(track) {
   btnSongs.classList.toggle("isMuted", !hasTrack);
 }
 
+function clearNowCover() {
+  nowCover.src = DEFAULT_COVER;
+  nowBg.style.opacity = "0";
+  nowBg.style.removeProperty("--cover-url");
+}
+
+function getTrackCoverIds(track) {
+  const out = [];
+  if (track?.coverArt) out.push(track.coverArt);
+  if (track?.albumId) out.push(track.albumId);
+  return [...new Set(out)];
+}
+
+function preloadImage(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
+}
+
+async function applyTrackCover(track) {
+  const requestId = ++state.nowCoverRequestId;
+  const ids = getTrackCoverIds(track);
+  if (!ids.length) {
+    clearNowCover();
+    return null;
+  }
+
+  for (const id of ids) {
+    const src = coverUrl(state.server, state.auth, id, COVER_SIZE_NOW);
+    const ok = await preloadImage(src);
+    if (!ok) continue;
+    if (requestId !== state.nowCoverRequestId) return null;
+    nowCover.src = src;
+    nowBg.style.setProperty("--cover-url", `url("${src}")`);
+    nowBg.style.opacity = "1";
+    return src;
+  }
+
+  if (requestId === state.nowCoverRequestId) clearNowCover();
+  return null;
+}
+
 function setNow(track) {
   if (!track) {
     nowTitle.textContent = "Nada reproduciendo";
     nowSub.textContent = "-";
-    nowCover.src = DEFAULT_COVER;
-    nowBg.style.opacity = "0";
-    nowBg.style.removeProperty("--cover-url");
+    clearNowCover();
     updateFavoriteButton(null);
     updateNowActionButtons(null);
     return;
@@ -796,16 +840,9 @@ function setNow(track) {
   nowSub.textContent = `${track.artist || ""}${track.album ? " · " + track.album : ""}`;
   const coverId = track.coverArt || track.albumId || null;
   state.lastCoverId = coverId;
-  if (coverId) {
-    const coverSrc = coverUrl(state.server, state.auth, coverId, COVER_SIZE_NOW);
-    nowCover.src = coverSrc;
-    nowBg.style.setProperty("--cover-url", `url("${coverSrc}")`);
-    nowBg.style.opacity = "1";
-  } else {
-    nowCover.src = DEFAULT_COVER;
-    nowBg.style.opacity = "0";
-    nowBg.style.removeProperty("--cover-url");
-  }
+  applyTrackCover(track).catch(() => {
+    clearNowCover();
+  });
   updateFavoriteButton(track);
   updateNowActionButtons(track);
 
@@ -1638,6 +1675,11 @@ async function toggleFavoriteCurrentTrack() {
 }
 
 function wireEvents() {
+  nowCover.addEventListener("error", () => {
+    if ((nowCover.getAttribute("src") || "").endsWith(DEFAULT_COVER)) return;
+    clearNowCover();
+  });
+
   setAppHeight();
   window.addEventListener("resize", setAppHeight);
   window.visualViewport?.addEventListener("resize", setAppHeight);
