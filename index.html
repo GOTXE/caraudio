@@ -6,7 +6,7 @@
     <meta name="color-scheme" content="dark light" />
     <meta name="app-version" content="v0.1.0-alpha.5" />
     <meta name="update-repo" content="GOTXE/caraudio" />
-    <title>CarPlayer · Navidrome</title>
+    <title>Music Skin ND</title>
     <link rel="stylesheet" href="./assets/css/styles.css" />
   </head>
   <body>
@@ -14,17 +14,18 @@
       <header>
         <div class="title">
           <h1>
-            CarPlayer · Navidrome
-            <button class="iconBtn" id="themeToggle" aria-label="Cambiar tema" title="Cambiar tema">☾</button>
+            Music Skin ND
           </h1>
-          <div class="sub">UI para coche.</div>
+          <div class="sub">Skin local para Navidrome.</div>
         </div>
         <div class="headerCenter" aria-label="Versión">
           <div class="pill mono" id="verCurrent" title="Versión actual"></div>
           <div class="pill pillGlow mono" id="verLatest" title="Hay una versión nueva disponible" hidden></div>
           <button class="ghostBtn whatsNewBtn" id="btnWhatsNew" title="Ver novedades">Novedades</button>
         </div>
-        <div class="headerRight"></div>
+        <div class="headerRight">
+          <button class="iconBtn" id="btnOpenMenu" aria-label="Abrir menú" title="Menú">☰</button>
+        </div>
       </header>
 
       <!-- LOGIN -->
@@ -70,10 +71,14 @@
                 <button class="segBtn" id="btnViewGenres">Géneros</button>
                 <button class="segBtn" id="btnViewAlbums">Álbumes</button>
                 <button class="segBtn" id="btnViewPlaylists">Listas</button>
+                <button class="segBtn" id="btnViewFavorites">Favoritas</button>
+                <button class="segBtn" id="btnViewMostPlayed">Más reproducidas</button>
               </div>
-              <button class="segBtn iconOnly" id="btnClearArtists" title="Limpiar" aria-label="Limpiar">🧹</button>
             </div>
-            <input id="artistFilter" placeholder="Filtrar artista…" />
+            <div class="filterWrap">
+              <input id="artistFilter" placeholder="Filtrar artista…" />
+              <button class="segBtn iconOnly filterClearBtn" id="btnClearArtists" title="Limpiar" aria-label="Limpiar">🧹</button>
+            </div>
             <div class="artistsList" id="artistsList"></div>
           </section>
 
@@ -85,7 +90,7 @@
                   <button class="ghostBtn" id="btnAlbums" disabled>Álbumes</button>
                   <button class="ghostBtn" id="btnSongs" disabled>Canciones</button>
                 </div>
-                <button class="ghostBtn" id="btnPaneSide" title="Cambiar posición de listas">Listas: Der</button>
+                <button class="ghostBtn" id="btnFavoriteSong" title="Marcar favorita" aria-label="Favorita">♡ Favorita</button>
               </div>
 
               <div class="nowContent">
@@ -103,14 +108,14 @@
               </div>
 
               <audio id="player" preload="none"></audio>
+              <div class="timeRow">
+                <span class="mono" id="tNow">0:00</span>
+                <span class="mono" id="tDur">0:00</span>
+              </div>
               <div class="progressWrap" aria-label="Progreso">
                 <div class="progressBuf" id="bufBar"></div>
                 <div class="progressNow" id="nowBar"></div>
                 <input class="seek" id="seek" type="range" min="0" max="1000" value="0" />
-              </div>
-              <div class="timeRow">
-                <span class="mono" id="tNow">0:00</span>
-                <span class="mono" id="tDur">0:00</span>
               </div>
             </section>
 
@@ -127,8 +132,6 @@
         </div>
       </div>
     </div>
-
-    <button class="dangerFab" id="btnLogout">Salir</button>
 
     <!-- Modal álbumes -->
     <div class="modal" id="albumsModal" hidden>
@@ -194,6 +197,71 @@
           <button class="ghostBtn" id="btnCloseWhatsNew">Entendido</button>
         </div>
         <div class="modalList whatsNewList" id="whatsNewList"></div>
+      </section>
+    </div>
+
+    <!-- Modal menú -->
+    <div class="modal modalTop" id="menuModal" hidden>
+      <section class="card modalCard menuCard">
+        <div class="topBar">
+          <div class="pill">Ajustes</div>
+          <button class="ghostBtn" id="btnCloseMenu">Cerrar</button>
+        </div>
+        <div class="menuRows">
+          <div class="menuRow">
+            <div class="menuLabel">Tema</div>
+            <div class="menuThemeOptions">
+              <button class="segBtn" id="btnThemeDay">Día</button>
+              <button class="segBtn" id="btnThemeNight">Noche</button>
+              <button class="segBtn" id="btnThemeAuto">Auto</button>
+              <button class="ghostBtn" id="btnThemeAutoConfig" title="Configurar auto">Configurar</button>
+            </div>
+            <div class="menuHint mono" id="themeAutoHint"></div>
+          </div>
+          <div class="menuRow">
+            <div class="menuLabel">Panel listas</div>
+            <button class="ghostBtn" id="btnPaneSide" title="Cambiar posición de listas">Listas: Der</button>
+          </div>
+          <div class="menuRow">
+            <div class="menuLabel">Usuario</div>
+            <button class="ghostBtn" id="btnOpenProfiles" title="Cambiar usuario">Cambiar usuario</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal perfiles -->
+    <div class="modal modalTop" id="profilesModal" hidden>
+      <section class="card modalCard">
+        <div class="topBar">
+          <div class="pill">Perfiles</div>
+          <button class="ghostBtn" id="btnCloseProfiles">Cerrar</button>
+        </div>
+        <div class="modalList" id="profilesList"></div>
+        <div class="topBar">
+          <button class="ghostBtn" id="btnAddProfile">Añadir nuevo perfil</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal tema auto -->
+    <div class="modal modalTop" id="autoThemeModal" hidden>
+      <section class="card modalCard" style="max-height: min(520px, 100%)">
+        <div class="topBar">
+          <div class="pill">Tema automático</div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <button class="ghostBtn" id="btnAutoThemeCancel">Cancelar</button>
+            <button class="ghostBtn" id="btnAutoThemeSave">Guardar</button>
+          </div>
+        </div>
+        <label for="autoThemeTimezone">Zona horaria</label>
+        <select id="autoThemeTimezone"></select>
+        <label for="autoThemeCity">Ciudad de referencia (opcional)</label>
+        <select id="autoThemeCity"></select>
+        <label for="autoThemeDayStart">Inicio de día (fallback)</label>
+        <input id="autoThemeDayStart" type="time" value="07:00" />
+        <label for="autoThemeNightStart">Inicio de noche (fallback)</label>
+        <input id="autoThemeNightStart" type="time" value="19:00" />
       </section>
     </div>
 
