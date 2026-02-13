@@ -40,15 +40,37 @@ export function setThemeMode(mode) {
   return next;
 }
 
+function normalizeAutoThemeSettings(input, hasStoredValue = false) {
+  const source = input && typeof input === "object" ? input : {};
+  const timeZone = typeof source.timeZone === "string" && source.timeZone.trim() ? source.timeZone.trim() : DEFAULTS.autoTheme.timeZone;
+  const dayStart = typeof source.dayStart === "string" && source.dayStart.trim() ? source.dayStart.trim() : DEFAULTS.autoTheme.dayStart;
+  const nightStart = typeof source.nightStart === "string" && source.nightStart.trim() ? source.nightStart.trim() : DEFAULTS.autoTheme.nightStart;
+
+  let configured = false;
+  if (typeof source.configured === "boolean") {
+    configured = source.configured;
+  } else if (hasStoredValue) {
+    // Compatibilidad: cualquier configuración previa se considera "configurada".
+    configured = true;
+  }
+
+  return {
+    timeZone,
+    dayStart,
+    nightStart,
+    configured,
+  };
+}
+
 export function getAutoThemeSettings() {
   const raw = localStorage.getItem(STORAGE_KEYS.autoTheme);
   if (!raw) return { ...DEFAULTS.autoTheme };
   try {
     const parsed = JSON.parse(raw);
-    return {
-      ...DEFAULTS.autoTheme,
-      ...(parsed || {}),
-    };
+    const normalized = normalizeAutoThemeSettings(parsed, true);
+    // Migra en caliente configuraciones heredadas (cityKey/lat/lon u otras claves antiguas).
+    localStorage.setItem(STORAGE_KEYS.autoTheme, JSON.stringify(normalized));
+    return normalized;
   } catch {
     return { ...DEFAULTS.autoTheme };
   }
@@ -56,10 +78,7 @@ export function getAutoThemeSettings() {
 
 export function setAutoThemeSettings(input) {
   const current = getAutoThemeSettings();
-  const next = {
-    ...current,
-    ...(input || {}),
-  };
+  const next = normalizeAutoThemeSettings({ ...current, ...(input || {}) }, true);
   localStorage.setItem(STORAGE_KEYS.autoTheme, JSON.stringify(next));
   return next;
 }
