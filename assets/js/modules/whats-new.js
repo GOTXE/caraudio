@@ -3,15 +3,17 @@
 // (Se actualiza normalmente al preparar el PR/release que entra en produccion.)
 const WHATS_NEW_BY_VERSION = {
   "v0.1.0-alpha.6": [
-    "Interfaz: nueva cabecera con branding Music Skin ND y usuario activo en header.",
-    "Interfaz: panel de ajustes centralizado para tema, posicion de listas y cambio de usuario.",
-    "Tema y visual: selector de tema con modos Dia, Noche y Auto.",
-    "Tema y visual: modo Auto configurable por zona horaria y ciudad de referencia opcional.",
-    "Reproduccion: boton de favorita sobre la pista en curso y filtro de canciones favoritas.",
-    "Reproduccion: nuevo filtro de canciones mas reproducidas del usuario actual.",
-    "Integracion Navidrome: reproducciones notificadas con scrobble para actualizar estadisticas.",
-    "Rendimiento: caratulas optimizadas para mejorar velocidad de carga.",
-    "Usabilidad: auto-scroll de cola para mantener visible la cancion activa.",
+    "Interfaz: rebranding a Music Skin ND y cabecera renovada con acceso a Novedades.",
+    "Ajustes: menu hamburguesa con tema (Dia, Noche, Auto), panel de listas y cambio de usuario.",
+    "Tema Auto: configuracion simplificada por zona horaria y horario Dia/Noche (sin ciudad), con migracion de ajustes antiguos.",
+    "Login: el menu de ajustes ya no se muestra en la pantalla de acceso.",
+    "Reproduccion: acciones rapidas de Mas reproducidas y Favoritas en el panel del reproductor.",
+    "Reproduccion: Favoritas y Mas reproducidas arrancan siempre en aleatorio.",
+    "Favorita actual: nuevo boton de corazon flotante junto a la portada (relleno cuando es favorita).",
+    "Listados: las acciones rapidas ya no alteran el contenido del panel lateral (solo mandan en reproduccion).",
+    "Portadas: carga optimizada, fallback propio de la UI y reintentos automaticos si la portada tarda en aparecer.",
+    "Rendimiento: cache en memoria para portadas y mejora de tiempos en listas/modales.",
+    "Cola: correccion de resaltado/auto-scroll para mantener visible la cancion en listas largas.",
   ],
   "v0.1.0-alpha.5": [
     "Controles reordenados: Atras, Play/Pause, Adelante, Aleatorio, Reproducir todo.",
