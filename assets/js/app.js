@@ -26,6 +26,7 @@ import { checkForUpdate, escapeHtml } from "./modules/ui.js";
 import { coverUrl, getStarred2, makeAuth, restJson, scrobble, star, streamUrl, unstar } from "./modules/navidrome.js";
 import { formatTime, mapSongsToQueue, toTrack } from "./modules/player.js";
 import { getWhatsNewForVersion, getWhatsNewSections } from "./modules/whats-new.js";
+import { isDebugEnabled, publishDebugEvent, setDebugEnabled } from "./modules/debug-bus.js";
 
 const DEFAULT_COVER = "./assets/img/music-player.svg";
 const COVER_SIZE_LIST = 96;
@@ -115,6 +116,8 @@ const btnThemeNight = document.getElementById("btnThemeNight");
 const btnThemeAuto = document.getElementById("btnThemeAuto");
 const btnThemeAutoConfig = document.getElementById("btnThemeAutoConfig");
 const themeAutoHint = document.getElementById("themeAutoHint");
+const btnDebugToggle = document.getElementById("btnDebugToggle");
+const btnOpenDebugPage = document.getElementById("btnOpenDebugPage");
 
 const profilesModal = document.getElementById("profilesModal");
 const btnOpenProfiles = document.getElementById("btnOpenProfiles");
@@ -182,6 +185,15 @@ let state = {
 function setStatus(text, kind) {
   statusEl.textContent = text;
   statusEl.className = "status" + (kind ? ` ${kind}` : "");
+  if (kind === "bad" || kind === "warn") {
+    publishDebugEvent({
+      kind: "app.status",
+      source: "ui",
+      level: kind === "bad" ? "error" : "warn",
+      summary: String(text || ""),
+      details: { kind: kind || "" },
+    });
+  }
 }
 
 function setBar(el, ratio) {
@@ -222,6 +234,15 @@ function syncThemeButtons() {
   } else {
     themeAutoHint.hidden = true;
     themeAutoHint.textContent = "";
+  }
+}
+
+function syncDebugButtons() {
+  const enabled = isDebugEnabled();
+  if (btnDebugToggle) btnDebugToggle.textContent = enabled ? "Debug: ON" : "Debug: OFF";
+  if (btnOpenDebugPage) {
+    btnOpenDebugPage.disabled = !enabled;
+    btnOpenDebugPage.classList.toggle("isMuted", !enabled);
   }
 }
 
@@ -849,9 +870,29 @@ function preloadNowCover(url) {
     const img = new Image();
     img.onload = () => {
       const isFallback = isLikelyNavidromeFallbackImage(img);
+      publishDebugEvent({
+        kind: isFallback ? "cover.fallback" : "cover.load",
+        source: "ui",
+        level: isFallback ? "warn" : "info",
+        summary: isFallback ? "Cover detectada como fallback Navidrome" : "Cover now-playing cargada",
+        details: {
+          url,
+          width: img.naturalWidth || 0,
+          height: img.naturalHeight || 0,
+        },
+      });
       resolve({ ok: !isFallback, fallback: isFallback });
     };
-    img.onerror = () => resolve({ ok: false, fallback: false });
+    img.onerror = () => {
+      publishDebugEvent({
+        kind: "cover.error",
+        source: "ui",
+        level: "warn",
+        summary: "Error al cargar cover now-playing",
+        details: { url },
+      });
+      resolve({ ok: false, fallback: false });
+    };
     img.src = url;
   });
 }
@@ -859,7 +900,15 @@ function preloadNowCover(url) {
 function applyDeferredCover(imgEl, coverId, size) {
   if (!imgEl) return;
   imgEl.src = DEFAULT_COVER;
-  if (!coverId) return;
+  if (!coverId) {
+    publishDebugEvent({
+      kind: "cover.fallback",
+      source: "ui",
+      summary: "Sin coverId en listado",
+      details: { size },
+    });
+    return;
+  }
   const src = coverUrl(state.server, state.auth, coverId, size);
   const cacheKey = makeCoverCacheKey(coverId, size);
   const cached = getCoverCacheState(cacheKey);
@@ -872,10 +921,28 @@ function applyDeferredCover(imgEl, coverId, size) {
   probe.onload = () => {
     setCoverCacheState(cacheKey, true);
     imgEl.src = src;
+    publishDebugEvent({
+      kind: "cover.load",
+      source: "ui",
+      summary: "Cover listado cargada",
+      details: {
+        coverId,
+        size,
+        width: probe.naturalWidth || 0,
+        height: probe.naturalHeight || 0,
+      },
+    });
   };
   probe.onerror = () => {
     setCoverCacheState(cacheKey, false);
     imgEl.src = DEFAULT_COVER;
+    publishDebugEvent({
+      kind: "cover.error",
+      source: "ui",
+      level: "warn",
+      summary: "Error cargando cover listado",
+      details: { coverId, size, src },
+    });
   };
   probe.src = src;
 }
@@ -1063,6 +1130,24 @@ async function playIndex(idx) {
   renderSongMenu();
   maybePrefetchRandom();
   const url = streamUrl(state.server, state.auth, track.id);
+  publishDebugEvent({
+    kind: "player.event",
+    source: "player",
+    summary: `Play index ${idx + 1}`,
+    details: {
+      queueLength: state.queue.length,
+      trackId: track.id,
+      title: track.title || "",
+      artist: track.artist || "",
+      album: track.album || "",
+      duration: Number(track.duration || 0),
+      suffix: track.suffix || "",
+      bitRate: Number(track.bitRate || 0),
+      contentType: track.contentType || "",
+      transcodedContentType: track.transcodedContentType || "",
+      streamUrl: url,
+    },
+  });
   state.scrobbleTrackId = track.id;
   state.scrobbleNowSent = false;
   state.scrobbleSubmissionSent = false;
@@ -1655,6 +1740,16 @@ async function connectWithCredentials({ server, username, password, silent = fal
     return false;
   }
   if (!silent) setStatus("Conectando...");
+  publishDebugEvent({
+    kind: "app.event",
+    source: "auth",
+    summary: "Intento de conexión",
+    details: {
+      server: normalizedServer,
+      username: user,
+      remember: !!rememberCredsEl?.checked,
+    },
+  });
   btnConnect.disabled = true;
 
   const auth = makeAuth(user, password);
@@ -1676,8 +1771,28 @@ async function connectWithCredentials({ server, username, password, silent = fal
     showScreen("player");
     setViewMode("artists");
     renderProfiles();
+    publishDebugEvent({
+      kind: "app.event",
+      source: "auth",
+      summary: "Conexión OK",
+      details: {
+        server: normalizedServer,
+        username: user,
+      },
+    });
     return true;
   } catch (e) {
+    publishDebugEvent({
+      kind: "app.error",
+      source: "auth",
+      level: "error",
+      summary: "Error de conexión",
+      details: {
+        server: normalizedServer,
+        username: user,
+        error: String(e || "error"),
+      },
+    });
     if (!silent) setStatus(`Error: ${String(e)}`, "bad");
     return false;
   } finally {
@@ -1898,14 +2013,32 @@ function wireEvents() {
   });
 
   player.addEventListener("ended", () => {
+    publishDebugEvent({ kind: "player.event", source: "player", summary: "Evento ended", details: { index: state.queueIndex } });
     if (state.queueIndex + 1 < state.queue.length) playIndex(state.queueIndex + 1);
     updatePlayPauseUI();
   });
   player.addEventListener("play", () => {
+    publishDebugEvent({ kind: "player.event", source: "player", summary: "Evento play", details: { index: state.queueIndex } });
     setQuickActionLoading("");
     updatePlayPauseUI();
   });
-  player.addEventListener("pause", updatePlayPauseUI);
+  player.addEventListener("pause", () => {
+    publishDebugEvent({ kind: "player.event", source: "player", summary: "Evento pause", details: { index: state.queueIndex } });
+    updatePlayPauseUI();
+  });
+  player.addEventListener("error", () => {
+    publishDebugEvent({
+      kind: "player.error",
+      source: "player",
+      level: "error",
+      summary: "Error del elemento audio",
+      details: {
+        code: player.error?.code || 0,
+        message: player.error?.message || "",
+        src: player.currentSrc || player.src || "",
+      },
+    });
+  });
   player.addEventListener("timeupdate", updateProgress);
   player.addEventListener("progress", updateProgress);
   player.addEventListener("loadedmetadata", updateProgress);
@@ -1986,15 +2119,17 @@ function wireEvents() {
   btnViewGenres.addEventListener("click", () => setViewMode("genres").catch((e) => setStatus(String(e), "bad")));
   btnViewAlbums.addEventListener("click", () => setViewMode("albums").catch((e) => setStatus(String(e), "bad")));
   btnViewPlaylists.addEventListener("click", () => setViewMode("playlists").catch((e) => setStatus(String(e), "bad")));
-  btnPlayMostPlayed.addEventListener("click", async () => {
-    try {
-      setStatus("Cargando más reproducidas...");
-      await playMostPlayedNow();
-    } catch (e) {
-      setQuickActionLoading("");
-      setStatus(`Error: ${String(e)}`, "bad");
-    }
-  });
+  if (btnPlayMostPlayed && !btnPlayMostPlayed.hidden) {
+    btnPlayMostPlayed.addEventListener("click", async () => {
+      try {
+        setStatus("Cargando más reproducidas...");
+        await playMostPlayedNow();
+      } catch (e) {
+        setQuickActionLoading("");
+        setStatus(`Error: ${String(e)}`, "bad");
+      }
+    });
+  }
   btnPlayFavorites.addEventListener("click", async () => {
     try {
       setStatus("Cargando favoritas...");
@@ -2007,6 +2142,7 @@ function wireEvents() {
 
   btnOpenMenu.addEventListener("click", () => {
     syncThemeButtons();
+    syncDebugButtons();
     menuModal.hidden = false;
   });
   btnCloseMenu.addEventListener("click", () => {
@@ -2044,6 +2180,16 @@ function wireEvents() {
   });
   btnThemeAutoConfig.addEventListener("click", () => {
     openAutoThemeModal();
+  });
+
+  btnDebugToggle?.addEventListener("click", () => {
+    setDebugEnabled(!isDebugEnabled());
+    syncDebugButtons();
+    setStatus(isDebugEnabled() ? "Debug activado." : "Debug desactivado.", "ok");
+  });
+  btnOpenDebugPage?.addEventListener("click", () => {
+    if (!isDebugEnabled()) return;
+    window.open("./debug.html", "_blank", "noopener");
   });
 
   btnOpenProfiles.addEventListener("click", () => {
@@ -2095,6 +2241,7 @@ function wireEvents() {
 
 function init() {
   migrateLegacyPreferences();
+  if (btnPlayMostPlayed) btnPlayMostPlayed.hidden = true;
   updateServerButton(getStoredServer());
 
   const remember = getRememberCreds();
@@ -2111,6 +2258,7 @@ function init() {
   });
   scheduleAutoThemeRecheck();
   syncThemeButtons();
+  syncDebugButtons();
 
   renderProfiles();
   showScreen("login");

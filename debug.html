@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Music Skin ND · Debug</title>
+    <style>
+      :root {
+        --bg: #0a0f18;
+        --panel: #101827;
+        --panel2: #1f2937;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --ok: #10b981;
+        --warn: #f59e0b;
+        --error: #ef4444;
+        --border: #334155;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        background: radial-gradient(900px 420px at 8% 0%, #0d2340, transparent 55%), var(--bg);
+        color: var(--text);
+      }
+      .wrap {
+        min-height: 100dvh;
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+        gap: 10px;
+        padding: 12px;
+      }
+      .bar, .filters {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        background: rgba(16, 24, 39, 0.88);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px;
+      }
+      .bar h1 {
+        margin: 0;
+        font-size: 16px;
+      }
+      .pill {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      button, input, select {
+        font: inherit;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 10px;
+        background: var(--panel2);
+      }
+      input { min-width: 240px; }
+      .ok { color: #052e1b; background: var(--ok); border-color: #059669; }
+      .warn { color: #2b1a00; background: var(--warn); border-color: #d97706; }
+      .error { color: #2b0000; background: var(--error); border-color: #dc2626; }
+      .list {
+        background: rgba(16, 24, 39, 0.88);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: auto;
+        padding: 8px;
+        display: grid;
+        gap: 8px;
+      }
+      .row {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--panel);
+        padding: 8px 10px;
+      }
+      .meta {
+        display: grid;
+        grid-template-columns: auto auto auto 1fr;
+        gap: 8px;
+        align-items: center;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .summary {
+        margin-top: 6px;
+        font-weight: 700;
+      }
+      details { margin-top: 6px; }
+      pre {
+        margin: 6px 0 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 12px;
+        color: #bfdbfe;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="bar">
+        <h1>Music Skin ND · Debug</h1>
+        <span class="pill" id="debugState">Debug: OFF</span>
+        <span class="pill" id="countLabel">0 eventos</span>
+        <button id="btnToggleDebug">Activar/Desactivar</button>
+        <button id="btnClear">Limpiar</button>
+        <button id="btnExport">Exportar JSON</button>
+      </div>
+      <div class="filters">
+        <select id="kindFilter">
+          <option value="all">Todo</option>
+          <option value="http">HTTP</option>
+          <option value="cover">Cover</option>
+          <option value="player">Player</option>
+          <option value="queue">Queue</option>
+        </select>
+        <select id="levelFilter">
+          <option value="all">Todos niveles</option>
+          <option value="info">Info</option>
+          <option value="warn">Warn</option>
+          <option value="error">Error</option>
+        </select>
+        <input id="textFilter" placeholder="Filtrar por texto..." />
+      </div>
+      <div class="list" id="eventsList"></div>
+    </div>
+    <script type="module" src="./assets/js/debug-view.js"></script>
+  </body>
+</html>

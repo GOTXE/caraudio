@@ -1,4 +1,5 @@
 import { normalizeServer } from "./storage.js";
+import { publishDebugEvent } from "./debug-bus.js";
 
 function randSalt(len = 16) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -174,18 +175,86 @@ export function buildRestUrl(server, viewName, params) {
 
 export async function restJson(server, auth, viewName, params) {
   const url = buildRestUrl(server, viewName, { ...baseParams(auth), ...(params || {}) });
-  const response = await fetch(url, { method: "GET" });
-  const text = await response.text();
+  const startedAt = typeof performance !== "undefined" && performance.now ? performance.now() : Date.now();
+  publishDebugEvent({
+    kind: "http.request",
+    source: "navidrome",
+    summary: `${viewName}`,
+    details: {
+      method: "GET",
+      url,
+      params: params || {},
+    },
+  });
+  let response;
+  let text = "";
+  try {
+    response = await fetch(url, { method: "GET" });
+    text = await response.text();
+  } catch (error) {
+    const elapsedMs = Math.round((typeof performance !== "undefined" && performance.now ? performance.now() : Date.now()) - startedAt);
+    publishDebugEvent({
+      kind: "http.error",
+      source: "navidrome",
+      level: "error",
+      summary: `${viewName} · Error de red`,
+      details: {
+        url,
+        elapsedMs,
+        error: String(error || "network error"),
+      },
+    });
+    throw error;
+  }
+  const elapsedMs = Math.round((typeof performance !== "undefined" && performance.now ? performance.now() : Date.now()) - startedAt);
+  publishDebugEvent({
+    kind: "http.response",
+    source: "navidrome",
+    level: response.ok ? "info" : "warn",
+    summary: `${viewName} · HTTP ${response.status}`,
+    details: {
+      url,
+      status: response.status,
+      ok: response.ok,
+      elapsedMs,
+      bytes: text.length,
+      contentType: response.headers.get("content-type") || "",
+      contentLength: response.headers.get("content-length") || "",
+    },
+  });
   let json;
   try {
     json = JSON.parse(text);
   } catch {
+    publishDebugEvent({
+      kind: "http.error",
+      source: "navidrome",
+      level: "error",
+      summary: `${viewName} · Respuesta no JSON`,
+      details: {
+        url,
+        status: response.status,
+        elapsedMs,
+      },
+    });
     throw new Error(`Respuesta no JSON (${response.status})`);
   }
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const sub = json["subsonic-response"];
   if (!sub) throw new Error("Respuesta Subsonic inválida");
-  if (sub.status === "failed") throw new Error(sub.error?.message || "Subsonic failed");
+  if (sub.status === "failed") {
+    publishDebugEvent({
+      kind: "http.error",
+      source: "navidrome",
+      level: "error",
+      summary: `${viewName} · Subsonic failed`,
+      details: {
+        url,
+        error: sub.error?.message || "Subsonic failed",
+      },
+    });
+    throw new Error(sub.error?.message || "Subsonic failed");
+  }
   return sub;
 }
 

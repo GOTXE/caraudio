@@ -14,6 +14,10 @@ export function toTrack(song) {
     albumId: song.albumId,
     duration: Number(song.duration || 0),
     coverArt: song.coverArt,
+    suffix: song.suffix || "",
+    bitRate: Number(song.bitRate || 0),
+    contentType: song.contentType || "",
+    transcodedContentType: song.transcodedContentType || "",
     starred: !!song.starred,
     playCount: Number(song.playCount || 0),
   };
