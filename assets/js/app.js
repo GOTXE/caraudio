@@ -144,6 +144,7 @@ let state = {
   selectedArtist: null,
   selectedArtistAlbums: [],
   artistAlbumsById: {},
+  albumCoverById: {},
   artistSongsById: {},
   selectedGenre: null,
   selectedGenreAlbums: [],
@@ -784,15 +785,73 @@ function startCoverRetry(track) {
 
 function getTrackCoverIds(track) {
   const out = [];
-  if (track?.coverArt) out.push(track.coverArt);
+  if (track?.albumCoverArt) out.push(track.albumCoverArt);
   return [...new Set(out)];
 }
 
-function preloadImage(url) {
+async function ensureAlbumCoverForTrack(track) {
+  if (!track || !track.albumId) {
+    track.albumCoverArt = null;
+    return null;
+  }
+  const albumId = String(track.albumId);
+  if (Object.prototype.hasOwnProperty.call(state.albumCoverById, albumId)) {
+    track.albumCoverArt = state.albumCoverById[albumId];
+    return track.albumCoverArt;
+  }
+  try {
+    const sub = await restJson(state.server, state.auth, "getAlbum", { id: albumId });
+    const coverId = sub.album?.coverArt ? String(sub.album.coverArt) : null;
+    state.albumCoverById[albumId] = coverId;
+    track.albumCoverArt = coverId;
+    return coverId;
+  } catch {
+    state.albumCoverById[albumId] = null;
+    track.albumCoverArt = null;
+    return null;
+  }
+}
+
+function getPixel(data, size, x, y) {
+  const idx = (Math.max(0, Math.min(size - 1, y)) * size + Math.max(0, Math.min(size - 1, x))) * 4;
+  return { r: data[idx], g: data[idx + 1], b: data[idx + 2] };
+}
+
+function isLikelyNavidromeFallbackImage(imageEl) {
+  try {
+    const size = 48;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+    ctx.drawImage(imageEl, 0, 0, size, size);
+    const data = ctx.getImageData(0, 0, size, size).data;
+
+    const tl = getPixel(data, size, 3, 3);
+    const center = getPixel(data, size, 24, 24);
+    const left = getPixel(data, size, 10, 24);
+    const top = getPixel(data, size, 24, 8);
+
+    const tlGray = Math.abs(tl.r - tl.g) < 18 && Math.abs(tl.g - tl.b) < 18 && tl.r >= 25 && tl.r <= 95;
+    const centerDark = center.r < 45 && center.g < 45 && center.b < 45;
+    const leftBlue = left.b > 120 && left.b - left.r > 30 && left.b - left.g > 18;
+    const topBlue = top.b > 120 && top.b - top.r > 30 && top.b - top.g > 18;
+
+    return tlGray && centerDark && leftBlue && topBlue;
+  } catch {
+    return false;
+  }
+}
+
+function preloadNowCover(url) {
   return new Promise((resolve) => {
     const img = new Image();
-    img.onload = () => resolve(true);
-    img.onerror = () => resolve(false);
+    img.onload = () => {
+      const isFallback = isLikelyNavidromeFallbackImage(img);
+      resolve({ ok: !isFallback, fallback: isFallback });
+    };
+    img.onerror = () => resolve({ ok: false, fallback: false });
     img.src = url;
   });
 }
@@ -824,6 +883,8 @@ function applyDeferredCover(imgEl, coverId, size) {
 async function applyTrackCover(track, options) {
   const opts = options || {};
   const requestId = opts.keepRequestId ? state.nowCoverRequestId : ++state.nowCoverRequestId;
+  await ensureAlbumCoverForTrack(track);
+  if (requestId !== state.nowCoverRequestId) return null;
   const ids = getTrackCoverIds(track);
   if (!ids.length) {
     clearNowCover();
@@ -840,7 +901,8 @@ async function applyTrackCover(track, options) {
     } else if (cached === false) {
       ok = false;
     } else {
-      ok = await preloadImage(src);
+      const probe = await preloadNowCover(src);
+      ok = probe.ok;
       setCoverCacheState(cacheKey, ok);
     }
     if (!ok) continue;
@@ -881,7 +943,7 @@ function setNow(track) {
   updateNowActionButtons(track);
 
   if ("mediaSession" in navigator) {
-    const art = track.coverArt ? coverUrl(state.server, state.auth, track.coverArt, COVER_SIZE_NOW) : null;
+    const art = track.albumCoverArt ? coverUrl(state.server, state.auth, track.albumCoverArt, COVER_SIZE_NOW) : null;
     try {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: track.title || "",
@@ -1538,6 +1600,7 @@ function resetPlayerState() {
   state.selectedArtist = null;
   state.selectedArtistAlbums = [];
   state.artistAlbumsById = {};
+  state.albumCoverById = {};
   state.artistSongsById = {};
   state.selectedGenre = null;
   state.selectedGenreAlbums = [];
