@@ -86,7 +86,7 @@
               <div class="nowBg" id="nowBg"></div>
               <div class="topBar">
                 <div class="sideBtns">
-                  <button class="ghostBtn" id="btnPlayMostPlayed">Más reproducidas</button>
+                  <button class="ghostBtn" id="btnPlayMostPlayed" hidden>Más reproducidas</button>
                   <button class="ghostBtn" id="btnPlayFavorites">Favoritas</button>
                   <button class="ghostBtn" id="btnAlbums" disabled>Álbumes</button>
                   <button class="ghostBtn" id="btnSongs" disabled>Canciones</button>
@@ -227,6 +227,13 @@
           <div class="menuRow">
             <div class="menuLabel">Usuario</div>
             <button class="ghostBtn" id="btnOpenProfiles" title="Cambiar usuario">Cambiar usuario</button>
+          </div>
+          <div class="menuRow">
+            <div class="menuLabel">Debug</div>
+            <div class="menuThemeOptions">
+              <button class="ghostBtn" id="btnDebugToggle" title="Activar o desactivar debug">Debug: OFF</button>
+              <button class="ghostBtn" id="btnOpenDebugPage" title="Abrir consola debug en otra pestaña">Abrir debug</button>
+            </div>
           </div>
         </div>
       </section>

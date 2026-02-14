@@ -14,6 +14,9 @@ Formato inspirado en "Keep a Changelog". Este proyecto sigue SemVer en `0.x` con
 - Ajustes de UI: escoba sobre el filtro, tiempos encima de progreso y retirada del boton Salir.
 - Rebranding de interfaz a \"Music Skin ND\".
 - Migracion de preferencias legacy: al actualizar, se mantienen tema y perfiles del usuario.
+- Correccion temporal: boton "Mas reproducidas" oculto hasta completar logica fiable de ranking.
+- Debug alpha: nueva consola visual en `debug.html` con eventos de red, covers y reproductor.
+- Ajustes responsive desktop: la barra de progreso queda visible al 100% sin reducir zoom.
 
 ## [v0.1.0-alpha.5] - 2026-02-06
 - Reorden de controles: Atras, Play/Pause, Adelante, Aleatorio, Reproducir todo.
