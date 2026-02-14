@@ -14,6 +14,8 @@ export function toTrack(song) {
     albumId: song.albumId,
     duration: Number(song.duration || 0),
     coverArt: song.coverArt,
+    starred: !!song.starred,
+    playCount: Number(song.playCount || 0),
   };
 }
 

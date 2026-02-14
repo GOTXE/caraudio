@@ -2,6 +2,21 @@
 // Cada nueva funcionalidad visible para usuario debe quedar registrada aqui por version/tag.
 // (Se actualiza normalmente al preparar el PR/release que entra en produccion.)
 const WHATS_NEW_BY_VERSION = {
+  "v0.1.0-alpha.6": [
+    "Nueva cabecera de Music Skin ND con acceso directo a Novedades.",
+    "Nuevo menu hamburguesa con Tema, lado de listas y cambio de usuario.",
+    "Tema con 3 modos: Dia, Noche y Auto.",
+    "Modo Auto simplificado: zona horaria + hora de Dia y Noche (sin ciudad).",
+    "Al actualizar la web, se conservan las preferencias del usuario (tema y perfiles).",
+    "En la pantalla de login ya no aparece el menu de ajustes.",
+    "Mas reproducidas y Favoritas se han movido al panel de reproduccion.",
+    "Al pulsar Mas reproducidas o Favoritas, la musica empieza en modo aleatorio.",
+    "Nuevo boton de favorita: solo corazon, junto a la portada, relleno cuando esta activa.",
+    "Mas reproducidas y Favoritas ya no cambian el listado lateral.",
+    "Portadas mas rapidas en listas y modales.",
+    "Si una portada falla al inicio, se reintenta y se muestra portada por defecto de la UI.",
+    "Corregido el seguimiento de la cancion activa en listas largas.",
+  ],
   "v0.1.0-alpha.5": [
     "Controles reordenados: Atras, Play/Pause, Adelante, Aleatorio, Reproducir todo.",
     "Indicador 'PAUSA' mas visible (sobre la caratula) para saber que hay que reanudar.",

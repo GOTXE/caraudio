@@ -3,7 +3,17 @@
 Formato inspirado en "Keep a Changelog". Este proyecto sigue SemVer en `0.x` con tags `vX.Y.Z-(alpha|beta|rc).N`.
 
 ## [Unreleased]
-- TBD
+- Nuevo panel de ajustes con tema, posicion de panel y cambio de usuario.
+- Tema con tres modos: Dia, Noche y Auto.
+- Modo Auto configurable por zona horaria IANA y ciudad opcional de referencia para orto/ocaso.
+- Filtro de canciones Favoritas (usuario actual) con accion de marcado desde la reproduccion.
+- Filtro de canciones Mas reproducidas (usuario actual) basado en playCount.
+- Reproducciones de esta app reportadas a Navidrome via scrobble.
+- Portadas optimizadas para carga mas rapida (listas/modales y reproductor).
+- Correccion: en colas largas, la cancion activa se mantiene visible con auto-scroll.
+- Ajustes de UI: escoba sobre el filtro, tiempos encima de progreso y retirada del boton Salir.
+- Rebranding de interfaz a \"Music Skin ND\".
+- Migracion de preferencias legacy: al actualizar, se mantienen tema y perfiles del usuario.
 
 ## [v0.1.0-alpha.5] - 2026-02-06
 - Reorden de controles: Atras, Play/Pause, Adelante, Aleatorio, Reproducir todo.

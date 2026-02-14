@@ -14,6 +14,12 @@
         --gap: 12px;
         --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
         --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans";
+        --modal-bg: rgba(15, 18, 26, 0.96);
+        --modal-border: rgba(255, 255, 255, 0.22);
+        --modal-text: rgba(255, 255, 255, 0.92);
+        --modal-input-bg: rgba(255, 255, 255, 0.08);
+        --modal-input-border: rgba(255, 255, 255, 0.22);
+        --modal-muted: rgba(255, 255, 255, 0.72);
       }
       @media (prefers-color-scheme: light) {
         :root {
@@ -45,6 +51,12 @@
         --muted: rgba(0, 0, 0, 0.62);
         --border: rgba(0, 0, 0, 0.12);
         --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        --modal-bg: rgba(246, 249, 255, 0.98);
+        --modal-border: rgba(10, 22, 44, 0.18);
+        --modal-text: rgba(8, 14, 24, 0.92);
+        --modal-input-bg: rgba(10, 22, 44, 0.05);
+        --modal-input-border: rgba(10, 22, 44, 0.16);
+        --modal-muted: rgba(8, 14, 24, 0.66);
       }
       * {
         box-sizing: border-box;
@@ -105,7 +117,25 @@
         line-height: 1;
       }
       .headerRight {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
         justify-self: end;
+      }
+      .headerRight [hidden] {
+        display: none !important;
+      }
+      .headerUser {
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.08);
+        color: var(--muted);
+        font-size: 12px;
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       h1 {
         margin: 0;
@@ -770,8 +800,31 @@
         gap: 10px;
         min-height: 0;
       }
-      .artistsPane > input {
+      .artistsPane .topBar {
+        align-items: flex-start;
+      }
+      .viewTabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        flex: 1;
+        max-height: 76px;
+        overflow: auto;
+        padding-right: 2px;
+      }
+      .filterWrap {
+        position: relative;
         align-self: start;
+      }
+      .filterWrap > input {
+        width: 100%;
+        padding-right: 46px;
+      }
+      .filterClearBtn {
+        position: absolute;
+        right: 6px;
+        top: 3px;
       }
       .artistsList {
         overflow: auto;
@@ -885,6 +938,17 @@
         width: 180px;
         text-align: center;
       }
+      .sideBtns .ghostBtn.loading {
+        border-color: rgba(0, 200, 182, 0.78);
+        background: linear-gradient(180deg, rgba(0, 200, 182, 0.36), rgba(0, 200, 182, 0.14));
+        box-shadow: 0 0 0 1px rgba(0, 200, 182, 0.16), 0 10px 20px rgba(0, 0, 0, 0.16), 0 0 18px rgba(0, 200, 182, 0.18);
+      }
+      .sideBtns .ghostBtn.isMuted {
+        border-color: rgba(255, 255, 255, 0.18);
+        background: linear-gradient(180deg, rgba(130, 138, 156, 0.22), rgba(95, 103, 120, 0.16));
+        color: rgba(235, 240, 248, 0.72);
+        filter: saturate(0.28);
+      }
       .nowMeta {
         display: grid;
         grid-template-columns: 1fr;
@@ -897,6 +961,35 @@
         position: relative;
         display: grid;
         place-items: center;
+      }
+      .coverFavBtn {
+        position: absolute;
+        right: -56px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 52px;
+        height: 52px;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+        color: rgba(230, 240, 255, 0.88);
+        font-size: 36px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
+      .coverFavBtn:hover,
+      .coverFavBtn:focus-visible,
+      .coverFavBtn:active {
+        background: transparent;
+        box-shadow: none;
+        filter: none;
+        transform: translateY(-50%) scale(1.02);
+      }
+      .coverFavBtn.active {
+        color: rgba(0, 200, 182, 0.96);
       }
       .coverXL {
         width: clamp(200px, 30vw, 300px);
@@ -1031,18 +1124,22 @@
         display: grid;
         grid-template-rows: auto 1fr;
         gap: 10px;
-        background: rgba(15, 18, 26, 0.96);
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        color: rgba(255, 255, 255, 0.92);
+        background: var(--modal-bg);
+        border: 1px solid var(--modal-border);
+        color: var(--modal-text);
       }
       .modalCard input,
       .modalCard select {
-        color: rgba(255, 255, 255, 0.95);
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.22);
+        color: var(--modal-text);
+        background: var(--modal-input-bg);
+        border-color: var(--modal-input-border);
+      }
+      .modalCard select option {
+        color: #101827;
+        background: #f8fafc;
       }
       .modalCard input::placeholder {
-        color: rgba(255, 255, 255, 0.5);
+        color: var(--modal-muted);
       }
       .modalList {
         overflow: auto;
@@ -1058,24 +1155,24 @@
 
       /* Más contraste dentro del modal */
       .modalCard .item {
-        background: rgba(255, 255, 255, 0.10);
-        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--modal-input-border);
       }
       .modalCard .name {
-        color: rgba(255, 255, 255, 0.95);
+        color: var(--modal-text);
       }
       .modalCard .desc,
       .modalCard .pill {
-        color: rgba(255, 255, 255, 0.72);
+        color: var(--modal-muted);
       }
       .modalCard .cover {
-        background: rgba(255, 255, 255, 0.14);
-        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.12);
+        border-color: var(--modal-input-border);
       }
       .modalCard .ghostBtn {
-        border-color: rgba(255, 255, 255, 0.18);
+        border-color: var(--modal-input-border);
         background: rgba(255, 255, 255, 0.06);
-        color: rgba(255, 255, 255, 0.9);
+        color: var(--modal-text);
       }
       .whatsNewCard {
         width: min(760px, 100%);
@@ -1115,4 +1212,65 @@
       .theme-light .whatsNewSectionTitle {
         color: rgba(8, 14, 24, 0.72);
         text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 10px rgba(0, 200, 182, 0.16);
+      }
+      .menuCard {
+        width: min(560px, 100%);
+      }
+      .menuRows {
+        display: grid;
+        gap: 14px;
+      }
+      .menuRow {
+        display: grid;
+        gap: 8px;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .menuLabel {
+        font-weight: 800;
+      }
+      .menuThemeOptions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .menuHint {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .profileRow {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .profileName {
+        font-weight: 800;
+      }
+      .profileMeta {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .autoThemeCard {
+        width: min(560px, 100%);
+        max-height: min(420px, 100%);
+      }
+      .autoTimeGridLabels,
+      .autoTimeGridInputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .autoTimeGridLabels label {
+        margin-top: 4px;
+      }
+      .autoTimeGridInputs input {
+        min-width: 0;
       }
