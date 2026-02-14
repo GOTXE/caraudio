@@ -449,6 +449,17 @@ function setAppHeight() {
   document.documentElement.style.setProperty("--app-height", `${Math.round(h)}px`);
 }
 
+function syncServerModalViewport() {
+  const vv = window.visualViewport;
+  const vh = vv?.height || window.innerHeight;
+  const top = vv?.offsetTop || 0;
+  const keyboardOpen = vv ? window.innerHeight - vv.height > 80 : false;
+  const root = document.documentElement;
+  root.style.setProperty("--vvh", `${Math.round(vh)}px`);
+  root.style.setProperty("--vv-top", `${Math.max(0, Math.round(top))}px`);
+  root.style.setProperty("--keyboard-open", keyboardOpen ? "1" : "0");
+}
+
 function applyListPaneSide(side) {
   if (!playerGrid || !btnPaneSide) return;
   playerGrid.dataset.listPane = side;
@@ -1665,16 +1676,24 @@ function closeAutoThemeModal() {
 function openServerModal() {
   serverUrlInput.value = getStoredServer();
   serverModal.hidden = false;
+  syncServerModalViewport();
   setServerCheck("idle", "Sin comprobar");
   if (serverUrlInput.value) probeServerUrl(serverUrlInput.value);
   setTimeout(() => {
     setAppHeight();
+    syncServerModalViewport();
     serverUrlInput.focus();
+    try {
+      serverUrlInput.scrollIntoView({ block: "center", behavior: "smooth" });
+    } catch {
+      // ignore
+    }
   }, 0);
 }
 
 function closeServerModal() {
   serverModal.hidden = true;
+  document.documentElement.style.setProperty("--keyboard-open", "0");
 }
 
 function resetPlayerState() {
@@ -1896,9 +1915,19 @@ function wireEvents() {
   });
 
   setAppHeight();
-  window.addEventListener("resize", setAppHeight);
-  window.visualViewport?.addEventListener("resize", setAppHeight);
-  window.visualViewport?.addEventListener("scroll", setAppHeight);
+  syncServerModalViewport();
+  window.addEventListener("resize", () => {
+    setAppHeight();
+    syncServerModalViewport();
+  });
+  window.visualViewport?.addEventListener("resize", () => {
+    setAppHeight();
+    syncServerModalViewport();
+  });
+  window.visualViewport?.addEventListener("scroll", () => {
+    setAppHeight();
+    syncServerModalViewport();
+  });
 
   btnEditServer.addEventListener("click", () => openServerModal());
   btnServerCancel.addEventListener("click", () => closeServerModal());
@@ -1928,6 +1957,20 @@ function wireEvents() {
   serverUrlInput.addEventListener("input", () => {
     if (serverProbeTimer) clearTimeout(serverProbeTimer);
     serverProbeTimer = setTimeout(() => probeServerUrl(serverUrlInput.value), 400);
+  });
+  serverUrlInput.addEventListener("focus", () => {
+    syncServerModalViewport();
+    setTimeout(() => {
+      syncServerModalViewport();
+      try {
+        serverUrlInput.scrollIntoView({ block: "center", behavior: "smooth" });
+      } catch {
+        // ignore
+      }
+    }, 80);
+  });
+  serverUrlInput.addEventListener("blur", () => {
+    syncServerModalViewport();
   });
   serverUrlInput.addEventListener("keydown", (event) => {
     if (event.key !== "Enter") return;
