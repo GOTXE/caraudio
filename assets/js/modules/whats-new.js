@@ -7,6 +7,7 @@ const WHATS_NEW_BY_VERSION = {
     "Nuevo menu hamburguesa con Tema, lado de listas y cambio de usuario.",
     "Tema con 3 modos: Dia, Noche y Auto.",
     "Modo Auto simplificado: zona horaria + hora de Dia y Noche (sin ciudad).",
+    "Al actualizar la web, se conservan las preferencias del usuario (tema y perfiles).",
     "En la pantalla de login ya no aparece el menu de ajustes.",
     "Mas reproducidas y Favoritas se han movido al panel de reproduccion.",
     "Al pulsar Mas reproducidas o Favoritas, la musica empieza en modo aleatorio.",

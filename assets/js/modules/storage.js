@@ -1,4 +1,5 @@
 import { DEFAULTS, STORAGE_KEYS } from "./constants.js";
+const STORAGE_SCHEMA_VERSION = 2;
 
 export function normalizeServer(input) {
   const raw = String(input || "").trim();
@@ -175,4 +176,57 @@ export function setActiveProfileId(profileId) {
   }
   localStorage.setItem(STORAGE_KEYS.activeProfileId, String(profileId));
   return String(profileId);
+}
+
+function makeProfileId(server, user) {
+  return `${normalizeServer(server)}::${String(user || "").trim().toLowerCase()}`;
+}
+
+export function migrateLegacyPreferences() {
+  const raw = localStorage.getItem(STORAGE_KEYS.storageSchema);
+  const currentSchema = Number.parseInt(raw || "0", 10) || 0;
+  if (currentSchema >= STORAGE_SCHEMA_VERSION) return;
+
+  // 1) Conserva preferencia de tema antigua (light/dark) en el nuevo modo day/night/auto.
+  const themeMode = localStorage.getItem(STORAGE_KEYS.themeMode);
+  const legacyTheme = localStorage.getItem(STORAGE_KEYS.theme);
+  if (!themeMode && (legacyTheme === "light" || legacyTheme === "dark")) {
+    localStorage.setItem(STORAGE_KEYS.themeMode, legacyTheme === "dark" ? "night" : "day");
+  }
+
+  // 2) Si había credenciales legacy pero no perfiles, crea uno para mantener autologin.
+  const profiles = getProfiles();
+  if (!profiles.length) {
+    const server = getStoredServer();
+    const user = localStorage.getItem(STORAGE_KEYS.user) || "";
+    const pass = localStorage.getItem(STORAGE_KEYS.pass) || "";
+    if (server && user) {
+      const profile = {
+        id: makeProfileId(server, user),
+        server,
+        user,
+        pass,
+        updatedAt: Date.now(),
+      };
+      localStorage.setItem(STORAGE_KEYS.profiles, JSON.stringify([profile]));
+      if (!getActiveProfileId()) {
+        localStorage.setItem(STORAGE_KEYS.activeProfileId, profile.id);
+      }
+    }
+  }
+
+  // 3) Normaliza configuración Auto heredada al esquema actual.
+  const autoRaw = localStorage.getItem(STORAGE_KEYS.autoTheme);
+  if (autoRaw) {
+    try {
+      const parsed = JSON.parse(autoRaw);
+      const normalized = normalizeAutoThemeSettings(parsed, true);
+      localStorage.setItem(STORAGE_KEYS.autoTheme, JSON.stringify(normalized));
+    } catch {
+      // Mantiene el valor por defecto si no se puede migrar.
+      localStorage.setItem(STORAGE_KEYS.autoTheme, JSON.stringify({ ...DEFAULTS.autoTheme }));
+    }
+  }
+
+  localStorage.setItem(STORAGE_KEYS.storageSchema, String(STORAGE_SCHEMA_VERSION));
 }

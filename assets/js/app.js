@@ -20,6 +20,7 @@ import {
   saveProfile,
   getActiveProfileId,
   setActiveProfileId,
+  migrateLegacyPreferences,
 } from "./modules/storage.js";
 import { checkForUpdate, escapeHtml } from "./modules/ui.js";
 import { coverUrl, getStarred2, makeAuth, restJson, scrobble, star, streamUrl, unstar } from "./modules/navidrome.js";
@@ -2030,6 +2031,7 @@ function wireEvents() {
 }
 
 function init() {
+  migrateLegacyPreferences();
   updateServerButton(getStoredServer());
 
   const remember = getRememberCreds();

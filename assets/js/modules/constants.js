@@ -11,6 +11,7 @@ export const STORAGE_KEYS = {
   whatsNewSeen: "carplayer.navidrome.whatsNewSeen",
   profiles: "carplayer.navidrome.profiles",
   activeProfileId: "carplayer.navidrome.activeProfileId",
+  storageSchema: "carplayer.navidrome.storageSchema",
 };
 
 export const DEFAULTS = {
