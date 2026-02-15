@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(/data/projects/caraudio:*)",
+      "Bash(curl:*)",
+      "Bash(zip:*)",
+      "Bash(ls:*)",
+      "Bash(unzip:*)",
+      "Bash(git reset:*)",
+      "Bash(gap:8px\" with .segmentGroup class\n  - Replace style=\"display:flex)",
+      "Bash(gap:10px\" with .modalToolbar class  - Replace style=\"display:none\" with hidden attribute\n- Add new CSS classes:\n  - .sessionInfo, .sessionLabel, .sessionValue  - .settingsActions, .btnBlock\n  - .segmentGroup, .modalToolbar, .queueToolbar\n- Add i18n key \"settings.session\" \\(ES/EN\\)\n\nFixes:\n- Content-Security-Policy violations \\(style-src ''self''\\)\n- TypeError: refs.sessionSummary is null\n- Missing session management UI\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}
