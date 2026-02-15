@@ -1,6 +1,6 @@
 #!/bin/bash
 # watchdog_caraudio.sh
-# Vigila proceso uvicorn y lo relanza si cae.
+# Vigila proceso de app (static o broker) y lo relanza si cae.
 
 set -euo pipefail
 
@@ -18,7 +18,7 @@ fi
 WORKDIR="${CARAUDIO_WORKDIR:-$BASE_DIR}"
 LOG_DIR="${CARAUDIO_LOG_DIR:-$WORKDIR/logs}"
 WATCHDOG_LOG="$LOG_DIR/watchdog_caraudio.log"
-RUN_PID="$LOG_DIR/caraudio_api.pid"
+RUN_PID="$LOG_DIR/caraudio.pid"
 SLEEP_SECONDS="${CARAUDIO_WATCHDOG_INTERVAL:-30}"
 
 mkdir -p "$LOG_DIR"

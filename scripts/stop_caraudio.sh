@@ -1,6 +1,6 @@
 #!/bin/bash
 # stop_caraudio.sh
-# Detiene API y watchdog si están corriendo.
+# Detiene app (static o broker) y watchdog si están corriendo.
 
 set -euo pipefail
 
@@ -17,8 +17,9 @@ fi
 
 WORKDIR="${CARAUDIO_WORKDIR:-$BASE_DIR}"
 LOG_DIR="${CARAUDIO_LOG_DIR:-$WORKDIR/logs}"
-APP_LOG="$LOG_DIR/caraudio_api.log"
-RUN_PID="$LOG_DIR/caraudio_api.pid"
+APP_LOG="$LOG_DIR/caraudio.log"
+RUN_PID="$LOG_DIR/caraudio.pid"
+MODE_FILE="$LOG_DIR/caraudio.mode"
 
 mkdir -p "$LOG_DIR"
 cd "$WORKDIR"
@@ -27,21 +28,23 @@ cd "$WORKDIR"
   echo "[stop_caraudio.sh] --- $(date '+%F %T') ---"
 
   if [ -f "$RUN_PID" ]; then
-    API_PID="$(cat "$RUN_PID")"
-    if ps -p "$API_PID" >/dev/null 2>&1; then
-      echo "Deteniendo API PID $API_PID"
-      kill "$API_PID" || true
+    APP_PID="$(cat "$RUN_PID")"
+    APP_MODE="$(cat "$MODE_FILE" 2>/dev/null || echo desconocido)"
+    if ps -p "$APP_PID" >/dev/null 2>&1; then
+      echo "Deteniendo app PID $APP_PID (modo $APP_MODE)"
+      kill "$APP_PID" || true
       sleep 2
-      if ps -p "$API_PID" >/dev/null 2>&1; then
-        echo "Forzando API PID $API_PID"
-        kill -9 "$API_PID" || true
+      if ps -p "$APP_PID" >/dev/null 2>&1; then
+        echo "Forzando app PID $APP_PID"
+        kill -9 "$APP_PID" || true
       fi
     else
-      echo "PID registrado no está activo: $API_PID"
+      echo "PID registrado no está activo: $APP_PID"
     fi
     rm -f "$RUN_PID"
+    rm -f "$MODE_FILE"
   else
-    echo "No existe PID file de API"
+    echo "No existe PID file de app"
   fi
 
   WATCHDOG_PIDS=$(ps aux | grep '[w]atchdog_caraudio.sh' | awk '{print $2}')
