@@ -10,6 +10,12 @@ Thumbs.db
 ### Local secrets/config
 # (Reservado si más adelante se reintroduce un backend/proxy)
 **/proxy.config.php
+.env
+
+### Runtime artifacts
+logs/
+**/__pycache__/
+*.pyc
 
 # Privado (no sincronizar)
 tech_docs/
