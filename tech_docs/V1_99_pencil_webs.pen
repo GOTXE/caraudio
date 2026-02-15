@@ -4554,6 +4554,791 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "mLXqz",
+      "x": 3400,
+      "y": 2860,
+      "name": "Error 404 Car Unit 1280x480",
+      "width": 1280,
+      "height": 480,
+      "fill": "#d5e2ef",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "hobY0",
+          "name": "errCarHeader",
+          "width": "fill_container",
+          "padding": [
+            12,
+            16
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "eGwSV",
+              "name": "errCarLogoWrap",
+              "width": 120,
+              "height": 60,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "VuOft",
+                  "name": "errCarLogo",
+                  "width": 120,
+                  "height": 60,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1771153667403.png",
+                    "mode": "fill"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "MbB2j",
+              "name": "errCarSpacer",
+              "width": 120,
+              "height": 1
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "xIcTI",
+          "name": "errCarMain",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            0,
+            16,
+            16,
+            16
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "0Zvvn",
+              "name": "errCarCard",
+              "width": 640,
+              "fill": "#fdfefe",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "A9NWc",
+                  "name": "errCarCode",
+                  "fill": "#0b1220",
+                  "content": "404",
+                  "fontFamily": "Inter",
+                  "fontSize": 52,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "k5UAn",
+                  "name": "errCarTitle",
+                  "fill": "#0b1220",
+                  "content": "Página no encontrada",
+                  "fontFamily": "Inter",
+                  "fontSize": 24,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "8X4US",
+                  "name": "errCarDesc",
+                  "fill": "#334155",
+                  "content": "La ruta solicitada no existe o ya no está disponible.",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "IrfFL",
+                  "name": "errCarActions",
+                  "width": "fill_container",
+                  "gap": 10,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "4nNND",
+                      "name": "errCarHome",
+                      "fill": "#159289",
+                      "cornerRadius": 12,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "4UO8h",
+                          "name": "errCarHomeTxt",
+                          "fill": "#ffffff",
+                          "content": "Volver al inicio",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YpfZz",
+                      "name": "errCarRetry",
+                      "fill": "#dbe6f2",
+                      "cornerRadius": 12,
+                      "padding": [
+                        9,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "X2ld4",
+                          "name": "errCarRetryTxt",
+                          "fill": "#0b1220",
+                          "content": "Reintentar",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "EZSq8",
+          "name": "errCarFooter",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 4,
+          "padding": [
+            6,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "PSjrn",
+              "name": "footerTop",
+              "fill": "#0b1220",
+              "content": "GOTXE ❤️ IA 🤖",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "KeaCT",
+              "name": "footerRow",
+              "width": "fill_container",
+              "gap": 16,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "UjHUu",
+                  "name": "footerLeft",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "FCJGv",
+                      "name": "githubIcon",
+                      "width": 18,
+                      "height": 18,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "./images/github-mark-day.png",
+                        "mode": "fill"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Z12U8",
+                  "name": "footerRight",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "sT2Hg",
+                      "name": "footerVer",
+                      "fill": "#0b1220",
+                      "content": "v1.0.0",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "CGL5U",
+                      "name": "footerUpdDot",
+                      "fill": "#22a06b",
+                      "width": 7,
+                      "height": 7
+                    },
+                    {
+                      "type": "text",
+                      "id": "JwcMQ",
+                      "name": "footerUpd",
+                      "fill": "#0b1220",
+                      "content": "⬆ v1.0.1",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "CyFjl",
+      "x": 4720,
+      "y": 3440,
+      "name": "Error 404 Desktop 1920x1080",
+      "width": 1920,
+      "height": 1080,
+      "fill": "#d5e2ef",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "uUkBf",
+          "name": "errDeskHeader",
+          "width": "fill_container",
+          "padding": [
+            16,
+            24
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "GQgKg",
+              "name": "errDeskLogoWrap",
+              "width": 220,
+              "height": 96,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "cYQEA",
+                  "name": "errDeskLogo",
+                  "width": 220,
+                  "height": 96,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1771153661362.png",
+                    "mode": "fill"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "9hMhZ",
+              "name": "errDeskSpacer",
+              "width": 220,
+              "height": 1
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Vzb3P",
+          "name": "errDeskMain",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            0,
+            24,
+            24,
+            24
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "4PCpq",
+              "name": "errDeskCard",
+              "width": 760,
+              "fill": "#fdfefe",
+              "cornerRadius": 20,
+              "layout": "vertical",
+              "gap": 10,
+              "padding": 24,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ZkSJ7",
+                  "name": "errDeskCode",
+                  "fill": "#0b1220",
+                  "content": "404",
+                  "fontFamily": "Inter",
+                  "fontSize": 84,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "fO9fw",
+                  "name": "errDeskTitle",
+                  "fill": "#0b1220",
+                  "content": "Página no encontrada",
+                  "fontFamily": "Inter",
+                  "fontSize": 34,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "bJYbn",
+                  "name": "errDeskDesc",
+                  "fill": "#334155",
+                  "content": "La ruta solicitada no existe o ya no está disponible.",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "MWFph",
+                  "name": "errDeskActions",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "r7aSf",
+                      "name": "errDeskHome",
+                      "fill": "#159289",
+                      "cornerRadius": 12,
+                      "padding": [
+                        11,
+                        16
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "d2utu",
+                          "name": "errDeskHomeTxt",
+                          "fill": "#ffffff",
+                          "content": "Volver al inicio",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "4znGZ",
+                      "name": "errDeskRetry",
+                      "fill": "#dbe6f2",
+                      "cornerRadius": 12,
+                      "padding": [
+                        11,
+                        16
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "E6N3p",
+                          "name": "errDeskRetryTxt",
+                          "fill": "#0b1220",
+                          "content": "Reintentar",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "JQogL",
+          "name": "errDeskFooter",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 4,
+          "padding": [
+            6,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "HGtnB",
+              "name": "footerTop",
+              "fill": "#0b1220",
+              "content": "GOTXE ❤️ IA 🤖",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "A54wC",
+              "name": "footerRow",
+              "width": "fill_container",
+              "gap": 16,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "pv98F",
+                  "name": "footerLeft",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "oB4s8",
+                      "name": "githubIcon",
+                      "width": 18,
+                      "height": 18,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "./images/github-mark-day.png",
+                        "mode": "fill"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wqwfB",
+                  "name": "footerRight",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ntybm",
+                      "name": "footerVer",
+                      "fill": "#0b1220",
+                      "content": "v1.0.0",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "jNzWz",
+                      "name": "footerUpdDot",
+                      "fill": "#22a06b",
+                      "width": 7,
+                      "height": 7
+                    },
+                    {
+                      "type": "text",
+                      "id": "ejtpH",
+                      "name": "footerUpd",
+                      "fill": "#0b1220",
+                      "content": "⬆ v1.0.1",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "fV8ac",
+      "x": 7520,
+      "y": 2300,
+      "name": "Error 404 Mobile 390x844",
+      "width": 390,
+      "height": 844,
+      "fill": "#d5e2ef",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "R9cX5",
+          "name": "errMobHeader",
+          "width": "fill_container",
+          "padding": [
+            12,
+            16
+          ],
+          "justifyContent": "space_between",
+          "children": [
+            {
+              "type": "frame",
+              "id": "FNyJ4",
+              "name": "errMobLogoWrap",
+              "width": 88,
+              "height": 44,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "d51GS",
+                  "name": "errMobLogo",
+                  "width": 88,
+                  "height": 44,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "./images/generated-1771153661362.png",
+                    "mode": "fill"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TuMFN",
+              "name": "errMobSpacer",
+              "width": 88,
+              "height": 1
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Mb7OI",
+          "name": "errMobMain",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            0,
+            16,
+            16,
+            16
+          ],
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "cSSgk",
+              "name": "errMobCard",
+              "width": "fill_container",
+              "fill": "#fdfefe",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "TsEOs",
+                  "name": "errMobCode",
+                  "fill": "#0b1220",
+                  "content": "404",
+                  "fontFamily": "Inter",
+                  "fontSize": 54,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "bOv3h",
+                  "name": "errMobTitle",
+                  "fill": "#0b1220",
+                  "content": "Página no encontrada",
+                  "fontFamily": "Inter",
+                  "fontSize": 26,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "XaMBz",
+                  "name": "errMobDesc",
+                  "fill": "#334155",
+                  "content": "La ruta no existe.",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "dtBsR",
+                  "name": "errMobHome",
+                  "width": "fill_container",
+                  "fill": "#159289",
+                  "cornerRadius": 12,
+                  "padding": [
+                    12,
+                    14
+                  ],
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ZwP7E",
+                      "name": "errMobHomeTxt",
+                      "fill": "#ffffff",
+                      "content": "Volver al inicio",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "7TDRE",
+          "name": "errMobFooter",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 4,
+          "padding": [
+            6,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "6n6fZ",
+              "name": "footerTop",
+              "fill": "#0b1220",
+              "content": "GOTXE ❤️ IA 🤖",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "luJIt",
+              "name": "footerRow",
+              "width": "fill_container",
+              "gap": 16,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "eE6wV",
+                  "name": "footerLeft",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "AO2c4",
+                      "name": "githubIcon",
+                      "width": 18,
+                      "height": 18,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "./images/github-mark-day.png",
+                        "mode": "fill"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "eT8VH",
+                  "name": "footerRight",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vYj4c",
+                      "name": "footerVer",
+                      "fill": "#0b1220",
+                      "content": "v1.0.0",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "WzUUC",
+                      "name": "footerUpdDot",
+                      "fill": "#22a06b",
+                      "width": 7,
+                      "height": 7
+                    },
+                    {
+                      "type": "text",
+                      "id": "3pv1K",
+                      "name": "footerUpd",
+                      "fill": "#0b1220",
+                      "content": "⬆ v1.0.1",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "2FKPY",
+      "x": -1230,
+      "y": 1655,
+      "name": "Frame 1",
+      "clip": true,
+      "width": 11,
+      "height": 19,
+      "fill": "#FFFFFF",
+      "layout": "none"
     }
   ]
 }
