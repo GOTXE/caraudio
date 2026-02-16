@@ -67,6 +67,7 @@ const userEl = document.getElementById("username");
 const passEl = document.getElementById("password");
 const rememberCredsEl = document.getElementById("rememberCreds");
 const btnConnect = document.getElementById("btnConnect");
+const btnLoginProfiles = document.getElementById("btnLoginProfiles");
 const btnLinkDevice = document.getElementById("btnLinkDevice");
 const btnDeviceModeAuto = document.getElementById("btnDeviceModeAuto");
 const btnDeviceModeCar = document.getElementById("btnDeviceModeCar");
@@ -814,6 +815,7 @@ function applyListPaneSide(side) {
 function renderProfiles() {
   profilesList.innerHTML = "";
   state.profiles = getProfiles();
+  if (btnLoginProfiles) btnLoginProfiles.hidden = state.profiles.length === 0;
   for (const profile of state.profiles) {
     const row = document.createElement("div");
     row.className = "profileRow";
@@ -823,19 +825,70 @@ function renderProfiles() {
         <div class="profileName">${escapeHtml(profile.user)}${active ? t("misc.active_profile_suffix") : ""}</div>
         <div class="profileMeta">${escapeHtml(profile.server)}</div>
       </div>
-      <button class="ghostBtn">${t("misc.change")}</button>
+      <button class="ghostBtn">${t("modal.profile_use")}</button>
     `;
-    row.querySelector("button").addEventListener("click", async () => {
-      if (!profile.pass) {
-        setStatus(t("status.profile_no_password"), "bad");
-        return;
-      }
-      await connectWithCredentials({ server: profile.server, username: profile.user, password: profile.pass, silent: false });
+    const useBtn = row.querySelector("button");
+    if (useBtn) useBtn.type = "button";
+    useBtn?.addEventListener("click", async () => {
+      if (useBtn.disabled) return;
+      useBtn.disabled = true;
+      useBtn.classList.add("loading");
       profilesModal.hidden = true;
       menuModal.hidden = true;
+
+      const normalizedServer = normalizeServer(profile.server || "");
+      const username = String(profile.user || "").trim();
+      const password = String(profile.pass || "");
+
+      try {
+        if (!password) {
+          const brokerSession = getBrokerSession();
+          const brokerServer = normalizeServer(brokerSession?.serverUrl || "");
+          const brokerUser = String(brokerSession?.username || "").trim().toLowerCase();
+          if (brokerSession && brokerServer === normalizedServer && brokerUser === username.toLowerCase()) {
+            const okBroker = await connectWithBrokerSession(brokerSession, { silent: false });
+            if (okBroker) return;
+          }
+          const server = setStoredServer(normalizedServer);
+          updateServerButton(server);
+          userEl.value = username;
+          passEl.value = "";
+          showScreen("login");
+          setStatus(t("status.profile_no_password"), "bad");
+          setTimeout(() => passEl.focus(), 0);
+          return;
+        }
+
+        const ok = await connectWithCredentials({
+          server: normalizedServer,
+          username,
+          password,
+          silent: false,
+        });
+
+        if (ok) return;
+        const server = setStoredServer(normalizedServer);
+        updateServerButton(server);
+        userEl.value = username;
+        passEl.value = "";
+        showScreen("login");
+        setTimeout(() => passEl.focus(), 0);
+      } finally {
+        useBtn.disabled = false;
+        useBtn.classList.remove("loading");
+      }
     });
     profilesList.appendChild(row);
   }
+}
+
+function openProfilesModal() {
+  renderProfiles();
+  if (!state.profiles.length) {
+    setStatus(t("status.new_profile_credentials"));
+    return;
+  }
+  profilesModal.hidden = false;
 }
 
 function saveCurrentProfile(server, username, password) {
@@ -2499,8 +2552,10 @@ function wireEvents() {
   });
 
   btnOpenProfiles.addEventListener("click", () => {
-    renderProfiles();
-    profilesModal.hidden = false;
+    openProfilesModal();
+  });
+  btnLoginProfiles?.addEventListener("click", () => {
+    openProfilesModal();
   });
   btnCloseProfiles.addEventListener("click", () => {
     profilesModal.hidden = true;
