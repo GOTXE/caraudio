@@ -28,5 +28,5 @@ test("checkForUpdate shows newer tag when available", async () => {
 
   assert.equal(currentEl.textContent, "v0.1.0-alpha.6");
   assert.equal(latestEl.hidden, false);
-  assert.equal(latestEl.textContent, "Nuevo: v0.2.0");
+  assert.equal(latestEl.textContent, "v0.2.0");
 });
