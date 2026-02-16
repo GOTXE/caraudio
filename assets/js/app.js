@@ -47,6 +47,7 @@ const COVER_FAIL_RETRY_MS = 30 * 1000;
 const COVER_CACHE_MAX_ITEMS = 1200;
 const BROKER_REFRESH_LEEWAY_SECONDS = 60;
 const BROKER_REFRESH_CHECK_MS = 60 * 1000;
+const SONG_MENU_VISIBLE_COUNT = 5;
 
 const statusEl = document.getElementById("status");
 const btnEditServer = document.getElementById("btnEditServer");
@@ -1186,8 +1187,12 @@ function renderSongsCatalog(list, emptyText) {
 }
 
 function updateProgress() {
-  const dur = Number.isFinite(player.duration) && player.duration > 0 ? player.duration : 0;
-  const cur = Number.isFinite(player.currentTime) ? player.currentTime : 0;
+  const currentTrack = state.queueIndex >= 0 && state.queueIndex < state.queue.length ? state.queue[state.queueIndex] : null;
+  const trackDur = Number(currentTrack?.duration || 0);
+  const mediaDur = Number.isFinite(player.duration) && player.duration > 0 ? player.duration : 0;
+  const dur = mediaDur || (Number.isFinite(trackDur) && trackDur > 0 ? trackDur : 0);
+  const rawCur = Number.isFinite(player.currentTime) ? player.currentTime : 0;
+  const cur = Math.max(0, dur > 0 ? Math.min(rawCur, dur) : rawCur);
 
   tNow.textContent = formatTime(cur);
   tDur.textContent = formatTime(dur);
@@ -1199,11 +1204,10 @@ function updateProgress() {
     return;
   }
 
-  if (state.queueIndex >= 0 && state.queueIndex < state.queue.length) {
-    const track = state.queue[state.queueIndex];
-    if (track && track.id && state.localPlayCountedId !== track.id && cur / dur >= 0.7) {
-      bumpLocalPlayCount(track);
-      state.localPlayCountedId = track.id;
+  if (currentTrack) {
+    if (currentTrack.id && state.localPlayCountedId !== currentTrack.id && cur / dur >= 0.7) {
+      bumpLocalPlayCount(currentTrack);
+      state.localPlayCountedId = currentTrack.id;
     }
   }
 
@@ -1579,7 +1583,8 @@ async function maybeSubmitScrobble() {
   }
 }
 
-function renderSongMenu() {
+function renderSongMenu(options = {}) {
+  const scrollMode = options.scrollMode === "page" ? "page" : "nearest";
   songMenu.innerHTML = "";
   if (!state.queue || state.queue.length === 0) return;
   let activeEl = null;
@@ -1592,16 +1597,29 @@ function renderSongMenu() {
     songMenu.appendChild(btn);
   });
   if (activeEl) {
-    activeEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    if (scrollMode === "page") {
+      const pageStart = Math.floor(state.queueIndex / SONG_MENU_VISIBLE_COUNT) * SONG_MENU_VISIBLE_COUNT;
+      const pageStartEl = songMenu.children[pageStart];
+      if (pageStartEl) {
+        // Forzar anclaje exacto al inicio del bloque para evitar arrastrar la fila anterior.
+        const targetTop = Math.max(0, pageStartEl.offsetTop + 1);
+        songMenu.scrollTop = targetTop;
+      } else {
+        activeEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
+    } else {
+      activeEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
   }
 }
 
-async function playIndex(idx) {
+async function playIndex(idx, options = {}) {
+  const scrollMode = options.scrollMode === "page" ? "page" : "nearest";
   if (idx < 0 || idx >= state.queue.length) return;
   state.queueIndex = idx;
   const track = state.queue[idx];
   setNow(track);
-  renderSongMenu();
+  renderSongMenu({ scrollMode });
   maybePrefetchRandom();
   const url = streamUrl(state.server, state.auth, track.id, { transcode: state.dataSaver });
   state.scrobbleTrackId = track.id;
@@ -1609,6 +1627,7 @@ async function playIndex(idx) {
   state.scrobbleSubmissionSent = false;
   state.localPlayCountedId = null;
   player.src = url;
+  updateProgress();
   try {
     await player.play();
     await sendNowPlayingScrobble(track);
@@ -2488,12 +2507,13 @@ function wireEvents() {
   });
 
   player.addEventListener("ended", () => {
-    if (state.queueIndex + 1 < state.queue.length) playIndex(state.queueIndex + 1);
+    if (state.queueIndex + 1 < state.queue.length) playIndex(state.queueIndex + 1, { scrollMode: "page" });
     updatePlayPauseUI();
   });
   player.addEventListener("play", () => {
     setQuickActionLoading("");
     updatePlayPauseUI();
+    updateProgress();
   });
   player.addEventListener("pause", updatePlayPauseUI);
   player.addEventListener("timeupdate", updateProgress);

@@ -1389,8 +1389,10 @@
       }
       .songMenu {
         display: grid;
-        gap: 8px;
-        max-height: 280px;
+        --song-row-gap: 8px;
+        --song-row-height: 44px;
+        gap: var(--song-row-gap);
+        max-height: calc(var(--song-row-height) * 5 + var(--song-row-gap) * 4);
         overflow: auto;
         padding-right: 6px;
         scrollbar-width: none;
@@ -1406,6 +1408,7 @@
         align-items: center;
         text-align: left;
         padding: 10px 10px;
+        min-height: var(--song-row-height);
         border-radius: 14px;
         border: 1px solid var(--border);
         background: linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.04));
@@ -1617,7 +1620,9 @@
         overflow: hidden;
       }
       body.device-mode-car .songMenu {
-        max-height: 200px; /* 6 filas visibles y scroll para el resto */
+        --song-row-gap: 4px;
+        --song-row-height: 30px;
+        max-height: calc(var(--song-row-height) * 5 + var(--song-row-gap) * 4); /* 5 filas visibles y scroll para el resto */
         gap: 4px;
         padding-right: 2px;
         align-content: start;
