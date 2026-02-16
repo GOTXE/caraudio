@@ -1,9 +1,10 @@
-const CACHE_VERSION = "v1-shell-20260215";
+const CACHE_VERSION = "v1-shell-20260216";
 const CACHE_NAME = `caraudio-${CACHE_VERSION}`;
 
 const APP_SHELL = [
   "./",
   "./index.html",
+  "./404.html",
   "./manifest.webmanifest",
   "./assets/css/styles.css",
   "./assets/js/app.js",
@@ -19,6 +20,7 @@ const APP_SHELL = [
   "./assets/img/music-player.svg",
   "./assets/img/app-logo-a.png",
   "./assets/img/app-logo-b.png",
+  "./assets/img/error-404-inspector.jpg",
   "./assets/img/github-mark-day.png",
   "./assets/img/github-mark-night.png",
   "./link/index.html",

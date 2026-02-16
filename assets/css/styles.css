@@ -1904,3 +1904,135 @@
       .autoTimeGridInputs input {
         min-width: 0;
       }
+
+      /* 404 page */
+      body.is-error404 {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        background: linear-gradient(180deg, #0f0d10 0%, #4c3b30 56%, #ccb79d 100%);
+        color: #e9c97f;
+      }
+      .error404Header {
+        padding: 12px 16px;
+      }
+      .error404Logo {
+        width: clamp(88px, 11vw, 220px);
+        height: auto;
+        display: block;
+      }
+      .error404Main {
+        display: grid;
+        place-items: center;
+        padding: 14px 20px;
+      }
+      .error404Card {
+        width: min(860px, 100%);
+        display: grid;
+        justify-items: center;
+        gap: 12px;
+      }
+      .error404Lead {
+        margin: 0;
+        color: #d8b468;
+        font-size: clamp(19px, 2vw, 28px);
+        font-weight: 700;
+        text-align: center;
+        line-height: 1.2;
+        text-wrap: balance;
+        max-width: 760px;
+      }
+      .error404Image {
+        width: clamp(108px, 18vw, 246px);
+        height: auto;
+        border-radius: 14px;
+        display: block;
+      }
+      .error404Sub {
+        margin: 0;
+        color: #e7c985;
+        font-size: clamp(12px, 1.2vw, 18px);
+        font-weight: 700;
+        text-align: center;
+        line-height: 1.25;
+        text-wrap: pretty;
+        max-width: 760px;
+      }
+      .error404Actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .error404Btn {
+        appearance: none;
+        border: 1px solid #d8b468;
+        background: transparent;
+        color: #d8b468;
+        border-radius: 12px;
+        padding: 10px 16px;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color 120ms ease, color 120ms ease, transform 70ms ease;
+      }
+      .error404Btn:hover,
+      .error404Btn:focus-visible {
+        background: rgba(216, 180, 104, 0.12);
+        outline: none;
+      }
+      .error404Btn:active {
+        transform: translateY(1px);
+      }
+      .error404Footer {
+        display: grid;
+        justify-items: center;
+        gap: 4px;
+        padding: 6px 16px 8px;
+        color: #13253c;
+      }
+      .error404FooterTop {
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .error404FooterRow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .error404VerWrap {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      #errVerLatest[hidden] {
+        display: none;
+      }
+
+      @media (max-width: 700px) {
+        .error404Main {
+          padding: 10px 10px 14px;
+        }
+        .error404Card {
+          width: min(360px, 100%);
+          gap: 10px;
+        }
+        .error404Lead {
+          max-width: 328px;
+        }
+        .error404Sub {
+          max-width: 328px;
+        }
+        .error404Actions {
+          width: min(340px, 100%);
+        }
+        .error404Btn {
+          width: min(320px, 100%);
+          text-align: center;
+        }
+      }

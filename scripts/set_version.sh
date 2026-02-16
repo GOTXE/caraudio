@@ -11,6 +11,7 @@ set -euo pipefail
 
 BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 INDEX_FILE="$BASE_DIR/index.html"
+ERROR_404_FILE="$BASE_DIR/404.html"
 README_FILE="$BASE_DIR/README.md"
 WHATS_NEW_FILE="$BASE_DIR/assets/js/modules/whats-new.js"
 VERSION_FILE="$BASE_DIR/VERSION"
@@ -68,7 +69,7 @@ if [[ ! "$NEW_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+(\.[0-9A-Za-z]+)
   exit 1
 fi
 
-if [ ! -f "$INDEX_FILE" ] || [ ! -f "$README_FILE" ] || [ ! -f "$WHATS_NEW_FILE" ]; then
+if [ ! -f "$INDEX_FILE" ] || [ ! -f "$ERROR_404_FILE" ] || [ ! -f "$README_FILE" ] || [ ! -f "$WHATS_NEW_FILE" ]; then
   echo "No se encontraron los archivos esperados para sincronizar version." >&2
   exit 1
 fi
@@ -83,6 +84,11 @@ echo "$NEW_VERSION" > "$VERSION_FILE"
 perl -0777 -i -pe \
   's{(<meta\s+name="app-version"\s+content=")[^"]+(")}{$1.$ENV{NEW_VERSION}.$2}e' \
   "$INDEX_FILE"
+
+# 1.1) 404.html meta app-version
+perl -0777 -i -pe \
+  's{(<meta\s+name="app-version"\s+content=")[^"]+(")}{$1.$ENV{NEW_VERSION}.$2}e' \
+  "$ERROR_404_FILE"
 
 # 2) README badge/tag (si existe con formato esperado)
 perl -0777 -i -pe \
@@ -113,6 +119,7 @@ echo "Version sincronizada: $NEW_VERSION"
 echo "Archivos:"
 echo "- VERSION"
 echo "- index.html"
+echo "- 404.html"
 echo "- README.md"
 if [ "$SYNC_WHATS_NEW" -eq 1 ]; then
   echo "- assets/js/modules/whats-new.js"

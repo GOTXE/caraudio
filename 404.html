@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#121015" />
+    <meta name="app-version" content="v1.0.0" />
+    <meta name="update-repo" content="GOTXE/caraudio" />
+    <link rel="icon" type="image/x-icon" href="./favicon.ico" />
+    <title>Error 404 · Music Skin ND</title>
+    <link rel="stylesheet" href="./assets/css/styles.css" />
+  </head>
+  <body class="is-error404">
+    <header class="error404Header">
+      <a href="./index.html" aria-label="Ir al inicio">
+        <img class="error404Logo" src="./assets/img/app-logo-a.png" alt="Music Skin ND" />
+      </a>
+    </header>
+
+    <main class="error404Main">
+      <section class="error404Card" aria-label="Página no encontrada">
+        <p class="error404Lead">Yo también esperaba verla aquí, la estoy buscando.</p>
+        <img class="error404Image" src="./assets/img/error-404-inspector.jpg" alt="Inspector buscando la página" />
+        <p class="error404Sub">Si quieres puedes seguir navegando, click en uno de los botones.</p>
+        <div class="error404Actions">
+          <a class="error404Btn" href="./index.html">Volver al inicio</a>
+          <button class="error404Btn" id="btn404Retry" type="button">Reintentar</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="error404Footer" aria-label="Información de versión">
+      <div class="error404FooterTop">GOTXE ❤️ IA 🤖</div>
+      <div class="error404FooterRow">
+        <a class="githubLink" href="https://github.com/gotxe" target="_blank" rel="noopener noreferrer" aria-label="GitHub de Gotxe">
+          <img class="githubMark githubMarkDay" src="./assets/img/github-mark-day.png" alt="GitHub" />
+          <img class="githubMark githubMarkNight" src="./assets/img/github-mark-night.png" alt="GitHub" />
+        </a>
+        <div class="error404VerWrap mono">
+          <span id="errVerCurrent">v1.0.0</span>
+          <span id="errVerLatest" hidden></span>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module">
+      import { checkForUpdate } from "./assets/js/modules/ui.js";
+
+      const currentEl = document.getElementById("errVerCurrent");
+      const latestEl = document.getElementById("errVerLatest");
+      const appVersion = document.querySelector('meta[name="app-version"]')?.content || "dev";
+      const updateRepo = document.querySelector('meta[name="update-repo"]')?.content || "";
+
+      if (currentEl) currentEl.textContent = appVersion;
+      checkForUpdate({
+        currentTag: appVersion,
+        repo: updateRepo,
+        currentEl,
+        latestEl,
+      }).finally(() => {
+        if (!latestEl) return;
+        if (latestEl.hidden || !latestEl.textContent) {
+          latestEl.hidden = true;
+          latestEl.textContent = "";
+          return;
+        }
+        latestEl.textContent = `⬆ ${latestEl.textContent}`;
+        latestEl.hidden = false;
+      });
+
+      document.getElementById("btn404Retry")?.addEventListener("click", () => {
+        window.location.reload();
+      });
+    </script>
+  </body>
+</html>
