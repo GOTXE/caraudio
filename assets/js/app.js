@@ -361,11 +361,11 @@ function setHeaderUserLabel(username) {
   const value = String(username || "").trim();
   if (!value) {
     headerUser.hidden = true;
-    headerUser.textContent = "@—";
+    headerUser.textContent = "—";
     return;
   }
   headerUser.hidden = false;
-  headerUser.textContent = `@${value}`;
+  headerUser.textContent = value;
 }
 
 function detectDeviceModeHeuristic() {

@@ -100,6 +100,8 @@
           --color-status-checking: rgba(163, 101, 0, 0.55);
           --color-status-ok: rgba(0, 143, 128, 0.85);
           --color-status-bad: rgba(191, 38, 38, 0.72);
+          --track: rgba(145, 164, 186, 0.6);
+          --buffer: rgba(232, 240, 249, 0.95);
 
           --bg: var(--color-bg-primary);
           --panel: var(--color-bg-surface);
@@ -143,6 +145,8 @@
         --modal-input-bg: rgba(10, 22, 44, 0.05);
         --modal-input-border: rgba(10, 22, 44, 0.16);
         --modal-muted: rgba(8, 14, 24, 0.66);
+        --track: rgba(145, 164, 186, 0.6);
+        --buffer: rgba(232, 240, 249, 0.95);
 
         --bg: var(--color-bg-primary);
         --panel: var(--color-bg-surface);
@@ -220,16 +224,21 @@
         display: none !important;
       }
       .headerUser {
-        padding: var(--space-2) var(--space-3);
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: var(--color-bg-overlay);
-        color: var(--muted);
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--text);
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.18);
         font-size: var(--text-xs);
-        max-width: 180px;
+        max-width: 220px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+      .theme-dark .headerUser {
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
       }
       h1 {
         margin: 0;
@@ -740,6 +749,10 @@
         background: var(--track);
         border: 1px solid rgba(255, 255, 255, 0.10);
         overflow: hidden;
+      }
+      .theme-light .progressWrap {
+        border-color: rgba(104, 126, 150, 0.4);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
       }
       .progressBuf,
       .progressNow {
