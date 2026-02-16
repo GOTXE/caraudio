@@ -21,3 +21,6 @@ logs/
 
 # Privado (no sincronizar)
 tech_docs/
+
+# Runtime data
+broker/data/broker.db
