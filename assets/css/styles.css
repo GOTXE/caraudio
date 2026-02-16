@@ -806,9 +806,9 @@
         gap: var(--space-5);
         padding: 28px;
         border-radius: 20px;
-        background: #fdfefe;
-        border-color: #d7e1ea;
-        color: #0b1220;
+        background: var(--modal-bg);
+        border-color: var(--modal-border);
+        color: var(--modal-text);
         transition: transform 220ms ease;
       }
       .loginTopRow {
@@ -824,7 +824,7 @@
         gap: var(--space-3);
       }
       .loginModeLabel {
-        color: #334155;
+        color: var(--modal-muted);
         font-size: 13px;
         font-weight: 700;
       }
@@ -839,7 +839,7 @@
       .loginTitle {
         font-size: 28px;
         font-weight: 800;
-        color: #0b1220;
+        color: var(--modal-text);
       }
       .loginCredRow {
         display: grid;
@@ -866,24 +866,37 @@
         color: #f4fffd;
       }
       .btnLinkDevice {
-        border-color: #d49e2f;
-        background: linear-gradient(180deg, #f7d36e, #f5c451);
-        color: #1f1300;
+        border-color: #e3b24b;
+        background: linear-gradient(180deg, #f9dd89, #e8b94a);
+        color: #1a1200;
+        font-weight: 900;
+        line-height: 1.16;
+        letter-spacing: 0.15px;
+        text-wrap: balance;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.22);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+      }
+      .theme-dark .btnLinkDevice {
+        border-color: #ffd98a;
+        background: linear-gradient(180deg, #ffe7a8, #f0c45c);
+        color: #171000;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.32);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.32), 0 0 16px rgba(240, 196, 92, 0.28);
       }
       .loginCard input,
       .loginCard select {
-        color: #0b1220;
-        background: #dbe6f2;
-        border-color: #c4d2e1;
+        color: var(--modal-text);
+        background: var(--modal-input-bg);
+        border-color: var(--modal-input-border);
         min-height: 42px;
       }
       .loginCard input::placeholder {
-        color: #6a7888;
+        color: var(--modal-muted);
       }
       .loginCard label {
         margin: 0;
         font-size: 14px;
-        color: #334155;
+        color: var(--modal-muted);
       }
 
       .inlineRow {
@@ -1021,7 +1034,7 @@
       }
       .loginFooterTop {
         font-size: 12px;
-        color: #0b1220;
+        color: var(--modal-text);
         font-weight: 700;
       }
       .loginFooterRow {
@@ -1053,7 +1066,7 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        color: #0b1220;
+        color: var(--modal-text);
         font-size: 11px;
       }
       #loginFooterUpd[hidden] {
@@ -1667,14 +1680,19 @@
         box-shadow: 0 0 0 1px rgba(0, 200, 182, 0.16), 0 10px 20px rgba(0, 0, 0, 0.16), 0 0 18px rgba(0, 200, 182, 0.16);
       }
       .ghostBtn.serverBtn {
-        border-color: var(--color-danger-border);
-        background: var(--color-danger-bg-soft);
-        color: var(--color-on-danger);
+        border-color: #bf4a4a;
+        background: linear-gradient(180deg, #b94343, #8f3434);
+        color: #fff3f3;
+        font-weight: 900;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.32);
+        box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.18);
       }
       .ghostBtn.serverBtn.ok {
-        border-color: var(--color-accent-border-strong);
-        background: var(--color-accent-bg-medium);
-        color: var(--color-on-success);
+        border-color: #1fb3a7;
+        background: linear-gradient(180deg, #17a297, #107d74);
+        color: #f2fffd;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
+        box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 0 14px rgba(0, 200, 182, 0.2);
       }
 
       .dangerFab {

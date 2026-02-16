@@ -1,5 +1,6 @@
 import { completeDevice, verifyDeviceCode } from "./modules/broker-client.js";
 import { createI18n, detectPreferredLanguage } from "./modules/i18n.js";
+import { getTheme, getThemeMode } from "./modules/storage.js";
 
 const codeEl = document.getElementById("linkCode");
 const userEl = document.getElementById("linkUser");
@@ -12,6 +13,22 @@ const i18n = createI18n(detectPreferredLanguage());
 i18n.apply(document);
 
 let attemptsLeft = 3;
+
+function applyStoredTheme() {
+  const html = document.documentElement;
+  html.classList.remove("theme-dark", "theme-light");
+  const storedTheme = getTheme();
+  if (storedTheme === "dark") {
+    html.classList.add("theme-dark");
+    return;
+  }
+  if (storedTheme === "light") {
+    html.classList.add("theme-light");
+    return;
+  }
+  const mode = getThemeMode();
+  html.classList.add(mode === "night" ? "theme-dark" : "theme-light");
+}
 
 function t(key, params) {
   return i18n.t(key, params);
@@ -61,6 +78,11 @@ authorizeBtn.addEventListener("click", async () => {
       username,
       password,
     });
+    codeEl.value = "";
+    userEl.value = "";
+    passEl.value = "";
+    attemptsLeft = 3;
+    updateAttempts();
     setStatus(t("link.connecting"), "ok");
   } catch (e) {
     const message = String(e || "");
@@ -81,3 +103,4 @@ authorizeBtn.addEventListener("click", async () => {
 });
 
 updateAttempts();
+applyStoredTheme();

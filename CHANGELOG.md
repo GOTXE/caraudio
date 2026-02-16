@@ -14,6 +14,7 @@ Formato inspirado en "Keep a Changelog". Este proyecto sigue SemVer en `0.x` con
 - Ajustes de UI: escoba sobre el filtro, tiempos encima de progreso y retirada del boton Salir.
 - Rebranding de interfaz a \"Music Skin ND\".
 - Migracion de preferencias legacy: al actualizar, se mantienen tema y perfiles del usuario.
+- Login: nuevo boton \"Usuarios\" visible solo cuando existen perfiles guardados, para entrar directamente con un perfil.
 
 ## [v0.1.0-alpha.5] - 2026-02-06
 - Reorden de controles: Atras, Play/Pause, Adelante, Aleatorio, Reproducir todo.

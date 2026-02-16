@@ -3,7 +3,15 @@
 // (Se actualiza normalmente al preparar el PR/release que entra en produccion.)
 const WHATS_NEW_BY_VERSION = {
   "v1.0.0": [
-    "No hay novedades registradas para esta version.",
+    "Nueva versión mayor v1.0.0: rediseño completo de la app con enfoque estable para uso diario.",
+    "Nuevo acceso por dispositivo: login adaptado para Car Unit y Desktop.",
+    "Vinculación con otro dispositivo: puedes autorizar desde móvil con código sin escribir en pantalla del coche.",
+    "Player mejorado en modo coche: controles más claros, mejor distribución y botones más cómodos.",
+    "Gestión de usuarios/perfiles: cambio rápido de usuario y acceso directo a perfiles guardados desde login.",
+    "Tema visual avanzado: modos Día, Noche y Auto con mejor contraste y legibilidad.",
+    "Mejoras de progreso y reproducción: barra de reproducción más visible y comportamiento más consistente.",
+    "PWA preparada para instalación: experiencia más cercana a app nativa en pantalla completa.",
+    "Base técnica V1 actualizada para estabilidad y evolución futura (incluye broker y estructura modular).",
   ],
   "v0.1.0-alpha.6": [
     "Nueva cabecera de Music Skin ND con acceso directo a Novedades.",

@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v1-shell-20260216";
+const CACHE_VERSION = "v1-shell-20260216-link-button-night";
 const CACHE_NAME = `caraudio-${CACHE_VERSION}`;
 
 const APP_SHELL = [

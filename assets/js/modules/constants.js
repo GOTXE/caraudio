@@ -24,7 +24,7 @@ export const DEFAULTS = {
   deviceMode: "auto",
   language: "es",
   quality: "low",
-  themeMode: "day",
+  themeMode: "night",
   autoTheme: {
     timeZone: "UTC",
     dayStart: "07:00",
