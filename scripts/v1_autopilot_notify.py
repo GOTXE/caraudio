@@ -41,7 +41,15 @@ def build_message(status: dict):
     run_id = status.get("run_id") or "-"
     states = status.get("states", {})
     phase_counts = status.get("phase_counts", {})
+    error_counts = status.get("error_counts", {})
     phase_rows = status.get("phase_gates", [])
+    tracker_issues = status.get("tracker_issues", [])
+    tracker_ok = status.get("tracker_ok", True)
+
+    task_errors = int(error_counts.get("tasks_blocked", states.get("blocked", 0) or 0))
+    phase_errors = int(error_counts.get("phases_blocked", phase_counts.get("blocked", 0) or 0))
+    gate_errors = int(error_counts.get("gate_failures", 0 if status.get("gates_ok") else 1))
+    total_errors = int(error_counts.get("total", task_errors + phase_errors + gate_errors))
 
     if overall == "complete":
         title = "V1 completada al 100%"
@@ -55,7 +63,7 @@ def build_message(status: dict):
     resumen = (
         f"Estado general: {overall}. run_id={run_id}. "
         f"Tareas: completado={states.get('done', 0)}, pendiente={states.get('todo', 0)}, "
-        f"en_progreso={states.get('doing', 0)}, error={states.get('blocked', 0)}."
+        f"en_progreso={states.get('doing', 0)}, error={total_errors}."
     )
 
     details = [
@@ -64,10 +72,19 @@ def build_message(status: dict):
             f"- Completado: {phase_counts.get('done', 0)}\n"
             f"- Pendiente: {phase_counts.get('pending', 0)}\n"
             f"- En progreso: {phase_counts.get('in_progress', 0)}\n"
-            f"- Error: {phase_counts.get('blocked', 0)}"
+            f"- Error: {phase_errors}"
         ),
         f"Gate tecnico: {'OK' if status.get('gates_ok') else 'ERROR'}",
+        (
+            "Errores detectados:\n"
+            f"- Tareas bloqueadas: {task_errors}\n"
+            f"- Fases bloqueadas: {phase_errors}\n"
+            f"- Fallo de gate: {gate_errors}\n"
+            f"- Total error: {total_errors}"
+        ),
     ]
+    if not tracker_ok and tracker_issues:
+        details.append("Tracker issues: " + ", ".join(str(item) for item in tracker_issues))
     if phase_rows:
         status_map = {
             "done": "completado",
@@ -93,7 +110,10 @@ def build_message(status: dict):
     if overall == "complete":
         action = "V1 ya está en verde total. Puedes cerrar el autopilot."
     elif overall in {"blocked", "gates_failed"}:
-        action = "Gotxe, revisa el log de autopilot y corrige el bloqueo para continuar."
+        if not tracker_ok and tracker_issues:
+            action = "Gotxe, corrige tracker (exactamente 1 tarea en doing) y reinicia autopilot."
+        else:
+            action = "Gotxe, revisa el log de autopilot y corrige el bloqueo para continuar."
     else:
         action = "Seguimos ejecutando automáticamente. Se avisará al próximo cambio relevante."
 

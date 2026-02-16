@@ -8,6 +8,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -36,6 +37,28 @@ def run_cmd(cmd):
 def load_json(path: Path):
     if not path.exists():
         return None
+
+
+def normalize_error_fingerprint(text: str) -> str:
+    raw = str(text or "")
+    if not raw.strip():
+        return ""
+    lines = [line.strip() for line in raw.splitlines() if line.strip()]
+    if not lines:
+        return ""
+    keywords = ("error", "failed", "exception", "traceback", "moduleNotFoundError")
+    picked = ""
+    for line in reversed(lines):
+        low = line.lower()
+        if any(k.lower() in low for k in keywords):
+            picked = line
+            break
+    if not picked:
+        picked = lines[-1]
+    picked = re.sub(r"\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}", "<ts>", picked)
+    picked = re.sub(r"\d+\.\d+ms|\d+ms", "<ms>", picked)
+    picked = re.sub(r"\s+", " ", picked).strip()
+    return picked[:240]
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
@@ -59,12 +82,14 @@ def get_active_task():
 
 
 def make_signature(payload):
+    status = payload.get("status") or {}
     base = {
         "reason": payload.get("reason"),
-        "overall": (payload.get("status") or {}).get("overall"),
-        "states": (payload.get("status") or {}).get("states"),
-        "gates_ok": (payload.get("status") or {}).get("gates_ok"),
-        "error_tail": (payload.get("status") or {}).get("gates_output_tail"),
+        "overall": status.get("overall"),
+        "states": status.get("states"),
+        "gates_ok": status.get("gates_ok"),
+        "active_task": payload.get("active_task"),
+        "error_fingerprint": normalize_error_fingerprint(status.get("gates_output_tail")),
     }
     return json.dumps(base, sort_keys=True, ensure_ascii=False)
 
@@ -125,4 +150,3 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

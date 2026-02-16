@@ -48,6 +48,9 @@ while true; do
   elif [ "$RC" -eq 4 ]; then
     echo "[v1_autopilot] [$TS] Gates failed; waiting for fixes" >> "$LOG_FILE"
     python3 "$BASE_DIR/scripts/v1_incident_capture.py" --reason gates_failed --rc "$RC" >> "$LOG_FILE" 2>&1 || true
+  elif [ "$RC" -ne 2 ]; then
+    echo "[v1_autopilot] [$TS] ERROR: guard returned unexpected rc=$RC" >> "$LOG_FILE"
+    python3 "$BASE_DIR/scripts/v1_incident_capture.py" --reason guard_error --rc "$RC" >> "$LOG_FILE" 2>&1 || true
   else
     echo "[v1_autopilot] [$TS] In progress" >> "$LOG_FILE"
   fi

@@ -32,12 +32,22 @@ else
 fi
 
 if [ -d broker ]; then
-  if ! command -v pytest >/dev/null 2>&1; then
-    echo "[v1_gate_check] ERROR: broker detectado pero pytest no disponible"
+  PYTEST_BIN="${CARAUDIO_PYTEST_BIN:-}"
+  if [ -z "$PYTEST_BIN" ]; then
+    if command -v pytest >/dev/null 2>&1; then
+      PYTEST_BIN="$(command -v pytest)"
+    elif [ -x "$BASE_DIR/.venv-tests/bin/pytest" ]; then
+      PYTEST_BIN="$BASE_DIR/.venv-tests/bin/pytest"
+    elif [ -x "$BASE_DIR/.venv/bin/pytest" ]; then
+      PYTEST_BIN="$BASE_DIR/.venv/bin/pytest"
+    fi
+  fi
+  if [ -z "$PYTEST_BIN" ]; then
+    echo "[v1_gate_check] ERROR: broker detectado pero pytest no disponible (usa CARAUDIO_PYTEST_BIN o .venv-tests)"
     exit 1
   fi
-  echo "[v1_gate_check] Ejecutando broker tests (pytest)"
-  pytest broker
+  echo "[v1_gate_check] Ejecutando broker tests ($PYTEST_BIN)"
+  "$PYTEST_BIN" broker
 else
   echo "[v1_gate_check] broker/ no existe aún; tests broker en N/A"
 fi

@@ -89,9 +89,21 @@ def main() -> int:
     gates_ok, gates_output = run_gates()
 
     blocked = states["blocked"] > 0
+    tracker_issues = []
+    if states["todo"] > 0 and states["doing"] == 0:
+        tracker_issues.append("no_active_doing_task")
+    if states["doing"] > 1:
+        tracker_issues.append("multiple_doing_tasks")
+    tracker_ok = not tracker_issues
+
+    gate_errors = 0 if gates_ok else 1
+    task_errors = states["blocked"]
+    phase_blocked = sum(1 for p in phase_rows if p["status"] == "blocked")
+    error_total = task_errors + phase_blocked + gate_errors
+
     all_done = states["todo"] == 0 and states["doing"] == 0 and states["blocked"] == 0 and states["done"] > 0
 
-    if blocked:
+    if blocked or not tracker_ok:
         code = 3
         overall = "blocked"
     elif all_done and gates_ok:
@@ -117,6 +129,14 @@ def main() -> int:
             "pending": sum(1 for p in phase_rows if p["status"] == "pending"),
             "blocked": sum(1 for p in phase_rows if p["status"] == "blocked"),
             "in_progress": sum(1 for p in phase_rows if p["status"] == "in_progress"),
+        },
+        "tracker_ok": tracker_ok,
+        "tracker_issues": tracker_issues,
+        "error_counts": {
+            "tasks_blocked": task_errors,
+            "phases_blocked": phase_blocked,
+            "gate_failures": gate_errors,
+            "total": error_total,
         },
         "gates_ok": gates_ok,
         "gates_output_tail": gates_output[-4000:],
