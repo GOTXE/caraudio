@@ -1603,6 +1603,19 @@
         height: clamp(108px, 14vw, 144px);
         border-radius: 16px;
       }
+
+      /* Car Unit 1420x480: más aire entre botones y primera canción */
+      @media (max-height: 520px) and (min-width: 1400px) {
+        body.device-mode-car .nowPanel .topBar {
+          margin-bottom: 4px;
+        }
+        body.device-mode-car .nowContent {
+          padding-top: 4px;
+        }
+        body.device-mode-car .songMenu {
+          margin-top: 6px;
+        }
+      }
       body.device-mode-car .nowMeta {
         gap: 8px;
         padding-top: 18px;
