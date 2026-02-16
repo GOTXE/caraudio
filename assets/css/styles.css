@@ -514,6 +514,27 @@
         color: var(--text);
         outline: none;
       }
+      .passwordWrap {
+        position: relative;
+        width: 100%;
+      }
+      .passwordWrap input {
+        padding-right: 54px;
+      }
+      .pwToggleBtn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 4px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--panel2);
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
       input:focus,
       select:focus {
         border-color: var(--color-accent-border-soft);

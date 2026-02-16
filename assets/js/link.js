@@ -8,6 +8,7 @@ const passEl = document.getElementById("linkPass");
 const statusEl = document.getElementById("linkStatus");
 const attemptsEl = document.getElementById("linkAttempts");
 const authorizeBtn = document.getElementById("linkAuthorize");
+const btnToggleLinkPass = document.getElementById("btnToggleLinkPass");
 
 const i18n = createI18n(detectPreferredLanguage());
 i18n.apply(document);
@@ -100,6 +101,14 @@ authorizeBtn.addEventListener("click", async () => {
   } finally {
     authorizeBtn.disabled = false;
   }
+});
+
+btnToggleLinkPass?.addEventListener("click", () => {
+  if (!passEl) return;
+  const isHidden = passEl.type === "password";
+  passEl.type = isHidden ? "text" : "password";
+  btnToggleLinkPass.textContent = isHidden ? t("common.hide") : t("common.show");
+  btnToggleLinkPass.setAttribute("aria-pressed", String(isHidden));
 });
 
 updateAttempts();

@@ -62,14 +62,17 @@
 
               <div class="loginField">
                 <label for="password" data-i18n="login.password">Contraseña</label>
-                <input
-                  id="password"
-                  type="password"
-                  autocomplete="current-password"
-                  autocapitalize="none"
-                  spellcheck="false"
-                  enterkeyhint="done"
-                />
+                <div class="passwordWrap">
+                  <input
+                    id="password"
+                    type="password"
+                    autocomplete="current-password"
+                    autocapitalize="none"
+                    spellcheck="false"
+                    enterkeyhint="done"
+                  />
+                  <button class="pwToggleBtn" id="btnTogglePassword" type="button" data-i18n="common.show">Mostrar</button>
+                </div>
               </div>
             </div>
 

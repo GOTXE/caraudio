@@ -22,7 +22,10 @@
         <input id="linkUser" class="inputControl" autocomplete="username" />
 
         <label for="linkPass" data-i18n="login.password">Contraseña</label>
-        <input id="linkPass" class="inputControl" type="password" autocomplete="current-password" />
+        <div class="passwordWrap">
+          <input id="linkPass" class="inputControl" type="password" autocomplete="current-password" />
+          <button class="pwToggleBtn" id="btnToggleLinkPass" type="button" data-i18n="common.show">Mostrar</button>
+        </div>
 
         <p class="linkAttempts mono" id="linkAttempts" data-i18n="link.attempts_left">Tienes 3 intentos.</p>
         <button id="linkAuthorize" class="btn" type="button" data-i18n="link.authorize">Autorizar</button>

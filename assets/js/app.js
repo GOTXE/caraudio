@@ -144,6 +144,7 @@ const btnCloseWhatsNew = document.getElementById("btnCloseWhatsNew");
 const btnOpenMenu = document.getElementById("btnOpenMenu");
 const btnHideKeyboard = document.getElementById("btnHideKeyboard");
 const btnServerHideKeyboard = document.getElementById("btnServerHideKeyboard");
+const btnTogglePassword = document.getElementById("btnTogglePassword");
 const headerUser = document.getElementById("headerUser");
 const menuModal = document.getElementById("menuModal");
 const btnCloseMenu = document.getElementById("btnCloseMenu");
@@ -2363,6 +2364,14 @@ function wireEvents() {
     if (e.key !== "Enter") return;
     e.preventDefault();
     connect();
+  });
+
+  btnTogglePassword?.addEventListener("click", () => {
+    if (!passEl) return;
+    const isHidden = passEl.type === "password";
+    passEl.type = isHidden ? "text" : "password";
+    btnTogglePassword.textContent = isHidden ? t("common.hide") : t("common.show");
+    btnTogglePassword.setAttribute("aria-pressed", String(isHidden));
   });
 
   [userEl, passEl].forEach((el) => {
