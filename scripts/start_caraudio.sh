@@ -15,13 +15,46 @@ if [ -f "$ENV_FILE" ]; then
   set +a
 fi
 
-WORKDIR="${CARAUDIO_WORKDIR:-$BASE_DIR}"
-WEB_DIR="${CARAUDIO_WEB_DIR:-$WORKDIR}"
-VENV_DIR="${CARAUDIO_VENV_DIR:-$WORKDIR/.venv}"
+resolve_path() {
+  local value="${1:-}"
+  local base="${2:-}"
+  if [ -z "$value" ]; then
+    echo ""
+    return
+  fi
+  case "$value" in
+    /*) echo "$value" ;;
+    *) echo "$base/$value" ;;
+  esac
+}
+
+WORKDIR_INPUT="$(resolve_path "${CARAUDIO_WORKDIR:-}" "$BASE_DIR")"
+if [ -z "$WORKDIR_INPUT" ]; then
+  WORKDIR="$BASE_DIR"
+elif [ -d "$WORKDIR_INPUT" ]; then
+  WORKDIR="$WORKDIR_INPUT"
+else
+  echo "[start_caraudio.sh] WARN: CARAUDIO_WORKDIR no existe: $WORKDIR_INPUT. Usando BASE_DIR=$BASE_DIR" >&2
+  WORKDIR="$BASE_DIR"
+fi
+
+WEB_DIR_INPUT="$(resolve_path "${CARAUDIO_WEB_DIR:-}" "$WORKDIR")"
+if [ -z "$WEB_DIR_INPUT" ]; then
+  WEB_DIR="$WORKDIR"
+elif [ -d "$WEB_DIR_INPUT" ]; then
+  WEB_DIR="$WEB_DIR_INPUT"
+else
+  echo "[start_caraudio.sh] WARN: CARAUDIO_WEB_DIR no existe: $WEB_DIR_INPUT. Usando WORKDIR=$WORKDIR" >&2
+  WEB_DIR="$WORKDIR"
+fi
+
+VENV_DIR_INPUT="$(resolve_path "${CARAUDIO_VENV_DIR:-}" "$WORKDIR")"
+VENV_DIR="${VENV_DIR_INPUT:-$WORKDIR/.venv}"
 PYTHON_BIN="${CARAUDIO_PYTHON_BIN:-python3}"
 HOST="${CARAUDIO_HOST:-0.0.0.0}"
 PORT="${CARAUDIO_PORT:-9000}"
-LOG_DIR="${CARAUDIO_LOG_DIR:-$WORKDIR/logs}"
+LOG_DIR_INPUT="$(resolve_path "${CARAUDIO_LOG_DIR:-}" "$WORKDIR")"
+LOG_DIR="${LOG_DIR_INPUT:-$WORKDIR/logs}"
 MODE="${CARAUDIO_MODE:-auto}"
 RUN_PID="$LOG_DIR/caraudio.pid"
 MODE_FILE="$LOG_DIR/caraudio.mode"
@@ -39,7 +72,15 @@ pick_mode() {
   echo "$MODE"
 }
 
-mkdir -p "$LOG_DIR"
+if ! mkdir -p "$LOG_DIR"; then
+  FALLBACK_LOG_DIR="$WORKDIR/logs"
+  echo "[start_caraudio.sh] WARN: No se pudo crear LOG_DIR=$LOG_DIR. Usando $FALLBACK_LOG_DIR" >&2
+  LOG_DIR="$FALLBACK_LOG_DIR"
+  RUN_PID="$LOG_DIR/caraudio.pid"
+  MODE_FILE="$LOG_DIR/caraudio.mode"
+  APP_LOG="$LOG_DIR/caraudio.log"
+  mkdir -p "$LOG_DIR"
+fi
 cd "$WORKDIR"
 
 START_MODE="$(pick_mode)"

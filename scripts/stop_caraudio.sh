@@ -15,13 +15,42 @@ if [ -f "$ENV_FILE" ]; then
   set +a
 fi
 
-WORKDIR="${CARAUDIO_WORKDIR:-$BASE_DIR}"
-LOG_DIR="${CARAUDIO_LOG_DIR:-$WORKDIR/logs}"
+resolve_path() {
+  local value="${1:-}"
+  local base="${2:-}"
+  if [ -z "$value" ]; then
+    echo ""
+    return
+  fi
+  case "$value" in
+    /*) echo "$value" ;;
+    *) echo "$base/$value" ;;
+  esac
+}
+
+WORKDIR_INPUT="$(resolve_path "${CARAUDIO_WORKDIR:-}" "$BASE_DIR")"
+if [ -z "$WORKDIR_INPUT" ]; then
+  WORKDIR="$BASE_DIR"
+elif [ -d "$WORKDIR_INPUT" ]; then
+  WORKDIR="$WORKDIR_INPUT"
+else
+  echo "[stop_caraudio.sh] WARN: CARAUDIO_WORKDIR no existe: $WORKDIR_INPUT. Usando BASE_DIR=$BASE_DIR" >&2
+  WORKDIR="$BASE_DIR"
+fi
+
+LOG_DIR_INPUT="$(resolve_path "${CARAUDIO_LOG_DIR:-}" "$WORKDIR")"
+LOG_DIR="${LOG_DIR_INPUT:-$WORKDIR/logs}"
 APP_LOG="$LOG_DIR/caraudio.log"
 RUN_PID="$LOG_DIR/caraudio.pid"
 MODE_FILE="$LOG_DIR/caraudio.mode"
 
-mkdir -p "$LOG_DIR"
+if ! mkdir -p "$LOG_DIR"; then
+  LOG_DIR="$WORKDIR/logs"
+  APP_LOG="$LOG_DIR/caraudio.log"
+  RUN_PID="$LOG_DIR/caraudio.pid"
+  MODE_FILE="$LOG_DIR/caraudio.mode"
+  mkdir -p "$LOG_DIR"
+fi
 cd "$WORKDIR"
 
 {
@@ -47,7 +76,7 @@ cd "$WORKDIR"
     echo "No existe PID file de app"
   fi
 
-  WATCHDOG_PIDS=$(ps aux | grep '[w]atchdog_caraudio.sh' | awk '{print $2}')
+  WATCHDOG_PIDS=$(ps aux | awk '/[w]atchdog_caraudio.sh/{print $2}' || true)
   if [ -n "$WATCHDOG_PIDS" ]; then
     echo "Deteniendo watchdog(s): $WATCHDOG_PIDS"
     kill $WATCHDOG_PIDS || true

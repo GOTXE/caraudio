@@ -15,13 +15,41 @@ if [ -f "$ENV_FILE" ]; then
   set +a
 fi
 
-WORKDIR="${CARAUDIO_WORKDIR:-$BASE_DIR}"
-LOG_DIR="${CARAUDIO_LOG_DIR:-$WORKDIR/logs}"
+resolve_path() {
+  local value="${1:-}"
+  local base="${2:-}"
+  if [ -z "$value" ]; then
+    echo ""
+    return
+  fi
+  case "$value" in
+    /*) echo "$value" ;;
+    *) echo "$base/$value" ;;
+  esac
+}
+
+WORKDIR_INPUT="$(resolve_path "${CARAUDIO_WORKDIR:-}" "$BASE_DIR")"
+if [ -z "$WORKDIR_INPUT" ]; then
+  WORKDIR="$BASE_DIR"
+elif [ -d "$WORKDIR_INPUT" ]; then
+  WORKDIR="$WORKDIR_INPUT"
+else
+  echo "[watchdog_caraudio.sh] WARN: CARAUDIO_WORKDIR no existe: $WORKDIR_INPUT. Usando BASE_DIR=$BASE_DIR" >&2
+  WORKDIR="$BASE_DIR"
+fi
+
+LOG_DIR_INPUT="$(resolve_path "${CARAUDIO_LOG_DIR:-}" "$WORKDIR")"
+LOG_DIR="${LOG_DIR_INPUT:-$WORKDIR/logs}"
 WATCHDOG_LOG="$LOG_DIR/watchdog_caraudio.log"
 RUN_PID="$LOG_DIR/caraudio.pid"
 SLEEP_SECONDS="${CARAUDIO_WATCHDOG_INTERVAL:-30}"
 
-mkdir -p "$LOG_DIR"
+if ! mkdir -p "$LOG_DIR"; then
+  LOG_DIR="$WORKDIR/logs"
+  WATCHDOG_LOG="$LOG_DIR/watchdog_caraudio.log"
+  RUN_PID="$LOG_DIR/caraudio.pid"
+  mkdir -p "$LOG_DIR"
+fi
 cd "$WORKDIR"
 
 while true; do
