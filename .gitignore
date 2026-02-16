@@ -16,6 +16,8 @@ Thumbs.db
 logs/
 **/__pycache__/
 *.pyc
+.venv/
+.venv-tests/
 
 # Privado (no sincronizar)
 tech_docs/
