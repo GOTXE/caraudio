@@ -142,6 +142,8 @@ const whatsNewList = document.getElementById("whatsNewList");
 const btnCloseWhatsNew = document.getElementById("btnCloseWhatsNew");
 
 const btnOpenMenu = document.getElementById("btnOpenMenu");
+const btnHideKeyboard = document.getElementById("btnHideKeyboard");
+const btnServerHideKeyboard = document.getElementById("btnServerHideKeyboard");
 const headerUser = document.getElementById("headerUser");
 const menuModal = document.getElementById("menuModal");
 const btnCloseMenu = document.getElementById("btnCloseMenu");
@@ -397,6 +399,10 @@ function applyDeviceMode(mode = state.deviceMode) {
   document.body.classList.toggle("device-mode-car", state.resolvedDeviceMode === "car");
   document.body.classList.toggle("device-mode-desktop", state.resolvedDeviceMode === "desktop");
   syncDeviceModeButtons();
+  if (state.resolvedDeviceMode !== "car") {
+    if (btnHideKeyboard) btnHideKeyboard.hidden = true;
+    if (btnServerHideKeyboard) btnServerHideKeyboard.hidden = true;
+  }
 }
 
 function setAndApplyDeviceMode(mode) {
@@ -787,6 +793,18 @@ async function probeServerUrl(input) {
       return lastProbe;
     }
     if (res.ok || res.status === 401 || res.status === 403) {
+      let payload = null;
+      try {
+        payload = await res.json();
+      } catch {
+        // ignore
+      }
+      const hasSubsonic = payload && typeof payload === "object" && payload["subsonic-response"];
+      if (!hasSubsonic) {
+        lastProbe = { url: normalized, state: "bad", kind: "not_navidrome" };
+        setServerCheck("bad", t("status.server_not_navidrome"));
+        return lastProbe;
+      }
       lastProbe = { url: normalized, state: "ok", kind: "ok" };
       setServerCheck("ok", t("common.ok"));
       return lastProbe;
@@ -2358,6 +2376,38 @@ function wireEvents() {
         }
       }, 50);
     });
+  });
+
+  const keyboardInputs = [artistFilter, userEl, passEl, serverUrlInput].filter(Boolean);
+
+  keyboardInputs.forEach((el) => {
+    el.addEventListener("focus", () => {
+      if (state.resolvedDeviceMode !== "car") return;
+      if (btnHideKeyboard) btnHideKeyboard.hidden = false;
+      if (btnServerHideKeyboard) btnServerHideKeyboard.hidden = false;
+    });
+  });
+
+  keyboardInputs.forEach((el) => {
+    el.addEventListener("blur", () => {
+      if (btnHideKeyboard) btnHideKeyboard.hidden = true;
+      if (btnServerHideKeyboard) btnServerHideKeyboard.hidden = true;
+    });
+  });
+
+  btnHideKeyboard?.addEventListener("click", () => {
+    if (!btnHideKeyboard) return;
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+    btnHideKeyboard.hidden = true;
+  });
+  btnServerHideKeyboard?.addEventListener("click", () => {
+    if (!btnServerHideKeyboard) return;
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+    btnServerHideKeyboard.hidden = true;
   });
 
   btnPrev.addEventListener("click", () => playNext(-1));

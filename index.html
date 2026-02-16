@@ -30,6 +30,7 @@
           <button class="ghostBtn whatsNewBtn" id="btnWhatsNew" title="Ver novedades" data-i18n="header.whats_new" data-i18n-title="header.whats_new">Novedades</button>
         </div>
         <div class="headerRight">
+          <button class="kbdHideBtn" id="btnHideKeyboard" type="button" hidden data-i18n="header.hide_keyboard">Ocultar teclado</button>
           <span class="headerUser mono" id="headerUser" hidden>@—</span>
           <button class="iconBtn" id="btnOpenMenu" aria-label="Abrir menú" title="Menú" hidden data-i18n-title="header.menu" data-i18n-aria-label="header.menu">☰</button>
         </div>
@@ -202,7 +203,7 @@
 
     <!-- Modal servidor -->
     <div class="modal modalTop" id="serverModal" hidden>
-      <section class="card modalCard" style="max-height: min(280px, 100%)">
+      <section class="card modalCard serverModalCard" style="max-height: min(280px, 100%)">
         <div class="topBar">
           <div class="modalTitleRow">
             <div class="pill" data-i18n="modal.server_title">Servidor Navidrome</div>
@@ -212,22 +213,24 @@
             </div>
           </div>
           <div style="display:flex;gap:10px;align-items:center">
+            <button class="kbdHideBtn" id="btnServerHideKeyboard" type="button" hidden data-i18n="header.hide_keyboard">Ocultar teclado</button>
             <button class="ghostBtn" id="btnServerCancel" data-i18n="common.cancel">Cancelar</button>
             <button class="ghostBtn" id="btnServerSave" data-i18n="common.save">Guardar</button>
           </div>
         </div>
 
-	        <label for="serverUrlInput">URL</label>
-	        <input
-	          id="serverUrlInput"
-	          type="url"
-	          inputmode="url"
-	          autocomplete="url"
-	          autocapitalize="none"
-	          spellcheck="false"
-	          enterkeyhint="done"
-	          placeholder="https://navidrome.tudominio.com"
-	        />
+        <div class="serverModalBody">
+          <input
+            id="serverUrlInput"
+            type="url"
+            inputmode="url"
+            autocomplete="url"
+            autocapitalize="none"
+            spellcheck="false"
+            enterkeyhint="done"
+            placeholder="https://navidrome.tudominio.com"
+          />
+        </div>
       </section>
     </div>
 

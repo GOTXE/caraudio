@@ -220,6 +220,27 @@
         gap: 8px;
         justify-self: end;
       }
+      .kbdHideBtn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--panel2);
+        color: var(--text);
+        font-weight: 700;
+        font-size: 12px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        cursor: pointer;
+        transition: transform 0.12s ease, background 0.2s ease, box-shadow 0.2s ease;
+      }
+      .kbdHideBtn:active {
+        transform: scale(0.98);
+      }
+      body.device-mode-desktop .kbdHideBtn {
+        display: none !important;
+      }
       .headerRight [hidden] {
         display: none !important;
       }
@@ -1748,6 +1769,13 @@
         background: var(--modal-bg);
         border: 1px solid var(--modal-border);
         color: var(--modal-text);
+      }
+      .serverModalCard {
+        gap: 6px;
+      }
+      .serverModalBody {
+        display: grid;
+        gap: 6px;
       }
       .modalCard input,
       .modalCard select {

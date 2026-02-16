@@ -2,6 +2,7 @@ const DICT = {
   es: {
     "app.subtitle": "Skin local para Navidrome.",
     "header.whats_new": "Novedades",
+    "header.hide_keyboard": "Ocultar teclado",
     "header.menu": "Menú",
     "login.access": "Acceso",
     "login.server_config": "Configurar servidor",
@@ -85,6 +86,7 @@ const DICT = {
     "status.server_http_warn": "Respuesta HTTP {{code}} (no bloqueante)",
     "status.server_network_warn": "No se pudo comprobar (DNS/CORS/offline)",
     "status.server_404": "No encontrado (404). Revisa dominio o subruta",
+    "status.server_not_navidrome": "Respuesta no válida (no es Navidrome/Subsonic).",
     "menu.settings": "Ajustes",
     "menu.theme": "Tema",
     "menu.theme_day": "Día",
@@ -139,6 +141,7 @@ const DICT = {
   en: {
     "app.subtitle": "Local skin for Navidrome.",
     "header.whats_new": "What's New",
+    "header.hide_keyboard": "Hide keyboard",
     "header.menu": "Menu",
     "login.access": "Login",
     "login.server_config": "Configure server",
@@ -222,6 +225,7 @@ const DICT = {
     "status.server_http_warn": "HTTP response {{code}} (non-blocking)",
     "status.server_network_warn": "Could not verify (DNS/CORS/offline)",
     "status.server_404": "Not found (404). Check domain or subpath",
+    "status.server_not_navidrome": "Invalid response (not Navidrome/Subsonic).",
     "menu.settings": "Settings",
     "menu.theme": "Theme",
     "menu.theme_day": "Day",
