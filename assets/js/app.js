@@ -41,7 +41,6 @@ import { getWhatsNewForVersion, getWhatsNewSections } from "./modules/whats-new.
 const DEFAULT_COVER = "./assets/img/music-player.svg";
 const COVER_SIZE_LIST = 96;
 const COVER_SIZE_NOW = 320;
-const MOST_PLAYED_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const COVER_FAIL_RETRY_MS = 30 * 1000;
 const COVER_CACHE_MAX_ITEMS = 1200;
 const BROKER_REFRESH_LEEWAY_SECONDS = 60;
@@ -286,10 +285,54 @@ function profileId(server, user) {
   return `${normalizeServer(server)}::${String(user || "").trim().toLowerCase()}`;
 }
 
-function getMostPlayedCacheStorageKey() {
+function getLocalPlaysStorageKey() {
   if (!state.server || !state.user) return "";
   const safe = btoa(unescape(encodeURIComponent(`${state.server}|${state.user}`)));
-  return `carplayer.navidrome.mostPlayedCache.${safe}`;
+  return `carplayer.navidrome.localPlays.${safe}`;
+}
+
+function loadLocalPlays() {
+  const key = getLocalPlaysStorageKey();
+  if (!key) return {};
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return {};
+    return parsed;
+  } catch {
+    return {};
+  }
+}
+
+function saveLocalPlays(map) {
+  const key = getLocalPlaysStorageKey();
+  if (!key) return;
+  try {
+    localStorage.setItem(key, JSON.stringify(map));
+  } catch {
+    // ignore
+  }
+}
+
+function bumpLocalPlayCount(track) {
+  if (!track || !track.id) return;
+  const plays = loadLocalPlays();
+  const entry = plays[track.id] || {};
+  const nextCount = Number(entry.count || 0) + 1;
+  plays[track.id] = {
+    count: nextCount,
+    lastPlayedAt: Date.now(),
+    track: {
+      id: track.id,
+      title: track.title,
+      artist: track.artist,
+      album: track.album,
+      coverArt: track.coverArt,
+      duration: track.duration,
+    },
+  };
+  saveLocalPlays(plays);
 }
 
 function applyTheme(mode) {
@@ -1116,6 +1159,14 @@ function updateProgress() {
     return;
   }
 
+  if (state.queueIndex >= 0 && state.queueIndex < state.queue.length) {
+    const track = state.queue[state.queueIndex];
+    if (track && track.id && state.localPlayCountedId !== track.id && cur / dur >= 0.7) {
+      bumpLocalPlayCount(track);
+      state.localPlayCountedId = track.id;
+    }
+  }
+
   setBar(nowBar, cur / dur);
 
   let buf = 0;
@@ -1516,6 +1567,7 @@ async function playIndex(idx) {
   state.scrobbleTrackId = track.id;
   state.scrobbleNowSent = false;
   state.scrobbleSubmissionSent = false;
+  state.localPlayCountedId = null;
   player.src = url;
   try {
     await player.play();
@@ -1668,95 +1720,19 @@ async function playFavoritesNow() {
   setStatus(t("player.favorites_count", { count: state.favoriteSongs.length }), "ok");
 }
 
-async function buildMostPlayedFromServer() {
-  if (state.mostPlayedLoading) return;
-  state.mostPlayedLoading = true;
-  try {
-    const allAlbums = [];
-    const pageSize = 200;
-    let offset = 0;
-
-    while (true) {
-      const sub = await restJson(state.server, state.auth, "getAlbumList2", {
-        type: "alphabeticalByName",
-        size: pageSize,
-        offset,
-      });
-      const page = sub.albumList2?.album || [];
-      if (!page.length) break;
-      allAlbums.push(...page);
-      if (page.length < pageSize) break;
-      offset += pageSize;
-      setStatus(t("player.indexing_albums", { count: allAlbums.length }));
-    }
-
-    const tracks = [];
-    let done = 0;
-    let cursor = 0;
-    const concurrency = 4;
-
-    async function worker() {
-      while (cursor < allAlbums.length) {
-        const i = cursor++;
-        const album = allAlbums[i];
-        const sub = await restJson(state.server, state.auth, "getAlbum", { id: album.id });
-        for (const song of sub.album?.song || []) {
-          tracks.push(toTrack(song));
-        }
-        done += 1;
-        if (done % 10 === 0 || done === allAlbums.length) {
-          setStatus(t("player.calc_most_played", { done, total: allAlbums.length }));
-        }
-      }
-    }
-
-    await Promise.all(Array.from({ length: concurrency }, () => worker()));
-
-    const ranked = markSongsStarred(tracks)
-      .map((track) => ({ ...track, playCount: Number(track.playCount || 0) }))
-      .sort((a, b) => Number(b.playCount || 0) - Number(a.playCount || 0));
-
-    state.mostPlayedSongs = ranked;
-    state.mostPlayedSongsFiltered = ranked;
-
-    const cacheKey = getMostPlayedCacheStorageKey();
-    if (cacheKey) {
-      localStorage.setItem(cacheKey, JSON.stringify({
-        timestamp: Date.now(),
-        songs: ranked,
-      }));
-    }
-  } finally {
-    state.mostPlayedLoading = false;
-  }
-}
-
 async function loadMostPlayed(options) {
   const opts = options || {};
-  const cacheKey = getMostPlayedCacheStorageKey();
-  if (cacheKey) {
-    const raw = localStorage.getItem(cacheKey);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (parsed?.timestamp && Date.now() - parsed.timestamp < MOST_PLAYED_CACHE_TTL_MS && Array.isArray(parsed.songs)) {
-          const songs = markSongsStarred(parsed.songs.map((song) => toTrack(song)));
-          state.mostPlayedSongs = songs;
-          state.mostPlayedSongsFiltered = songs;
-          if (opts.render !== false) {
-            renderSongsCatalog(songs, t("player.no_plays"));
-          }
-          return;
-        }
-      } catch {
-        // ignore
-      }
-    }
-  }
+  const plays = loadLocalPlays();
+  const ranked = Object.values(plays)
+    .filter((entry) => entry && Number(entry.count || 0) > 0 && entry.track)
+    .map((entry) => ({ ...toTrack(entry.track), playCount: Number(entry.count || 0) }))
+    .sort((a, b) => Number(b.playCount || 0) - Number(a.playCount || 0));
 
-  await buildMostPlayedFromServer();
+  const songs = markSongsStarred(ranked);
+  state.mostPlayedSongs = songs;
+  state.mostPlayedSongsFiltered = songs;
   if (opts.render !== false) {
-    renderSongsCatalog(state.mostPlayedSongs, t("player.no_plays"));
+    renderSongsCatalog(songs, t("player.no_plays"));
   }
 }
 
