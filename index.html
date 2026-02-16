@@ -296,28 +296,32 @@
         <div class="menuRows">
           <div class="menuRow">
             <div class="menuLabel" data-i18n="menu.theme">Tema</div>
-            <div class="menuThemeOptions">
-              <button class="segBtn" id="btnThemeDay" data-i18n="menu.theme_day">Día</button>
-              <button class="segBtn" id="btnThemeNight" data-i18n="menu.theme_night">Noche</button>
-              <button class="segBtn" id="btnThemeAuto" data-i18n="menu.theme_auto">Auto</button>
-              <button class="ghostBtn" id="btnThemeAutoConfig" title="Configurar auto" data-i18n="menu.theme_config" data-i18n-title="menu.theme_config">Configurar</button>
-            </div>
-            <div class="menuHint mono" id="themeAutoHint" hidden></div>
+            <button class="ghostBtn menuActionBtn" id="btnThemeConfig" title="Configurar tema" data-i18n="menu.theme_config" data-i18n-title="menu.theme_config">Config</button>
+          </div>
+          <div class="menuRow">
+            <div class="menuLabel" data-i18n="menu.data_saver">Ahorro de datos</div>
+            <button class="menuToggle" id="btnDataSaverToggle" type="button" data-state="off">
+              <span class="menuToggleText">No</span>
+              <span class="menuToggleKnob" aria-hidden="true"></span>
+            </button>
           </div>
           <div class="menuRow">
             <div class="menuLabel" data-i18n="menu.list_pane">Panel listas</div>
-            <button class="ghostBtn" id="btnPaneSide" title="Cambiar posición de listas" data-i18n-title="menu.list_pane">Derecha</button>
-          </div>
-          <div class="menuRow">
-            <div class="menuLabel" data-i18n="menu.user">Usuario</div>
-            <button class="ghostBtn" id="btnOpenProfiles" title="Cambiar usuario" data-i18n="menu.switch_user" data-i18n-title="menu.switch_user">Cambiar usuario</button>
+            <button class="menuToggle" id="btnPaneToggle" type="button" data-state="right">
+              <span class="menuToggleText">Der</span>
+              <span class="menuToggleKnob" aria-hidden="true"></span>
+            </button>
           </div>
           <div class="menuRow">
             <div class="menuLabel" data-i18n="menu.language">Idioma</div>
-            <div class="menuThemeOptions">
-              <button class="segBtn" id="btnLangEs" type="button">ES</button>
-              <button class="segBtn" id="btnLangEn" type="button">EN</button>
-            </div>
+            <button class="menuToggle" id="btnLangToggle" type="button" data-state="es">
+              <span class="menuToggleText">ES</span>
+              <span class="menuToggleKnob" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div class="menuRow">
+            <div class="menuLabel" data-i18n="menu.user">Usuario</div>
+            <button class="ghostBtn menuActionBtn" id="btnOpenProfiles" title="Cambiar usuario" data-i18n="menu.switch_user" data-i18n-title="menu.switch_user">Cambiar usuario</button>
           </div>
         </div>
       </section>
@@ -342,23 +346,28 @@
       <section class="card modalCard autoThemeCard">
         <div class="topBar">
           <div class="pill" data-i18n="modal.auto_theme_title">Tema automático</div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <button class="ghostBtn" id="btnAutoThemeCancel" data-i18n="common.cancel">Cancelar</button>
-          <button class="ghostBtn" id="btnAutoThemeSave" data-i18n="common.save">Guardar</button>
+          <div style="display:flex;gap:10px;align-items:center">
+            <button class="ghostBtn" id="btnAutoThemeCancel" data-i18n="common.cancel">Cancelar</button>
+            <button class="ghostBtn" id="btnAutoThemeSave" data-i18n="common.save">Guardar</button>
+          </div>
         </div>
-      </div>
-      <label for="autoThemeTimezone" data-i18n="modal.timezone">Zona horaria</label>
-      <select id="autoThemeTimezone"></select>
-      <div class="autoTimeGridLabels">
-        <label for="autoThemeDayStart" data-i18n="modal.day">Día</label>
-        <label for="autoThemeNightStart" data-i18n="modal.night">Noche</label>
-      </div>
-      <div class="autoTimeGridInputs">
-        <input id="autoThemeDayStart" type="time" value="07:00" />
-        <input id="autoThemeNightStart" type="time" value="19:00" />
-      </div>
-    </section>
-  </div>
+        <div class="autoThemeModeRow">
+          <button class="segBtn" id="btnThemeCfgDay" data-i18n="menu.theme_day">Día</button>
+          <button class="segBtn" id="btnThemeCfgNight" data-i18n="menu.theme_night">Noche</button>
+          <button class="segBtn" id="btnThemeCfgAuto" data-i18n="menu.theme_auto">Auto</button>
+        </div>
+        <label for="autoThemeTimezone" data-i18n="modal.timezone">Zona horaria</label>
+        <select id="autoThemeTimezone"></select>
+        <div class="autoTimeGridLabels">
+          <label for="autoThemeDayStart" data-i18n="modal.day">Día</label>
+          <label for="autoThemeNightStart" data-i18n="modal.night">Noche</label>
+        </div>
+        <div class="autoTimeGridInputs">
+          <input id="autoThemeDayStart" type="time" value="07:00" />
+          <input id="autoThemeNightStart" type="time" value="19:00" />
+        </div>
+      </section>
+    </div>
 
     <script type="module" src="./assets/js/app.js"></script>
   </body>

@@ -179,6 +179,23 @@ export function setStoredCredentials({ user, pass }, remember) {
   else localStorage.removeItem(STORAGE_KEYS.pass);
 }
 
+export function getDataSaverPreference() {
+  const value = localStorage.getItem(STORAGE_KEYS.dataSaver);
+  if (value === "1") return true;
+  if (value === "0") return false;
+  return null;
+}
+
+export function setDataSaverPreference(enabled) {
+  if (enabled === null || enabled === undefined) {
+    localStorage.removeItem(STORAGE_KEYS.dataSaver);
+    return null;
+  }
+  const next = enabled === true;
+  localStorage.setItem(STORAGE_KEYS.dataSaver, next ? "1" : "0");
+  return next;
+}
+
 export function getListPaneSide() {
   const value = localStorage.getItem(STORAGE_KEYS.listPaneSide);
   return value === "left" || value === "right" ? value : DEFAULTS.listPaneSide;

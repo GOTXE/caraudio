@@ -198,8 +198,13 @@ export function coverUrl(server, auth, id, size = 256) {
   return buildRestUrl(server, "getCoverArt", { ...baseParams(auth), id, size });
 }
 
-export function streamUrl(server, auth, id) {
-  return buildRestUrl(server, "stream", { ...baseParams(auth), id });
+export function streamUrl(server, auth, id, options = {}) {
+  const params = { ...baseParams(auth), id };
+  if (options?.transcode) {
+    params.maxBitRate = 192;
+    params.format = "mp3";
+  }
+  return buildRestUrl(server, "stream", params);
 }
 
 export async function star(server, auth, id) {

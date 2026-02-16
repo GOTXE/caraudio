@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
   themeMode: "carplayer.navidrome.themeMode",
   autoTheme: "carplayer.navidrome.autoTheme",
   quality: "carplayer.navidrome.quality",
+  dataSaver: "carplayer.navidrome.dataSaver",
   listPaneSide: "carplayer.navidrome.listPaneSide",
   rememberCreds: "carplayer.navidrome.rememberCreds",
   deviceMode: "carplayer.navidrome.deviceMode",

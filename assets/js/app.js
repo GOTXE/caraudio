@@ -25,6 +25,8 @@ import {
   setThemeMode,
   getAutoThemeSettings,
   setAutoThemeSettings,
+  getDataSaverPreference,
+  setDataSaverPreference,
   getProfiles,
   saveProfile,
   getActiveProfileId,
@@ -113,7 +115,7 @@ const btnPlayMostPlayed = document.getElementById("btnPlayMostPlayed");
 const btnPlayFavorites = document.getElementById("btnPlayFavorites");
 const btnAlbums = document.getElementById("btnAlbums");
 const btnSongs = document.getElementById("btnSongs");
-const btnPaneSide = document.getElementById("btnPaneSide");
+const btnPaneToggle = document.getElementById("btnPaneToggle");
 const playerGrid = document.getElementById("playerGrid");
 const songMenu = document.getElementById("songMenu");
 
@@ -147,13 +149,9 @@ const btnTogglePassword = document.getElementById("btnTogglePassword");
 const headerUser = document.getElementById("headerUser");
 const menuModal = document.getElementById("menuModal");
 const btnCloseMenu = document.getElementById("btnCloseMenu");
-const btnThemeDay = document.getElementById("btnThemeDay");
-const btnThemeNight = document.getElementById("btnThemeNight");
-const btnThemeAuto = document.getElementById("btnThemeAuto");
-const btnThemeAutoConfig = document.getElementById("btnThemeAutoConfig");
-const btnLangEs = document.getElementById("btnLangEs");
-const btnLangEn = document.getElementById("btnLangEn");
-const themeAutoHint = document.getElementById("themeAutoHint");
+const btnThemeConfig = document.getElementById("btnThemeConfig");
+const btnDataSaverToggle = document.getElementById("btnDataSaverToggle");
+const btnLangToggle = document.getElementById("btnLangToggle");
 
 const profilesModal = document.getElementById("profilesModal");
 const btnOpenProfiles = document.getElementById("btnOpenProfiles");
@@ -167,6 +165,9 @@ const autoThemeDayStart = document.getElementById("autoThemeDayStart");
 const autoThemeNightStart = document.getElementById("autoThemeNightStart");
 const btnAutoThemeCancel = document.getElementById("btnAutoThemeCancel");
 const btnAutoThemeSave = document.getElementById("btnAutoThemeSave");
+const btnThemeCfgDay = document.getElementById("btnThemeCfgDay");
+const btnThemeCfgNight = document.getElementById("btnThemeCfgNight");
+const btnThemeCfgAuto = document.getElementById("btnThemeCfgAuto");
 
 let filterTimer = null;
 let autoThemeTimer = null;
@@ -210,6 +211,8 @@ let state = {
   activeProfileId: getActiveProfileId(),
   deviceMode: getDeviceMode(),
   resolvedDeviceMode: "desktop",
+  dataSaverPreference: getDataSaverPreference(),
+  dataSaver: false,
   language: "es",
   i18n: createI18n("es"),
   scrobbleTrackId: "",
@@ -229,6 +232,7 @@ let state = {
     countdownTimer: null,
   },
   brokerRefreshTimer: null,
+  themeConfigMode: "auto",
 };
 
 function setStatus(text, kind) {
@@ -260,6 +264,7 @@ function setLanguageUi(nextLanguage) {
   setShuffleUI();
   syncSongsButton();
   applyListPaneSide(getListPaneSide());
+  syncDataSaverToggle();
   updateServerButton(getStoredServer());
   if (pauseHint && !pauseHint.hidden) {
     pauseHint.textContent = state.quickActionLoading ? t("player.loading_cover") : t("player.pause");
@@ -272,8 +277,11 @@ function setLanguageUi(nextLanguage) {
 }
 
 function syncLanguageButtons() {
-  btnLangEs?.classList.toggle("active", state.language === "es");
-  btnLangEn?.classList.toggle("active", state.language === "en");
+  if (!btnLangToggle) return;
+  const isEs = state.language !== "en";
+  btnLangToggle.dataset.state = isEs ? "es" : "en";
+  const textEl = btnLangToggle.querySelector(".menuToggleText");
+  if (textEl) textEl.textContent = isEs ? "ES" : "EN";
 }
 
 function setBar(el, ratio) {
@@ -283,6 +291,29 @@ function setBar(el, ratio) {
 
 function profileId(server, user) {
   return `${normalizeServer(server)}::${String(user || "").trim().toLowerCase()}`;
+}
+
+function resolveDataSaverEnabled() {
+  if (state.dataSaverPreference === null) return state.resolvedDeviceMode === "car";
+  return state.dataSaverPreference === true;
+}
+
+function syncDataSaverToggle() {
+  if (!btnDataSaverToggle) return;
+  const enabled = resolveDataSaverEnabled();
+  state.dataSaver = enabled;
+  btnDataSaverToggle.dataset.state = enabled ? "on" : "off";
+  const textEl = btnDataSaverToggle.querySelector(".menuToggleText");
+  if (textEl) textEl.textContent = enabled ? t("common.yes") : t("common.no");
+}
+
+function setDataSaverEnabled(enabled, { persist = true } = {}) {
+  const next = enabled === true;
+  state.dataSaver = next;
+  if (persist) {
+    state.dataSaverPreference = setDataSaverPreference(next);
+  }
+  syncDataSaverToggle();
 }
 
 function getLocalPlaysStorageKey() {
@@ -348,17 +379,19 @@ function applyTheme(mode) {
 
 function syncThemeButtons() {
   const mode = getThemeMode();
-  btnThemeDay.classList.toggle("active", mode === "day");
-  btnThemeNight.classList.toggle("active", mode === "night");
-  btnThemeAuto.classList.toggle("active", mode === "auto");
-  const autoCfg = getAutoThemeSettings();
-  if (mode === "auto") {
-    themeAutoHint.hidden = false;
-    themeAutoHint.textContent = `${t("menu.theme_auto")}: ${autoCfg.timeZone || "UTC"}`;
-  } else {
-    themeAutoHint.hidden = true;
-    themeAutoHint.textContent = "";
+  if (btnThemeConfig) {
+    const label =
+      mode === "day" ? t("menu.theme_day") : mode === "night" ? t("menu.theme_night") : t("menu.theme_auto");
+    btnThemeConfig.textContent = t("menu.theme_config");
+    btnThemeConfig.title = `${t("menu.theme")}: ${label}`;
   }
+  syncThemeConfigModeButtons();
+}
+
+function syncThemeConfigModeButtons() {
+  btnThemeCfgDay?.classList.toggle("active", state.themeConfigMode === "day");
+  btnThemeCfgNight?.classList.toggle("active", state.themeConfigMode === "night");
+  btnThemeCfgAuto?.classList.toggle("active", state.themeConfigMode === "auto");
 }
 
 function getTimeZonesList() {
@@ -443,6 +476,9 @@ function applyDeviceMode(mode = state.deviceMode) {
   document.body.classList.toggle("device-mode-car", state.resolvedDeviceMode === "car");
   document.body.classList.toggle("device-mode-desktop", state.resolvedDeviceMode === "desktop");
   syncDeviceModeButtons();
+  if (state.dataSaverPreference === null) {
+    syncDataSaverToggle();
+  }
   if (state.resolvedDeviceMode !== "car") {
     if (btnHideKeyboard) btnHideKeyboard.hidden = true;
     if (btnServerHideKeyboard) btnServerHideKeyboard.hidden = true;
@@ -870,9 +906,13 @@ function setAppHeight() {
 }
 
 function applyListPaneSide(side) {
-  if (!playerGrid || !btnPaneSide) return;
+  if (!playerGrid || !btnPaneToggle) return;
   playerGrid.dataset.listPane = side;
-  btnPaneSide.textContent = side === "right" ? t("menu.pane_right") : t("menu.pane_left");
+  btnPaneToggle.dataset.state = side === "right" ? "right" : "left";
+  const textEl = btnPaneToggle.querySelector(".menuToggleText");
+  if (textEl) {
+    textEl.textContent = side === "right" ? t("menu.pane_right_short") : t("menu.pane_left_short");
+  }
 }
 
 function renderProfiles() {
@@ -1563,7 +1603,7 @@ async function playIndex(idx) {
   setNow(track);
   renderSongMenu();
   maybePrefetchRandom();
-  const url = streamUrl(state.server, state.auth, track.id);
+  const url = streamUrl(state.server, state.auth, track.id, { transcode: state.dataSaver });
   state.scrobbleTrackId = track.id;
   state.scrobbleNowSent = false;
   state.scrobbleSubmissionSent = false;
@@ -1992,6 +2032,8 @@ function fillAutoThemeModal() {
   autoThemeTimezone.value = getTimeZoneOptionFallback(zones, cfg.timeZone);
   autoThemeDayStart.value = cfg.dayStart || "07:00";
   autoThemeNightStart.value = cfg.nightStart || "19:00";
+  state.themeConfigMode = getThemeMode();
+  syncThemeConfigModeButtons();
 }
 
 function openAutoThemeModal() {
@@ -2001,6 +2043,11 @@ function openAutoThemeModal() {
 
 function closeAutoThemeModal() {
   autoThemeModal.hidden = true;
+}
+
+function setThemeConfigMode(mode) {
+  state.themeConfigMode = mode === "day" || mode === "night" ? mode : "auto";
+  syncThemeConfigModeButtons();
 }
 
 function openServerModal() {
@@ -2264,8 +2311,10 @@ function wireEvents() {
     applyDeviceMode("auto");
     closeDeviceModeModal();
   });
-  btnLangEs?.addEventListener("click", () => setLanguageUi("es"));
-  btnLangEn?.addEventListener("click", () => setLanguageUi("en"));
+  btnLangToggle?.addEventListener("click", () => {
+    const next = state.language === "en" ? "es" : "en";
+    setLanguageUi(next);
+  });
   deviceModeModal?.addEventListener("click", (event) => {
     if (event.target === deviceModeModal) {
       setDeviceModePromptSeen(true);
@@ -2311,7 +2360,7 @@ function wireEvents() {
     if (event.target === serverModal) closeServerModal();
   });
 
-  btnPaneSide?.addEventListener("click", () => {
+  btnPaneToggle?.addEventListener("click", () => {
     const current = playerGrid?.dataset.listPane === "right" ? "right" : "left";
     const next = setListPaneSide(current === "left" ? "right" : "left");
     applyListPaneSide(next);
@@ -2548,6 +2597,9 @@ function wireEvents() {
 
   btnOpenMenu.addEventListener("click", () => {
     syncThemeButtons();
+    syncDataSaverToggle();
+    syncLanguageButtons();
+    applyListPaneSide(getListPaneSide());
     menuModal.hidden = false;
   });
   btnCloseMenu.addEventListener("click", () => {
@@ -2557,34 +2609,11 @@ function wireEvents() {
     if (event.target === menuModal) menuModal.hidden = true;
   });
 
-  btnThemeDay.addEventListener("click", () => {
-    setThemeMode("day");
-    applyThemeMode().catch(() => {
-      // ignore
-    });
-    scheduleAutoThemeRecheck();
-  });
-  btnThemeNight.addEventListener("click", () => {
-    setThemeMode("night");
-    applyThemeMode().catch(() => {
-      // ignore
-    });
-    scheduleAutoThemeRecheck();
-  });
-  btnThemeAuto.addEventListener("click", () => {
-    const cfg = getAutoThemeSettings();
-    if (!cfg.configured) {
-      openAutoThemeModal();
-      return;
-    }
-    setThemeMode("auto");
-    applyThemeMode({ showAutoInfo: true }).catch(() => {
-      // ignore
-    });
-    scheduleAutoThemeRecheck();
-  });
-  btnThemeAutoConfig.addEventListener("click", () => {
+  btnThemeConfig?.addEventListener("click", () => {
     openAutoThemeModal();
+  });
+  btnDataSaverToggle?.addEventListener("click", () => {
+    setDataSaverEnabled(!state.dataSaver, { persist: true });
   });
 
   btnOpenProfiles.addEventListener("click", () => {
@@ -2607,20 +2636,26 @@ function wireEvents() {
   });
 
   btnAutoThemeCancel.addEventListener("click", () => closeAutoThemeModal());
+  btnThemeCfgDay?.addEventListener("click", () => setThemeConfigMode("day"));
+  btnThemeCfgNight?.addEventListener("click", () => setThemeConfigMode("night"));
+  btnThemeCfgAuto?.addEventListener("click", () => setThemeConfigMode("auto"));
   btnAutoThemeSave.addEventListener("click", () => {
     const tz = autoThemeTimezone.value || "UTC";
+    const selectedMode = state.themeConfigMode === "day" || state.themeConfigMode === "night" ? state.themeConfigMode : "auto";
+    const current = getAutoThemeSettings();
     const settings = {
       timeZone: tz,
       dayStart: autoThemeDayStart.value || "07:00",
       nightStart: autoThemeNightStart.value || "19:00",
-      configured: true,
+      configured: current.configured || selectedMode === "auto",
     };
     setAutoThemeSettings(settings);
-    setThemeMode("auto");
-    applyThemeMode({ showAutoInfo: true }).catch(() => {
+    setThemeMode(selectedMode);
+    applyThemeMode({ showAutoInfo: selectedMode === "auto" }).catch(() => {
       // ignore
     });
     scheduleAutoThemeRecheck();
+    syncThemeButtons();
     closeAutoThemeModal();
   });
   autoThemeModal.addEventListener("click", (event) => {
@@ -2654,6 +2689,7 @@ function init() {
   if (pass) passEl.value = pass;
 
   applyDeviceMode(getDeviceMode());
+  syncDataSaverToggle();
   applyListPaneSide(getListPaneSide());
   applyThemeMode().catch(() => {
     const saved = getTheme();
