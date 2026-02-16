@@ -67,7 +67,7 @@ export async function checkForUpdate({ currentTag, repo, currentEl, latestEl }) 
     }
     if (!best) return;
     if (compareSemVer(best, current) > 0) {
-      latestEl.textContent = `Nuevo: ${best.raw}`;
+      latestEl.textContent = best.raw;
       latestEl.hidden = false;
     }
   } catch {

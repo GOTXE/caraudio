@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#dbe6f2" />
+    <title>Vincular con otro dispositivo</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="is-link">
+    <main class="linkPage">
+      <section class="card linkCard">
+        <h1 data-i18n="link.modal_title">Vincular con otro dispositivo</h1>
+        <p class="sub" data-i18n="link.modal_body">Abre la URL e introduce el código para autorizar.</p>
+
+        <label for="linkCode" data-i18n="link.code_label">Código</label>
+        <input id="linkCode" class="inputControl mono linkCodeInput" maxlength="9" placeholder="XXXX-XXXX" />
+
+        <label for="linkUser" data-i18n="login.username">Usuario</label>
+        <input id="linkUser" class="inputControl" autocomplete="username" />
+
+        <label for="linkPass" data-i18n="login.password">Contraseña</label>
+        <input id="linkPass" class="inputControl" type="password" autocomplete="current-password" />
+
+        <p class="linkAttempts mono" id="linkAttempts" data-i18n="link.attempts_left">Tienes 3 intentos.</p>
+        <button id="linkAuthorize" class="btn" type="button" data-i18n="link.authorize">Autorizar</button>
+        <p class="status" id="linkStatus"></p>
+      </section>
+    </main>
+    <script type="module" src="../assets/js/link.js"></script>
+  </body>
+</html>

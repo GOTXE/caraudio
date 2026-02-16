@@ -1,10 +1,19 @@
 import {
+  clearBrokerSession,
+  getBrokerSession,
   getListPaneSide,
+  getLanguage,
   getRememberCreds,
+  getDeviceMode,
+  getDeviceModePromptSeen,
   getStoredCredentials,
   getStoredServer,
   getTheme,
   setListPaneSide,
+  setLanguage,
+  setBrokerSession,
+  setDeviceMode,
+  setDeviceModePromptSeen,
   setRememberCreds,
   setStoredCredentials,
   setStoredServer,
@@ -22,6 +31,8 @@ import {
   setActiveProfileId,
   migrateLegacyPreferences,
 } from "./modules/storage.js";
+import { createI18n, detectPreferredLanguage } from "./modules/i18n.js";
+import { pollDevice, refreshSession, revokeSession, startDevice } from "./modules/broker-client.js";
 import { checkForUpdate, escapeHtml } from "./modules/ui.js";
 import { coverUrl, getStarred2, makeAuth, restJson, scrobble, star, streamUrl, unstar } from "./modules/navidrome.js";
 import { formatTime, mapSongsToQueue, toTrack } from "./modules/player.js";
@@ -33,12 +44,16 @@ const COVER_SIZE_NOW = 320;
 const MOST_PLAYED_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const COVER_FAIL_RETRY_MS = 30 * 1000;
 const COVER_CACHE_MAX_ITEMS = 1200;
+const BROKER_REFRESH_LEEWAY_SECONDS = 60;
+const BROKER_REFRESH_CHECK_MS = 60 * 1000;
 
 const statusEl = document.getElementById("status");
 const btnEditServer = document.getElementById("btnEditServer");
 const btnWhatsNew = document.getElementById("btnWhatsNew");
 const verCurrent = document.getElementById("verCurrent");
 const verLatest = document.getElementById("verLatest");
+const loginFooterVer = document.getElementById("loginFooterVer");
+const loginFooterUpd = document.getElementById("loginFooterUpd");
 const APP_VERSION = document.querySelector('meta[name="app-version"]')?.content || "dev";
 const UPDATE_REPO = document.querySelector('meta[name="update-repo"]')?.content || "";
 
@@ -52,6 +67,25 @@ const userEl = document.getElementById("username");
 const passEl = document.getElementById("password");
 const rememberCredsEl = document.getElementById("rememberCreds");
 const btnConnect = document.getElementById("btnConnect");
+const btnLinkDevice = document.getElementById("btnLinkDevice");
+const btnDeviceModeAuto = document.getElementById("btnDeviceModeAuto");
+const btnDeviceModeCar = document.getElementById("btnDeviceModeCar");
+const btnDeviceModeDesktop = document.getElementById("btnDeviceModeDesktop");
+
+const deviceModeModal = document.getElementById("deviceModeModal");
+const deviceModeModalText = document.getElementById("deviceModeModalText");
+const btnDeviceModeModalClose = document.getElementById("btnDeviceModeModalClose");
+const btnDeviceModeUseSuggested = document.getElementById("btnDeviceModeUseSuggested");
+const btnDeviceModeUseAlternative = document.getElementById("btnDeviceModeUseAlternative");
+const btnDeviceModeKeepAuto = document.getElementById("btnDeviceModeKeepAuto");
+const linkDeviceModal = document.getElementById("linkDeviceModal");
+const linkDeviceText = document.getElementById("linkDeviceText");
+const linkDeviceUrl = document.getElementById("linkDeviceUrl");
+const linkDeviceCode = document.getElementById("linkDeviceCode");
+const linkDeviceTimer = document.getElementById("linkDeviceTimer");
+const linkDeviceStatus = document.getElementById("linkDeviceStatus");
+const btnLinkClose = document.getElementById("btnLinkClose");
+const btnLinkRetry = document.getElementById("btnLinkRetry");
 
 const nowCover = document.getElementById("nowCover");
 const nowBg = document.getElementById("nowBg");
@@ -114,6 +148,8 @@ const btnThemeDay = document.getElementById("btnThemeDay");
 const btnThemeNight = document.getElementById("btnThemeNight");
 const btnThemeAuto = document.getElementById("btnThemeAuto");
 const btnThemeAutoConfig = document.getElementById("btnThemeAutoConfig");
+const btnLangEs = document.getElementById("btnLangEs");
+const btnLangEn = document.getElementById("btnLangEn");
 const themeAutoHint = document.getElementById("themeAutoHint");
 
 const profilesModal = document.getElementById("profilesModal");
@@ -169,6 +205,10 @@ let state = {
   starredIds: new Set(),
   profiles: [],
   activeProfileId: getActiveProfileId(),
+  deviceMode: getDeviceMode(),
+  resolvedDeviceMode: "desktop",
+  language: "es",
+  i18n: createI18n("es"),
   scrobbleTrackId: "",
   scrobbleNowSent: false,
   scrobbleSubmissionSent: false,
@@ -177,11 +217,60 @@ let state = {
   quickActionLoading: "",
   coverRetryTimer: null,
   coverRetryTrackId: "",
+  linkFlow: {
+    deviceCode: "",
+    userCode: "",
+    expiresAt: 0,
+    pollDelayMs: 2000,
+    pollTimer: null,
+    countdownTimer: null,
+  },
+  brokerRefreshTimer: null,
 };
 
 function setStatus(text, kind) {
   statusEl.textContent = text;
   statusEl.className = "status" + (kind ? ` ${kind}` : "");
+}
+
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  if (!window.isSecureContext && !/^localhost$|^127\./.test(window.location.hostname)) return;
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(() => {
+      // ignore service worker registration errors
+    });
+  });
+}
+
+function t(key, params) {
+  return state.i18n?.t(key, params) || key;
+}
+
+function setLanguageUi(nextLanguage) {
+  const normalized = state.i18n.setLanguage(nextLanguage);
+  state.language = normalized;
+  setLanguage(normalized);
+  state.i18n.apply(document);
+  syncLanguageButtons();
+  syncThemeButtons();
+  setShuffleUI();
+  syncSongsButton();
+  applyListPaneSide(getListPaneSide());
+  updateServerButton(getStoredServer());
+  if (pauseHint && !pauseHint.hidden) {
+    pauseHint.textContent = state.quickActionLoading ? t("player.loading_cover") : t("player.pause");
+  }
+  if (!state.queue.length || state.queueIndex < 0) {
+    nowTitle.textContent = t("player.nothing_playing");
+    if (nowSub.textContent === "-") nowSub.textContent = "—";
+  }
+  renderProfiles();
+}
+
+function syncLanguageButtons() {
+  btnLangEs?.classList.toggle("active", state.language === "es");
+  btnLangEn?.classList.toggle("active", state.language === "en");
 }
 
 function setBar(el, ratio) {
@@ -218,7 +307,7 @@ function syncThemeButtons() {
   const autoCfg = getAutoThemeSettings();
   if (mode === "auto") {
     themeAutoHint.hidden = false;
-    themeAutoHint.textContent = `Auto: ${autoCfg.timeZone || "UTC"}`;
+    themeAutoHint.textContent = `${t("menu.theme_auto")}: ${autoCfg.timeZone || "UTC"}`;
   } else {
     themeAutoHint.hidden = true;
     themeAutoHint.textContent = "";
@@ -279,8 +368,294 @@ function setHeaderUserLabel(username) {
   headerUser.textContent = `@${value}`;
 }
 
+function detectDeviceModeHeuristic() {
+  const width = Math.max(window.innerWidth || 0, window.visualViewport?.width || 0);
+  const height = Math.max(window.innerHeight || 0, window.visualViewport?.height || 0);
+  const ratio = width && height ? width / height : 0;
+  const ua = String(navigator.userAgent || "").toLowerCase();
+  const isAutomotiveUa = ua.includes("android automotive") || ua.includes(" aaos") || ua.includes(" carlauncher");
+  if (isAutomotiveUa) return "car";
+  if (height > 0 && height <= 560 && ratio >= 2) return "car";
+  return "desktop";
+}
+
+function resolveDeviceMode(mode) {
+  return mode === "auto" ? detectDeviceModeHeuristic() : mode;
+}
+
+function syncDeviceModeButtons() {
+  if (!btnDeviceModeAuto || !btnDeviceModeCar || !btnDeviceModeDesktop) return;
+  btnDeviceModeAuto.classList.toggle("active", state.deviceMode === "auto");
+  btnDeviceModeCar.classList.toggle("active", state.deviceMode === "car");
+  btnDeviceModeDesktop.classList.toggle("active", state.deviceMode === "desktop");
+}
+
+function applyDeviceMode(mode = state.deviceMode) {
+  state.deviceMode = mode;
+  state.resolvedDeviceMode = resolveDeviceMode(mode);
+  document.body.classList.toggle("device-mode-car", state.resolvedDeviceMode === "car");
+  document.body.classList.toggle("device-mode-desktop", state.resolvedDeviceMode === "desktop");
+  syncDeviceModeButtons();
+}
+
+function setAndApplyDeviceMode(mode) {
+  const next = setDeviceMode(mode);
+  applyDeviceMode(next);
+  setDeviceModePromptSeen(true);
+}
+
+function closeDeviceModeModal() {
+  if (!deviceModeModal) return;
+  deviceModeModal.hidden = true;
+}
+
+function openDeviceModeSuggestion() {
+  if (!deviceModeModal || !deviceModeModalText || !btnDeviceModeUseSuggested || !btnDeviceModeUseAlternative) return;
+  const suggested = detectDeviceModeHeuristic();
+  const alternative = suggested === "car" ? "desktop" : "car";
+  const suggestedLabel = suggested === "car" ? t("device_mode.car") : t("device_mode.desktop");
+  const alternativeLabel = alternative === "car" ? t("device_mode.car") : t("device_mode.desktop");
+  deviceModeModalText.textContent = t("device_mode.suggest_text", { suggested: suggestedLabel });
+  btnDeviceModeUseSuggested.textContent = t("device_mode.use", { mode: suggestedLabel });
+  btnDeviceModeUseSuggested.dataset.mode = suggested;
+  btnDeviceModeUseAlternative.textContent = t("device_mode.use", { mode: alternativeLabel });
+  btnDeviceModeUseAlternative.dataset.mode = alternative;
+  deviceModeModal.hidden = false;
+}
+
+function maybeSuggestDeviceMode() {
+  if (!screenLogin || screenLogin.hidden) return;
+  if (state.deviceMode !== "auto") return;
+  if (getDeviceModePromptSeen()) return;
+  openDeviceModeSuggestion();
+}
+
+function clearLinkFlowTimers() {
+  if (state.linkFlow.pollTimer) {
+    clearTimeout(state.linkFlow.pollTimer);
+    state.linkFlow.pollTimer = null;
+  }
+  if (state.linkFlow.countdownTimer) {
+    clearInterval(state.linkFlow.countdownTimer);
+    state.linkFlow.countdownTimer = null;
+  }
+}
+
+function closeLinkDeviceModal() {
+  clearLinkFlowTimers();
+  if (linkDeviceModal) linkDeviceModal.hidden = true;
+}
+
+function clearBrokerRefreshTimer() {
+  if (!state.brokerRefreshTimer) return;
+  clearTimeout(state.brokerRefreshTimer);
+  state.brokerRefreshTimer = null;
+}
+
+async function revokeBrokerSessionSafe() {
+  const session = getBrokerSession();
+  if (!session?.refreshToken) {
+    clearBrokerSession();
+    clearBrokerRefreshTimer();
+    return;
+  }
+  try {
+    await revokeSession({ refresh_token: session.refreshToken });
+  } catch {
+    // ignore revoke errors on cleanup
+  } finally {
+    clearBrokerSession();
+    clearBrokerRefreshTimer();
+  }
+}
+
+async function refreshBrokerSessionIfNeeded(sessionInput, { force = false } = {}) {
+  const session = sessionInput || getBrokerSession();
+  if (!session) return null;
+  const now = Math.floor(Date.now() / 1000);
+  const refreshExpiresAt = Number(session.refreshExpiresAt || 0) || 0;
+  const accessExpiresAt = Number(session.accessExpiresAt || 0) || 0;
+
+  if (refreshExpiresAt > 0 && refreshExpiresAt <= now) {
+    clearBrokerSession();
+    clearBrokerRefreshTimer();
+    return null;
+  }
+
+  const shouldRefresh = force || accessExpiresAt <= 0 || accessExpiresAt <= now + BROKER_REFRESH_LEEWAY_SECONDS;
+  if (!shouldRefresh || !session.refreshToken) return session;
+
+  try {
+    const refreshed = await refreshSession({ refresh_token: session.refreshToken });
+    return setBrokerSession({
+      ...session,
+      sessionId: refreshed.session_id || session.sessionId,
+      accessToken: refreshed.access_token || session.accessToken,
+      refreshToken: refreshed.refresh_token || session.refreshToken,
+      accessExpiresAt: Number(refreshed.access_expires_at || session.accessExpiresAt || 0),
+      refreshExpiresAt: Number(refreshed.refresh_expires_at || session.refreshExpiresAt || 0),
+    });
+  } catch (e) {
+    if (String(e).includes("invalid_session")) {
+      clearBrokerSession();
+      clearBrokerRefreshTimer();
+      return null;
+    }
+    return session;
+  }
+}
+
+function scheduleBrokerSessionRefresh() {
+  clearBrokerRefreshTimer();
+  if (!getBrokerSession()) return;
+  state.brokerRefreshTimer = setTimeout(async () => {
+    const refreshed = await refreshBrokerSessionIfNeeded(null);
+    if (!refreshed) {
+      clearBrokerRefreshTimer();
+      return;
+    }
+    scheduleBrokerSessionRefresh();
+  }, BROKER_REFRESH_CHECK_MS);
+}
+
+function deriveLinkUrl() {
+  const rawPath = String(window.location.pathname || "/");
+  const basePath = rawPath.endsWith("/") ? rawPath : rawPath.replace(/\/[^/]*$/, "/");
+  return new URL(`link/index.html`, `${window.location.origin}${basePath}`).toString();
+}
+
+function renderLinkDeviceCountdown() {
+  if (!linkDeviceTimer) return;
+  const remain = Math.max(0, Math.ceil((state.linkFlow.expiresAt - Date.now()) / 1000));
+  linkDeviceTimer.textContent = formatTime(remain);
+}
+
+function startLinkDeviceCountdown() {
+  renderLinkDeviceCountdown();
+  clearLinkFlowTimers();
+  state.linkFlow.countdownTimer = setInterval(() => {
+    renderLinkDeviceCountdown();
+    if (Date.now() >= state.linkFlow.expiresAt) {
+      clearLinkFlowTimers();
+      if (linkDeviceStatus) linkDeviceStatus.textContent = t("link.expired");
+    }
+  }, 250);
+}
+
+async function connectWithBrokerSession(session, { silent = false } = {}) {
+  const refreshed = await refreshBrokerSessionIfNeeded(session);
+  const server = normalizeServer(refreshed?.serverUrl || session?.serverUrl || "");
+  const username = String(refreshed?.username || session?.username || "").trim();
+  const authSalt = String(refreshed?.authSalt || session?.authSalt || "");
+  const authToken = String(refreshed?.authToken || session?.authToken || "");
+  if (!server || !username || !authSalt || !authToken) return false;
+  try {
+    if (!silent) setStatus(t("status.connecting"));
+    const auth = { u: username, s: authSalt, t: authToken };
+    await restJson(server, auth, "ping", {});
+    state.server = server;
+    state.auth = auth;
+    state.user = username;
+    setHeaderUserLabel(username);
+    setStoredServer(server);
+    setStoredCredentials({ user: username, pass: "" }, false);
+    saveCurrentProfile(server, username, "");
+    resetPlayerState();
+    await hydrateStarredIds();
+    showScreen("player");
+    await setViewMode("artists");
+    renderProfiles();
+    scheduleBrokerSessionRefresh();
+    if (!silent) setStatus(t("status.connected"), "ok");
+    return true;
+  } catch (e) {
+    clearBrokerSession();
+    clearBrokerRefreshTimer();
+    if (!silent) setStatus(t("common.error", { error: String(e) }), "bad");
+    return false;
+  }
+}
+
+async function pollLinkDeviceFlow() {
+  if (!state.linkFlow.deviceCode) return;
+  try {
+    const data = await pollDevice({ device_code: state.linkFlow.deviceCode });
+    if (data.status === "pending") {
+      state.linkFlow.pollDelayMs = Math.min(8000, Math.max(2000, Number(data.interval_seconds || 2) * 1000));
+      if (linkDeviceStatus) linkDeviceStatus.textContent = t("link.pending");
+      state.linkFlow.pollTimer = setTimeout(() => pollLinkDeviceFlow(), state.linkFlow.pollDelayMs);
+      return;
+    }
+    if (data.status === "approved") {
+      const brokerSession = setBrokerSession({
+        sessionId: data.session_id,
+        serverUrl: data.server_url,
+        username: data.username,
+        authSalt: data.auth_salt,
+        authToken: data.auth_token,
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        accessExpiresAt: data.access_expires_at,
+        refreshExpiresAt: data.refresh_expires_at,
+        linkedAt: Date.now(),
+      });
+      if (linkDeviceStatus) linkDeviceStatus.textContent = t("link.connecting");
+      closeLinkDeviceModal();
+      const ok = await connectWithBrokerSession(brokerSession, { silent: false });
+      if (!ok) setStatus(t("link.failed_start"), "bad");
+      return;
+    }
+    if (data.status === "expired") {
+      if (linkDeviceStatus) linkDeviceStatus.textContent = t("link.expired");
+      clearLinkFlowTimers();
+      return;
+    }
+    if (data.status === "denied") {
+      if (linkDeviceStatus) linkDeviceStatus.textContent = t("link.denied");
+      clearLinkFlowTimers();
+      return;
+    }
+    state.linkFlow.pollTimer = setTimeout(() => pollLinkDeviceFlow(), 3000);
+  } catch (e) {
+    if (linkDeviceStatus) linkDeviceStatus.textContent = t("common.error", { error: String(e) });
+    state.linkFlow.pollTimer = setTimeout(() => pollLinkDeviceFlow(), 4000);
+  }
+}
+
+async function startLinkDeviceFlow() {
+  const server = normalizeServer(getStoredServer());
+  if (!server) {
+    setStatus(t("status.need_server"), "bad");
+    openServerModal();
+    return;
+  }
+  if (!linkDeviceModal || !linkDeviceUrl || !linkDeviceCode || !linkDeviceStatus || !linkDeviceText || !linkDeviceTimer) return;
+  linkDeviceModal.hidden = false;
+  linkDeviceUrl.textContent = deriveLinkUrl();
+  linkDeviceText.textContent = t("link.url_with_value", { url: deriveLinkUrl() });
+  linkDeviceCode.textContent = "----";
+  linkDeviceStatus.textContent = t("link.pending");
+  linkDeviceTimer.textContent = "0:00";
+
+  clearLinkFlowTimers();
+  try {
+    const data = await startDevice({ server_url: server });
+    state.linkFlow.deviceCode = String(data.device_code || "");
+    state.linkFlow.userCode = String(data.user_code || "----");
+    state.linkFlow.expiresAt = Date.now() + Math.max(1, Number(data.expires_in || 300)) * 1000;
+    state.linkFlow.pollDelayMs = Math.max(2000, Number(data.interval_seconds || 2) * 1000);
+    linkDeviceCode.textContent = state.linkFlow.userCode;
+    startLinkDeviceCountdown();
+    state.linkFlow.pollTimer = setTimeout(() => pollLinkDeviceFlow(), state.linkFlow.pollDelayMs);
+  } catch (e) {
+    linkDeviceStatus.textContent = t("common.error", { error: String(e) });
+  }
+}
+
 function showScreen(which) {
   const isLogin = which === "login";
+  document.body.classList.toggle("is-login", isLogin);
+  document.body.classList.toggle("is-player", !isLogin);
   screenLogin.hidden = !isLogin;
   screenPlayer.hidden = isLogin;
   if (btnOpenMenu) btnOpenMenu.hidden = isLogin;
@@ -289,6 +664,8 @@ function showScreen(which) {
     if (menuModal) menuModal.hidden = true;
     if (profilesModal) profilesModal.hidden = true;
     if (autoThemeModal) autoThemeModal.hidden = true;
+  } else if (deviceModeModal) {
+    deviceModeModal.hidden = true;
   }
   if (isLogin) {
     setHeaderUserLabel("");
@@ -344,7 +721,7 @@ async function applyThemeMode({ showAutoInfo = false } = {}) {
   const isDay = dayStart <= nightStart ? nowMinutes >= dayStart && nowMinutes < nightStart : nowMinutes >= dayStart || nowMinutes < nightStart;
   applyTheme(isDay ? "light" : "dark");
   if (showAutoInfo) {
-    setStatus("Modo auto: usando horario configurado.", "ok");
+    setStatus(t("status.auto_theme"), "ok");
   }
   syncThemeButtons();
 }
@@ -364,7 +741,7 @@ function updateServerButton(server) {
   const normalized = normalizeServer(server || "");
   const ok = !!normalized;
   btnEditServer.classList.toggle("ok", ok);
-  btnEditServer.textContent = ok ? "Servidor configurado" : "Servidor no configurado";
+  btnEditServer.textContent = ok ? t("status.server_checked") : t("status.server_not_configured");
 }
 
 function setServerCheck(stateValue, text) {
@@ -378,7 +755,7 @@ async function probeServerUrl(input) {
   const raw = String(input || "").trim();
   if (!raw) {
     lastProbe = { url: "", state: "idle", kind: "idle" };
-    setServerCheck("idle", "Sin comprobar");
+    setServerCheck("idle", t("status.server_idle"));
     return lastProbe;
   }
 
@@ -390,35 +767,35 @@ async function probeServerUrl(input) {
     normalized = normalizeServer(`${u.origin}${u.pathname}`);
   } catch {
     lastProbe = { url: raw, state: "bad", kind: "invalid" };
-    setServerCheck("bad", raw.includes("://") ? "URL invalida" : "Falta https://");
+    setServerCheck("bad", raw.includes("://") ? t("status.server_url_invalid") : t("status.server_missing_scheme"));
     return lastProbe;
   }
 
-  setServerCheck("checking", "Comprobando...");
+  setServerCheck("checking", t("status.server_checking"));
   try {
     const pingUrl = `${normalized}/rest/ping.view?f=json&c=carplayer&v=1.16.1`;
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 2500);
+    const timeoutId = setTimeout(() => ctrl.abort(), 2500);
     const res = await fetch(pingUrl, { method: "GET", signal: ctrl.signal });
-    clearTimeout(t);
+    clearTimeout(timeoutId);
 
     if (res.status === 404) {
       lastProbe = { url: normalized, state: "bad", kind: "not_found" };
-      setServerCheck("bad", "No encontrado (404). Revisa dominio o subruta");
+      setServerCheck("bad", t("status.server_404"));
       return lastProbe;
     }
     if (res.ok || res.status === 401 || res.status === 403) {
       lastProbe = { url: normalized, state: "ok", kind: "ok" };
-      setServerCheck("ok", "OK");
+      setServerCheck("ok", t("common.ok"));
       return lastProbe;
     }
 
     lastProbe = { url: normalized, state: "warn", kind: "http" };
-    setServerCheck("warn", `Respuesta HTTP ${res.status} (no bloqueante)`);
+    setServerCheck("warn", t("status.server_http_warn", { code: res.status }));
     return lastProbe;
   } catch {
     lastProbe = { url: normalized, state: "warn", kind: "network" };
-    setServerCheck("warn", "No se pudo comprobar (DNS/CORS/offline)");
+    setServerCheck("warn", t("status.server_network_warn"));
     return lastProbe;
   }
 }
@@ -431,7 +808,7 @@ function setAppHeight() {
 function applyListPaneSide(side) {
   if (!playerGrid || !btnPaneSide) return;
   playerGrid.dataset.listPane = side;
-  btnPaneSide.textContent = side === "right" ? "Dercha" : "Izquierda";
+  btnPaneSide.textContent = side === "right" ? t("menu.pane_right") : t("menu.pane_left");
 }
 
 function renderProfiles() {
@@ -443,14 +820,14 @@ function renderProfiles() {
     const active = profile.id === state.activeProfileId;
     row.innerHTML = `
       <div>
-        <div class="profileName">${escapeHtml(profile.user)}${active ? " · Activo" : ""}</div>
+        <div class="profileName">${escapeHtml(profile.user)}${active ? t("misc.active_profile_suffix") : ""}</div>
         <div class="profileMeta">${escapeHtml(profile.server)}</div>
       </div>
-      <button class="ghostBtn">Cambiar</button>
+      <button class="ghostBtn">${t("misc.change")}</button>
     `;
     row.querySelector("button").addEventListener("click", async () => {
       if (!profile.pass) {
-        setStatus("Ese perfil no tiene clave guardada.", "bad");
+        setStatus(t("status.profile_no_password"), "bad");
         return;
       }
       await connectWithCredentials({ server: profile.server, username: profile.user, password: profile.pass, silent: false });
@@ -485,16 +862,16 @@ function renderArtists(list) {
       <div class="meta">
         <div class="name">${escapeHtml(a.name || "-")}</div>
       </div>
-      <button class="cta">Ver</button>
+      <button class="cta">${t("common.view")}</button>
     `;
     applyDeferredCover(div.querySelector("img.cover"), a.coverArt, COVER_SIZE_LIST);
     const open = async () => {
       try {
-        setStatus(`Cargando albumes: ${a.name}...`);
+        setStatus(t("player.load_albums_artist", { name: a.name }));
         await selectArtist(a.id, a.name, { openModal: true });
-        setStatus("OK.", "ok");
+        setStatus(t("common.ok"), "ok");
       } catch (e) {
-        setStatus(`Error: ${String(e)}`, "bad");
+        setStatus(t("common.error", { error: String(e) }), "bad");
       }
     };
     div.querySelector("button").addEventListener("click", (e) => {
@@ -517,18 +894,18 @@ function renderGenres(list) {
       <img class="cover" alt="" src="${DEFAULT_COVER}"/>
       <div class="meta">
         <div class="name">${escapeHtml(name)}</div>
-        <div class="desc">${count ? `${count} ${g.albumCount ? "albumes" : "canciones"}` : ""}</div>
+        <div class="desc">${count ? `${count} ${g.albumCount ? t("player.albums").toLowerCase() : t("player.songs").toLowerCase()}` : ""}</div>
       </div>
-      <button class="cta">Ver</button>
+      <button class="cta">${t("common.view")}</button>
     `;
     applyDeferredCover(div.querySelector("img.cover"), g.coverArt, COVER_SIZE_LIST);
     const open = async () => {
       try {
-        setStatus(`Cargando genero: ${name}...`);
+        setStatus(t("player.load_genre", { name }));
         await selectGenre(name);
-        setStatus("OK.", "ok");
+        setStatus(t("common.ok"), "ok");
       } catch (e) {
-        setStatus(`Error: ${String(e)}`, "bad");
+        setStatus(t("common.error", { error: String(e) }), "bad");
       }
     };
     div.querySelector("button").addEventListener("click", (e) => {
@@ -551,15 +928,15 @@ function renderAlbums(list) {
         <div class="name">${escapeHtml(al.name || "-")}</div>
         <div class="desc">${escapeHtml(al.artist || "")}</div>
       </div>
-      <button class="cta">Reproducir</button>
+      <button class="cta">${t("common.play")}</button>
     `;
     applyDeferredCover(div.querySelector("img.cover"), al.coverArt, COVER_SIZE_LIST);
     const play = async () => {
       try {
         await playAlbum(al.id);
-        setStatus("OK.", "ok");
+        setStatus(t("common.ok"), "ok");
       } catch (e) {
-        setStatus(`Error: ${String(e)}`, "bad");
+        setStatus(t("common.error", { error: String(e) }), "bad");
       }
     };
     div.querySelector("button").addEventListener("click", (e) => {
@@ -580,9 +957,9 @@ function renderPlaylists(list) {
       <img class="cover" alt="" src="${DEFAULT_COVER}"/>
       <div class="meta">
         <div class="name">${escapeHtml(p.name || "-")}</div>
-        <div class="desc">${p.songCount ? `${p.songCount} canciones` : ""}</div>
+        <div class="desc">${p.songCount ? `${p.songCount} ${t("player.songs").toLowerCase()}` : ""}</div>
       </div>
-      <button class="cta">Reproducir</button>
+      <button class="cta">${t("common.play")}</button>
     `;
     applyDeferredCover(div.querySelector("img.cover"), p.coverArt, COVER_SIZE_LIST);
     const play = async () => {
@@ -597,9 +974,9 @@ function renderPlaylists(list) {
         renderSongMenu();
         if (state.shuffleEnabled) shuffleQueue(true);
         if (state.queue.length) playIndex(0);
-        setStatus("OK.", "ok");
+        setStatus(t("common.ok"), "ok");
       } catch (e) {
-        setStatus(`Error: ${String(e)}`, "bad");
+        setStatus(t("common.error", { error: String(e) }), "bad");
       }
     };
     div.querySelector("button").addEventListener("click", (e) => {
@@ -617,21 +994,21 @@ function renderSongsCatalog(list, emptyText) {
   if (!items.length) {
     const div = document.createElement("div");
     div.className = "item";
-    div.innerHTML = `<div class="meta"><div class="name">${escapeHtml(emptyText || "Sin resultados")}</div></div>`;
+    div.innerHTML = `<div class="meta"><div class="name">${escapeHtml(emptyText || t("player.empty_results"))}</div></div>`;
     artistsList.appendChild(div);
     return;
   }
   items.forEach((track, index) => {
     const div = document.createElement("div");
     div.className = "item";
-    const stars = track.playCount ? ` · ${track.playCount} plays` : "";
+    const stars = track.playCount ? ` · ${track.playCount} ${t("player.plays_suffix")}` : "";
     div.innerHTML = `
       <img class="cover" alt="" src="${DEFAULT_COVER}"/>
       <div class="meta">
         <div class="name">${escapeHtml(track.title || "-")}</div>
         <div class="desc">${escapeHtml(track.artist || "")}${stars}</div>
       </div>
-      <button class="cta">Play</button>
+      <button class="cta">${t("common.play")}</button>
     `;
     applyDeferredCover(div.querySelector("img.cover"), track.coverArt, COVER_SIZE_LIST);
     const play = () => {
@@ -704,10 +1081,10 @@ function updatePlayPauseUI() {
   if (pauseHint) {
     const hasTrack = !!(state.queue && state.queue.length && state.queueIndex >= 0 && state.queue[state.queueIndex]);
     if (state.quickActionLoading) {
-      pauseHint.textContent = "CARGANDO";
+      pauseHint.textContent = t("player.loading_cover");
       pauseHint.hidden = false;
     } else {
-      pauseHint.textContent = "PAUSA";
+      pauseHint.textContent = t("player.pause");
       pauseHint.hidden = !(hasTrack && player.paused && !player.ended);
     }
   }
@@ -920,8 +1297,8 @@ async function applyTrackCover(track, options) {
 function setNow(track) {
   stopCoverRetry();
   if (!track) {
-    nowTitle.textContent = "Nada reproduciendo";
-    nowSub.textContent = "-";
+    nowTitle.textContent = t("player.nothing_playing");
+    nowSub.textContent = "—";
     clearNowCover();
     updateFavoriteButton(null);
     updateNowActionButtons(null);
@@ -964,7 +1341,7 @@ function setNow(track) {
 
 function syncSongsButton() {
   btnSongs.disabled = state.queue.length === 0;
-  btnSongs.textContent = state.queue.length ? `Canciones (${state.queue.length})` : "Canciones";
+  btnSongs.textContent = state.queue.length ? t("player.song_count", { count: state.queue.length }) : t("player.songs_fallback");
 }
 
 function queueAndPlayTracks(tracks, options) {
@@ -1107,10 +1484,10 @@ function shuffleQueue(keepCurrent = true) {
 function setShuffleUI() {
   if (state.shuffleEnabled) {
     btnShuffle.classList.add("primary");
-    btnShuffle.textContent = "Aleatorio ✓";
+    btnShuffle.textContent = t("player.shuffle_on");
   } else {
     btnShuffle.classList.remove("primary");
-    btnShuffle.textContent = "Aleatorio";
+    btnShuffle.textContent = t("player.shuffle");
   }
 }
 
@@ -1201,7 +1578,7 @@ async function loadFavorites(options) {
   state.favoriteSongs = mapped;
   state.favoriteSongsFiltered = mapped;
   if (opts.render !== false) {
-    renderSongsCatalog(mapped, "No hay favoritas");
+    renderSongsCatalog(mapped, t("player.no_favorites"));
   }
 }
 
@@ -1212,10 +1589,10 @@ async function playFavoritesNow() {
   setShuffleUI();
   if (!queueAndPlayTracks(state.favoriteSongs, { shuffleStart: true })) {
     setQuickActionLoading("");
-    setStatus("No hay favoritas para reproducir.", "bad");
+    setStatus(t("player.no_favorites_play"), "bad");
     return;
   }
-  setStatus(`Favoritas: ${state.favoriteSongs.length} canciones`, "ok");
+  setStatus(t("player.favorites_count", { count: state.favoriteSongs.length }), "ok");
 }
 
 async function buildMostPlayedFromServer() {
@@ -1237,7 +1614,7 @@ async function buildMostPlayedFromServer() {
       allAlbums.push(...page);
       if (page.length < pageSize) break;
       offset += pageSize;
-      setStatus(`Indexando albumes... ${allAlbums.length}`);
+      setStatus(t("player.indexing_albums", { count: allAlbums.length }));
     }
 
     const tracks = [];
@@ -1255,7 +1632,7 @@ async function buildMostPlayedFromServer() {
         }
         done += 1;
         if (done % 10 === 0 || done === allAlbums.length) {
-          setStatus(`Calculando mas reproducidas... ${done}/${allAlbums.length}`);
+          setStatus(t("player.calc_most_played", { done, total: allAlbums.length }));
         }
       }
     }
@@ -1294,7 +1671,7 @@ async function loadMostPlayed(options) {
           state.mostPlayedSongs = songs;
           state.mostPlayedSongsFiltered = songs;
           if (opts.render !== false) {
-            renderSongsCatalog(songs, "No hay reproducciones");
+            renderSongsCatalog(songs, t("player.no_plays"));
           }
           return;
         }
@@ -1306,7 +1683,7 @@ async function loadMostPlayed(options) {
 
   await buildMostPlayedFromServer();
   if (opts.render !== false) {
-    renderSongsCatalog(state.mostPlayedSongs, "No hay reproducciones");
+    renderSongsCatalog(state.mostPlayedSongs, t("player.no_plays"));
   }
 }
 
@@ -1317,10 +1694,10 @@ async function playMostPlayedNow() {
   setShuffleUI();
   if (!queueAndPlayTracks(state.mostPlayedSongs, { shuffleStart: true })) {
     setQuickActionLoading("");
-    setStatus("No hay canciones en más reproducidas.", "bad");
+    setStatus(t("player.no_most_played_play"), "bad");
     return;
   }
-  setStatus(`Más reproducidas: ${state.mostPlayedSongs.length} canciones`, "ok");
+  setStatus(t("player.most_played_count", { count: state.mostPlayedSongs.length }), "ok");
 }
 
 async function getArtistAlbums(artistId) {
@@ -1345,7 +1722,7 @@ async function playAlbum(albumId) {
 }
 
 async function playAllRandom() {
-  setStatus("Aleatorio: cargando 20 canciones...");
+  setStatus(t("player.random_loading"));
   state.shuffleEnabled = true;
   setShuffleUI();
   state.randomMode = true;
@@ -1353,9 +1730,9 @@ async function playAllRandom() {
   state.queueIndex = -1;
   try {
     await loadRandomBlock(20);
-    setStatus("OK.", "ok");
+    setStatus(t("common.ok"), "ok");
   } catch (e) {
-    setStatus(`Error: ${String(e)}`, "bad");
+    setStatus(t("common.error", { error: String(e) }), "bad");
   }
 }
 
@@ -1368,7 +1745,7 @@ async function selectArtist(artistId, name, opts) {
   const albums = await getArtistAlbums(artistId);
   state.selectedArtistAlbums = albums;
   btnAlbums.disabled = albums.length === 0;
-  btnAlbums.textContent = albums.length ? `Albumes (${albums.length})` : "Albumes";
+  btnAlbums.textContent = albums.length ? t("player.albums_count", { count: albums.length }) : t("player.albumes_fallback");
   if (opts?.openModal) openAlbumsModal();
 }
 
@@ -1382,7 +1759,7 @@ async function selectGenre(genreName) {
   const albums = sub.albumList2?.album || [];
   state.selectedGenreAlbums = albums;
   btnAlbums.disabled = albums.length === 0;
-  btnAlbums.textContent = albums.length ? `Albumes (${albums.length})` : "Albumes";
+  btnAlbums.textContent = albums.length ? t("player.albums_count", { count: albums.length }) : t("player.albumes_fallback");
   openAlbumsModal();
 }
 
@@ -1390,9 +1767,9 @@ function openAlbumsModal() {
   const a = state.selectedArtist;
   const g = state.selectedGenre;
   const albums = a ? state.selectedArtistAlbums : state.selectedGenreAlbums;
-  if (a) albumsTitle.textContent = `Albumes · ${a.name}`;
-  else if (g) albumsTitle.textContent = `Albumes · ${g.name}`;
-  else albumsTitle.textContent = "Albumes";
+  if (a) albumsTitle.textContent = t("player.albums_of", { name: a.name });
+  else if (g) albumsTitle.textContent = t("player.albums_of", { name: g.name });
+  else albumsTitle.textContent = t("modal.albums_title");
 
   albumsList.innerHTML = "";
   btnPlayAllAlbums.disabled = albums.length === 0;
@@ -1406,7 +1783,7 @@ function openAlbumsModal() {
         <div class="name">${escapeHtml(al.name || "-")}</div>
         <div class="desc">${escapeHtml(a?.name || "")}</div>
       </div>
-      <button class="cta">Play</button>
+      <button class="cta">${t("common.play")}</button>
     `;
     applyDeferredCover(div.querySelector("img.cover"), al.coverArt, COVER_SIZE_LIST);
     div.querySelector("button").addEventListener("click", async (e) => {
@@ -1448,7 +1825,7 @@ async function playAllAlbums() {
     return;
   }
 
-  setStatus(`Cargando ${albums.length} albumes...`);
+  setStatus(t("player.load_albums_total", { count: albums.length }));
   btnPlayAllAlbums.disabled = true;
   const allSongs = [];
   try {
@@ -1465,7 +1842,7 @@ async function playAllAlbums() {
         const songs = sub.album?.song || [];
         for (const song of songs) allSongs.push(toTrack(song));
         done += 1;
-        setStatus(`Cargando albumes... ${done}/${total}`);
+        setStatus(t("player.calc_most_played", { done, total }));
       }
     }
 
@@ -1480,10 +1857,10 @@ async function playAllAlbums() {
     renderSongMenu();
     if (state.shuffleEnabled) shuffleQueue(true);
     if (state.queue.length) playIndex(0);
-    setStatus("OK.", "ok");
+    setStatus(t("common.ok"), "ok");
     closeAlbumsModal();
   } catch (e) {
-    setStatus(`Error: ${String(e)}`, "bad");
+    setStatus(t("common.error", { error: String(e) }), "bad");
   } finally {
     btnPlayAllAlbums.disabled = false;
   }
@@ -1492,7 +1869,7 @@ async function playAllAlbums() {
 function openSongsModal() {
   if (!state.queue || state.queue.length === 0) return;
   const current = state.queue[state.queueIndex] || null;
-  songsTitle.textContent = current?.album ? `Canciones · ${current.album}` : "Canciones";
+  songsTitle.textContent = current?.album ? t("player.albums_of", { name: current.album }) : t("modal.songs_title");
   songsList.innerHTML = "";
   let activeEl = null;
   state.queue.forEach((track, idx) => {
@@ -1505,7 +1882,7 @@ function openSongsModal() {
         <div class="name">${escapeHtml(track.title || "-")}</div>
         <div class="desc">${escapeHtml(track.artist || "")}</div>
       </div>
-      <button class="cta">Play</button>
+      <button class="cta">${t("common.play")}</button>
     `;
     div.querySelector("button").addEventListener("click", (e) => {
       e.stopPropagation();
@@ -1533,7 +1910,7 @@ function closeWhatsNewModal(markSeen = true) {
 }
 
 function openWhatsNewModal() {
-  whatsNewTitle.textContent = `Mejoras en ${APP_VERSION}`;
+  whatsNewTitle.textContent = t("whatsnew.title", { version: APP_VERSION });
   whatsNewList.innerHTML = "";
   const sections = getWhatsNewSections(APP_VERSION);
   for (const section of sections) {
@@ -1542,7 +1919,7 @@ function openWhatsNewModal() {
     title.textContent = section.version;
     whatsNewList.appendChild(title);
 
-    const items = Array.isArray(section.items) && section.items.length ? section.items : ["Sin detalles."];
+    const items = Array.isArray(section.items) && section.items.length ? section.items : [t("whatsnew.no_details")];
     for (const item of items) {
       const row = document.createElement("div");
       row.className = "whatsNewItem";
@@ -1580,7 +1957,7 @@ function closeAutoThemeModal() {
 function openServerModal() {
   serverUrlInput.value = getStoredServer();
   serverModal.hidden = false;
-  setServerCheck("idle", "Sin comprobar");
+  setServerCheck("idle", t("status.server_idle"));
   if (serverUrlInput.value) probeServerUrl(serverUrlInput.value);
   setTimeout(() => {
     setAppHeight();
@@ -1614,9 +1991,9 @@ function resetPlayerState() {
   state.mostPlayedSongsFiltered = [];
   state.starredIds = new Set();
   btnAlbums.disabled = true;
-  btnAlbums.textContent = "Albumes";
+  btnAlbums.textContent = t("player.albumes_fallback");
   btnSongs.disabled = true;
-  btnSongs.textContent = "Canciones";
+  btnSongs.textContent = t("player.songs_fallback");
   state.shuffleEnabled = false;
   state.randomMode = false;
   state.randomLoading = false;
@@ -1646,15 +2023,15 @@ async function connectWithCredentials({ server, username, password, silent = fal
   const normalizedServer = normalizeServer(server || "");
   const user = String(username || "").trim();
   if (!normalizedServer) {
-    if (!silent) setStatus("Configura el servidor primero.", "bad");
+    if (!silent) setStatus(t("status.need_server"), "bad");
     openServerModal();
     return false;
   }
   if (!user || !password) {
-    if (!silent) setStatus("Falta usuario/contraseña.", "bad");
+    if (!silent) setStatus(t("status.missing_credentials"), "bad");
     return false;
   }
-  if (!silent) setStatus("Conectando...");
+  if (!silent) setStatus(t("status.connecting"));
   btnConnect.disabled = true;
 
   const auth = makeAuth(user, password);
@@ -1666,19 +2043,20 @@ async function connectWithCredentials({ server, username, password, silent = fal
     setHeaderUserLabel(user);
     const remember = !!rememberCredsEl?.checked;
     setRememberCreds(remember);
+    await revokeBrokerSessionSafe();
     const storedServer = setStoredServer(normalizedServer);
     updateServerButton(storedServer);
     setStoredCredentials({ user, pass: password }, remember);
     saveCurrentProfile(normalizedServer, user, password);
     resetPlayerState();
     await hydrateStarredIds();
-    if (!silent) setStatus("OK. Conectado.", "ok");
+    if (!silent) setStatus(t("status.connected"), "ok");
     showScreen("player");
     setViewMode("artists");
     renderProfiles();
     return true;
   } catch (e) {
-    if (!silent) setStatus(`Error: ${String(e)}`, "bad");
+    if (!silent) setStatus(t("common.error", { error: String(e) }), "bad");
     return false;
   } finally {
     btnConnect.disabled = false;
@@ -1690,6 +2068,26 @@ async function connect() {
     server: getStoredServer(),
     username: userEl.value,
     password: passEl.value,
+    silent: false,
+  });
+}
+
+async function tryAutoConnectFromStoredState(activeProfiles, activeId) {
+  const brokerSession = getBrokerSession();
+  if (brokerSession) {
+    setStatus(t("status.autoconnecting"));
+    const ok = await connectWithBrokerSession(brokerSession, { silent: false });
+    if (ok) return true;
+  }
+
+  if (!getRememberCreds()) return false;
+  const active = activeProfiles.find((p) => p.id === activeId) || activeProfiles[0];
+  if (!active?.server || !active?.user || !active?.pass) return false;
+  setStatus(t("status.autoconnecting"));
+  return connectWithCredentials({
+    server: active.server,
+    username: active.user,
+    password: active.pass,
     silent: false,
   });
 }
@@ -1711,12 +2109,12 @@ function applyListFilter() {
     state.favoriteSongsFiltered = !q
       ? state.favoriteSongs
       : state.favoriteSongs.filter((s) => `${s.title || ""} ${s.artist || ""} ${s.album || ""}`.toLowerCase().includes(q));
-    renderSongsCatalog(state.favoriteSongsFiltered, "No hay favoritas");
+    renderSongsCatalog(state.favoriteSongsFiltered, t("player.no_favorites"));
   } else if (state.viewMode === "mostPlayed") {
     state.mostPlayedSongsFiltered = !q
       ? state.mostPlayedSongs
       : state.mostPlayedSongs.filter((s) => `${s.title || ""} ${s.artist || ""} ${s.album || ""}`.toLowerCase().includes(q));
-    renderSongsCatalog(state.mostPlayedSongsFiltered, "No hay reproducciones");
+    renderSongsCatalog(state.mostPlayedSongsFiltered, t("player.no_plays"));
   } else {
     state.artistsFiltered = !q ? state.artists : state.artists.filter((a) => (a.name || "").toLowerCase().includes(q));
     renderArtists(state.artistsFiltered);
@@ -1732,12 +2130,12 @@ async function setViewMode(mode) {
   artistFilter.value = "";
   artistFilter.placeholder =
     mode === "genres"
-      ? "Filtrar genero..."
+      ? t("player.filter_genre")
       : mode === "albums"
-        ? "Filtrar album..."
+        ? t("player.filter_album")
         : mode === "playlists"
-          ? "Filtrar lista..."
-          : "Filtrar artista...";
+          ? t("player.filter_playlist")
+          : t("player.filter_artist");
 
   if (mode === "genres") {
     await loadGenres();
@@ -1770,7 +2168,7 @@ async function toggleFavoriteCurrentTrack() {
       await loadFavorites();
     }
   } catch (e) {
-    setStatus(`Error al cambiar favorita: ${String(e)}`, "bad");
+    setStatus(t("status.favorite_toggle_error", { error: String(e) }), "bad");
   }
 }
 
@@ -1781,9 +2179,50 @@ function wireEvents() {
   });
 
   setAppHeight();
-  window.addEventListener("resize", setAppHeight);
-  window.visualViewport?.addEventListener("resize", setAppHeight);
+  window.addEventListener("resize", () => {
+    setAppHeight();
+    if (state.deviceMode === "auto") applyDeviceMode("auto");
+  });
+  window.visualViewport?.addEventListener("resize", () => {
+    setAppHeight();
+    if (state.deviceMode === "auto") applyDeviceMode("auto");
+  });
   window.visualViewport?.addEventListener("scroll", setAppHeight);
+
+  btnDeviceModeAuto?.addEventListener("click", () => {
+    const next = setDeviceMode("auto");
+    applyDeviceMode(next);
+    maybeSuggestDeviceMode();
+  });
+  btnDeviceModeCar?.addEventListener("click", () => setAndApplyDeviceMode("car"));
+  btnDeviceModeDesktop?.addEventListener("click", () => setAndApplyDeviceMode("desktop"));
+  btnDeviceModeModalClose?.addEventListener("click", () => {
+    setDeviceModePromptSeen(true);
+    closeDeviceModeModal();
+  });
+  btnDeviceModeUseSuggested?.addEventListener("click", () => {
+    const mode = btnDeviceModeUseSuggested.dataset.mode || "desktop";
+    setAndApplyDeviceMode(mode);
+    closeDeviceModeModal();
+  });
+  btnDeviceModeUseAlternative?.addEventListener("click", () => {
+    const mode = btnDeviceModeUseAlternative.dataset.mode || "car";
+    setAndApplyDeviceMode(mode);
+    closeDeviceModeModal();
+  });
+  btnDeviceModeKeepAuto?.addEventListener("click", () => {
+    setDeviceModePromptSeen(true);
+    applyDeviceMode("auto");
+    closeDeviceModeModal();
+  });
+  btnLangEs?.addEventListener("click", () => setLanguageUi("es"));
+  btnLangEn?.addEventListener("click", () => setLanguageUi("en"));
+  deviceModeModal?.addEventListener("click", (event) => {
+    if (event.target === deviceModeModal) {
+      setDeviceModePromptSeen(true);
+      closeDeviceModeModal();
+    }
+  });
 
   btnEditServer.addEventListener("click", () => openServerModal());
   btnServerCancel.addEventListener("click", () => closeServerModal());
@@ -1797,17 +2236,17 @@ function wireEvents() {
     }
     try {
       const parsed = new URL(value);
-      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error("Protocolo invalido");
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error("invalid protocol");
       const normalized = normalizeServer(`${parsed.origin}${parsed.pathname}`);
       if (lastProbe.kind === "not_found" && lastProbe.url === normalizeServer(normalized)) {
-        setStatus("La URL no existe (ping 404). Revisa dominio o subruta.", "bad");
+        setStatus(t("status.server_not_found"), "bad");
         return;
       }
       const stored = setStoredServer(normalized);
       updateServerButton(stored);
       closeServerModal();
     } catch {
-      setStatus("URL invalida. Ej: https://navidrome.tudominio.com", "bad");
+      setStatus(t("status.invalid_url"), "bad");
     }
   });
   serverUrlInput.addEventListener("input", () => {
@@ -1827,6 +2266,19 @@ function wireEvents() {
     const current = playerGrid?.dataset.listPane === "right" ? "right" : "left";
     const next = setListPaneSide(current === "left" ? "right" : "left");
     applyListPaneSide(next);
+  });
+
+  btnLinkDevice?.addEventListener("click", () => {
+    startLinkDeviceFlow().catch((e) => setStatus(t("common.error", { error: String(e) }), "bad"));
+  });
+  btnLinkClose?.addEventListener("click", () => closeLinkDeviceModal());
+  btnLinkRetry?.addEventListener("click", () => {
+    startLinkDeviceFlow().catch((e) => {
+      if (linkDeviceStatus) linkDeviceStatus.textContent = t("common.error", { error: String(e) });
+    });
+  });
+  linkDeviceModal?.addEventListener("click", (event) => {
+    if (event.target === linkDeviceModal) closeLinkDeviceModal();
   });
 
   btnConnect.addEventListener("click", () => connect());
@@ -1879,13 +2331,13 @@ function wireEvents() {
         shuffleQueue(true);
         state.randomMode = false;
       } else {
-        setStatus("Aleatorio: cargando 20 canciones...");
+        setStatus(t("player.random_loading"));
         try {
           state.randomMode = true;
           await loadRandomBlock(20);
-          setStatus("OK.", "ok");
+          setStatus(t("common.ok"), "ok");
         } catch (e) {
-          setStatus(`Error: ${String(e)}`, "bad");
+          setStatus(t("common.error", { error: String(e) }), "bad");
         }
       }
     } else {
@@ -1988,20 +2440,20 @@ function wireEvents() {
   btnViewPlaylists.addEventListener("click", () => setViewMode("playlists").catch((e) => setStatus(String(e), "bad")));
   btnPlayMostPlayed.addEventListener("click", async () => {
     try {
-      setStatus("Cargando más reproducidas...");
+      setStatus(t("status.loading_most_played"));
       await playMostPlayedNow();
     } catch (e) {
       setQuickActionLoading("");
-      setStatus(`Error: ${String(e)}`, "bad");
+      setStatus(t("common.error", { error: String(e) }), "bad");
     }
   });
   btnPlayFavorites.addEventListener("click", async () => {
     try {
-      setStatus("Cargando favoritas...");
+      setStatus(t("status.loading_favorites"));
       await playFavoritesNow();
     } catch (e) {
       setQuickActionLoading("");
-      setStatus(`Error: ${String(e)}`, "bad");
+      setStatus(t("common.error", { error: String(e) }), "bad");
     }
   });
 
@@ -2060,7 +2512,7 @@ function wireEvents() {
     profilesModal.hidden = true;
     menuModal.hidden = true;
     showScreen("login");
-    setStatus("Introduce credenciales del nuevo usuario.");
+    setStatus(t("status.new_profile_credentials"));
   });
 
   btnAutoThemeCancel.addEventListener("click", () => closeAutoThemeModal());
@@ -2095,6 +2547,12 @@ function wireEvents() {
 
 function init() {
   migrateLegacyPreferences();
+  registerServiceWorker();
+  const storedLanguage = getLanguage();
+  const initialLanguage = storedLanguage || detectPreferredLanguage();
+  state.i18n = createI18n(initialLanguage);
+  setLanguageUi(initialLanguage);
+
   updateServerButton(getStoredServer());
 
   const remember = getRememberCreds();
@@ -2104,6 +2562,7 @@ function init() {
   if (user) userEl.value = user;
   if (pass) passEl.value = pass;
 
+  applyDeviceMode(getDeviceMode());
   applyListPaneSide(getListPaneSide());
   applyThemeMode().catch(() => {
     const saved = getTheme();
@@ -2115,8 +2574,21 @@ function init() {
   renderProfiles();
   showScreen("login");
   setHeaderUserLabel("");
+  setTimeout(() => maybeSuggestDeviceMode(), 180);
 
-  checkForUpdate({ currentTag: APP_VERSION, repo: UPDATE_REPO, currentEl: verCurrent, latestEl: verLatest });
+  if (loginFooterVer) loginFooterVer.textContent = APP_VERSION;
+  checkForUpdate({ currentTag: APP_VERSION, repo: UPDATE_REPO, currentEl: verCurrent, latestEl: verLatest }).finally(() => {
+    if (!loginFooterUpd || !loginFooterVer) return;
+    loginFooterVer.textContent = verCurrent?.textContent || APP_VERSION;
+    const latestRaw = verLatest?.textContent || "";
+    if (verLatest?.hidden || !latestRaw) {
+      loginFooterUpd.hidden = true;
+      loginFooterUpd.textContent = "";
+      return;
+    }
+    loginFooterUpd.textContent = `⬆ ${latestRaw}`;
+    loginFooterUpd.hidden = false;
+  });
   const seen = getWhatsNewSeenVersion();
   if (seen !== APP_VERSION && getWhatsNewForVersion(APP_VERSION).length) {
     openWhatsNewModal();
@@ -2129,20 +2601,11 @@ function init() {
     if (active?.user) userEl.value = active.user;
   }
 
-  if (getRememberCreds()) {
-    const active = profiles.find((p) => p.id === activeId) || profiles[0];
-    if (active?.server && active?.user && active?.pass) {
-      setStatus("Autoconectando...");
-      setTimeout(() => {
-        connectWithCredentials({
-          server: active.server,
-          username: active.user,
-          password: active.pass,
-          silent: false,
-        });
-      }, 80);
-    }
-  }
+  setTimeout(() => {
+    tryAutoConnectFromStoredState(profiles, activeId).catch(() => {
+      // ignore auto-connect errors
+    });
+  }, 80);
 
   setShuffleUI();
 }

@@ -1,0 +1,31 @@
+{
+  "name": "Music Skin ND",
+  "short_name": "Music ND",
+  "description": "Car mode web client for Navidrome.",
+  "lang": "es",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#dbe6f2",
+  "theme_color": "#dbe6f2",
+  "icons": [
+    {
+      "src": "./assets/img/app-logo-b.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/img/app-logo-a.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/img/music-player.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ]
+}

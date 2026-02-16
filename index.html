@@ -4,8 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#dbe6f2" />
     <meta name="app-version" content="v0.1.0-alpha.6" />
     <meta name="update-repo" content="GOTXE/caraudio" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./assets/img/app-logo-b.png" />
     <title>Music Skin ND</title>
     <link rel="stylesheet" href="./assets/css/styles.css" />
   </head>
@@ -13,19 +16,21 @@
     <div class="wrap">
       <header>
         <div class="title">
+          <img class="loginLogo loginLogoDesktop" src="./assets/img/app-logo-a.png" alt="Logo app" />
+          <img class="loginLogo loginLogoCar" src="./assets/img/app-logo-b.png" alt="Logo app car" />
           <h1>
             Music Skin ND
           </h1>
-          <div class="sub">Skin local para Navidrome.</div>
+          <div class="sub" data-i18n="app.subtitle">Skin local para Navidrome.</div>
         </div>
         <div class="headerCenter" aria-label="Versión">
           <div class="pill mono" id="verCurrent" title="Versión actual"></div>
           <div class="pill pillGlow mono" id="verLatest" title="Hay una versión nueva disponible" hidden></div>
-          <button class="ghostBtn whatsNewBtn" id="btnWhatsNew" title="Ver novedades">Novedades</button>
+          <button class="ghostBtn whatsNewBtn" id="btnWhatsNew" title="Ver novedades" data-i18n="header.whats_new" data-i18n-title="header.whats_new">Novedades</button>
         </div>
         <div class="headerRight">
           <span class="headerUser mono" id="headerUser" hidden>@—</span>
-          <button class="iconBtn" id="btnOpenMenu" aria-label="Abrir menú" title="Menú" hidden>☰</button>
+          <button class="iconBtn" id="btnOpenMenu" aria-label="Abrir menú" title="Menú" hidden data-i18n-title="header.menu" data-i18n-aria-label="header.menu">☰</button>
         </div>
       </header>
 
@@ -33,32 +38,65 @@
       <div class="screen" id="screenLogin">
         <div class="loginWrap">
           <section class="card loginCard">
-            <div class="topBar">
+            <div class="loginTopRow">
+              <div class="loginTitle" data-i18n="login.access">Acceso</div>
+              <button class="ghostBtn serverBtn" id="btnEditServer" type="button" data-i18n="login.server_config">Configurar servidor</button>
             </div>
 
-            <button class="ghostBtn serverBtn" id="btnEditServer" type="button">Servidor no configurado</button>
+            <div class="loginModeRow">
+              <span class="loginModeLabel" data-i18n="login.device">Dispositivo</span>
+              <div class="deviceModeSwitch" role="group" aria-label="Modo de dispositivo" data-i18n-aria-label="device_mode.aria_group">
+                <button class="segBtn" id="btnDeviceModeAuto" type="button" data-i18n="login.device_auto">Auto</button>
+                <button class="segBtn" id="btnDeviceModeCar" type="button" data-i18n="login.device_car">Car Unit</button>
+                <button class="segBtn" id="btnDeviceModeDesktop" type="button" data-i18n="login.device_desktop">Desktop</button>
+              </div>
+            </div>
 
-	            <label for="username">Usuario</label>
-	            <input id="username" autocomplete="username" autocapitalize="none" spellcheck="false" enterkeyhint="next" />
-	
-	            <label for="password">Contraseña</label>
-	            <input
-	              id="password"
-	              type="password"
-	              autocomplete="current-password"
-	              autocapitalize="none"
-	              spellcheck="false"
-	              enterkeyhint="done"
-	            />
+            <div class="loginCredRow">
+              <div class="loginField">
+                <label for="username" data-i18n="login.username">Usuario</label>
+                <input id="username" autocomplete="username" autocapitalize="none" spellcheck="false" enterkeyhint="next" />
+              </div>
 
-            <button class="btn" id="btnConnect">Conectar</button>
-            <label class="rememberRow" for="rememberCreds">
-              <input id="rememberCreds" type="checkbox" />
-              <span>Recordar credenciales</span>
-            </label>
+              <div class="loginField">
+                <label for="password" data-i18n="login.password">Contraseña</label>
+                <input
+                  id="password"
+                  type="password"
+                  autocomplete="current-password"
+                  autocapitalize="none"
+                  spellcheck="false"
+                  enterkeyhint="done"
+                />
+              </div>
+            </div>
 
-            <div class="status" id="status">Esperando…</div>
+            <div class="loginBottomRow">
+              <label class="rememberRow" for="rememberCreds">
+                <input id="rememberCreds" type="checkbox" />
+                <span data-i18n="login.remember">Recordar credenciales</span>
+              </label>
+              <div class="loginBtnsStack">
+                <button class="btn" id="btnConnect" data-i18n="login.connect">Conectar</button>
+                <button class="btn secondary btnLinkDevice" id="btnLinkDevice" type="button" data-i18n="login.link_other_device">Vincular con otro dispositivo</button>
+              </div>
+            </div>
+
+            <div class="status" id="status"></div>
           </section>
+          <footer class="loginFooter" aria-label="Información de versión">
+            <div class="loginFooterTop">GOTXE ❤️ IA 🤖</div>
+            <div class="loginFooterRow">
+              <a class="githubLink" href="https://github.com/gotxe" target="_blank" rel="noopener noreferrer" aria-label="GitHub de Gotxe">
+                <img class="githubMark githubMarkDay" src="./assets/img/github-mark-day.png" alt="GitHub" />
+                <img class="githubMark githubMarkNight" src="./assets/img/github-mark-night.png" alt="GitHub" />
+              </a>
+              <div class="loginFooterVerWrap">
+                <span class="mono" id="loginFooterVer">v0.0.0</span>
+                <span class="mono" id="loginFooterUpd" hidden></span>
+              </div>
+            </div>
+          </footer>
         </div>
       </div>
 
@@ -68,15 +106,15 @@
           <section class="card artistsPane">
             <div class="topBar">
               <div class="viewTabs">
-                <button class="segBtn active" id="btnViewArtists">Artistas</button>
-                <button class="segBtn" id="btnViewGenres">Géneros</button>
-                <button class="segBtn" id="btnViewAlbums">Álbumes</button>
-                <button class="segBtn" id="btnViewPlaylists">Listas</button>
+                <button class="segBtn active" id="btnViewArtists" data-i18n="player.tab_artists">Artistas</button>
+                <button class="segBtn" id="btnViewGenres" data-i18n="player.tab_genres">Géneros</button>
+                <button class="segBtn" id="btnViewAlbums" data-i18n="player.tab_albums">Álbumes</button>
+                <button class="segBtn" id="btnViewPlaylists" data-i18n="player.tab_playlists">Listas</button>
               </div>
             </div>
             <div class="filterWrap">
-              <input id="artistFilter" placeholder="Filtrar artista…" />
-              <button class="segBtn iconOnly filterClearBtn" id="btnClearArtists" title="Limpiar" aria-label="Limpiar">🧹</button>
+              <input id="artistFilter" placeholder="Filtrar artista…" data-i18n-placeholder="player.filter_artist" />
+              <button class="segBtn iconOnly filterClearBtn" id="btnClearArtists" title="Limpiar" aria-label="Limpiar" data-i18n-title="common.clear" data-i18n-aria-label="common.clear">🧹</button>
             </div>
             <div class="artistsList" id="artistsList"></div>
           </section>
@@ -86,10 +124,10 @@
               <div class="nowBg" id="nowBg"></div>
               <div class="topBar">
                 <div class="sideBtns">
-                  <button class="ghostBtn" id="btnPlayMostPlayed">Más reproducidas</button>
-                  <button class="ghostBtn" id="btnPlayFavorites">Favoritas</button>
-                  <button class="ghostBtn" id="btnAlbums" disabled>Álbumes</button>
-                  <button class="ghostBtn" id="btnSongs" disabled>Canciones</button>
+                  <button class="ghostBtn" id="btnPlayMostPlayed" data-i18n="player.most_played">Más reproducidas</button>
+                  <button class="ghostBtn" id="btnPlayFavorites" data-i18n="player.favorites">Favoritas</button>
+                  <button class="ghostBtn" id="btnAlbums" disabled data-i18n="player.albums">Álbumes</button>
+                  <button class="ghostBtn" id="btnSongs" disabled data-i18n="player.songs">Canciones</button>
                 </div>
                 <div></div>
               </div>
@@ -98,12 +136,12 @@
                 <div class="songMenu" id="songMenu"></div>
                 <div class="nowMeta">
                   <div class="coverWrap">
-                    <div class="pauseHint" id="pauseHint" hidden>PAUSA</div>
+                    <div class="pauseHint" id="pauseHint" hidden data-i18n="player.pause">PAUSA</div>
                     <img class="coverXL" id="nowCover" alt="" src="./assets/img/music-player.svg" />
-                    <button class="coverFavBtn" id="btnFavoriteSong" title="Marcar favorita" aria-label="Favorita">♡</button>
+                    <button class="coverFavBtn" id="btnFavoriteSong" title="Marcar favorita" aria-label="Favorita" data-i18n-title="player.mark_favorite" data-i18n-aria-label="player.mark_favorite">♡</button>
                   </div>
                   <div>
-                    <div class="bigTitle" id="nowTitle">Nada reproduciendo</div>
+                    <div class="bigTitle" id="nowTitle" data-i18n="player.nothing_playing">Nada reproduciendo</div>
                     <div class="bigSub" id="nowSub">—</div>
                   </div>
                 </div>
@@ -126,8 +164,8 @@
                 <button id="btnPrev">◀◀</button>
                 <button class="primary" id="btnPlayPause">▶︎ / ❚❚</button>
                 <button id="btnNext">▶▶</button>
-                <button id="btnShuffle">Aleatorio</button>
-                <button id="btnPlayAll">Reproducir todo</button>
+                <button id="btnShuffle" data-i18n="player.shuffle">Aleatorio</button>
+                <button id="btnPlayAll" data-i18n="player.play_all">Reproducir todo</button>
               </div>
             </section>
           </section>
@@ -139,10 +177,10 @@
     <div class="modal" id="albumsModal" hidden>
       <section class="card modalCard">
         <div class="topBar">
-          <div class="pill" id="albumsTitle">Álbumes</div>
+          <div class="pill" id="albumsTitle" data-i18n="modal.albums_title">Álbumes</div>
           <div style="display:flex;gap:10px;align-items:center">
-            <button class="ghostBtn" id="btnPlayAllAlbums">Reproducir todo</button>
-            <button class="ghostBtn" id="btnCloseAlbums">Cerrar</button>
+            <button class="ghostBtn" id="btnPlayAllAlbums" data-i18n="player.play_all">Reproducir todo</button>
+            <button class="ghostBtn" id="btnCloseAlbums" data-i18n="common.close">Cerrar</button>
           </div>
         </div>
         <div class="modalList" id="albumsList"></div>
@@ -153,8 +191,8 @@
     <div class="modal" id="songsModal" hidden>
       <section class="card modalCard">
         <div class="topBar">
-          <div class="pill" id="songsTitle">Canciones</div>
-          <button class="ghostBtn" id="btnCloseSongs">Cerrar</button>
+          <div class="pill" id="songsTitle" data-i18n="modal.songs_title">Canciones</div>
+          <button class="ghostBtn" id="btnCloseSongs" data-i18n="common.close">Cerrar</button>
         </div>
         <div class="modalList" id="songsList"></div>
       </section>
@@ -165,15 +203,15 @@
       <section class="card modalCard" style="max-height: min(280px, 100%)">
         <div class="topBar">
           <div class="modalTitleRow">
-            <div class="pill">Servidor Navidrome</div>
-            <div class="serverCheck" id="serverCheck" data-state="idle" aria-live="polite" title="Sin comprobar">
+            <div class="pill" data-i18n="modal.server_title">Servidor Navidrome</div>
+            <div class="serverCheck" id="serverCheck" data-state="idle" aria-live="polite" title="Sin comprobar" data-i18n-title="status.server_idle">
               <span class="dot" aria-hidden="true"></span>
-              <span id="serverCheckText">Sin comprobar</span>
+              <span id="serverCheckText" data-i18n="status.server_idle">Sin comprobar</span>
             </div>
           </div>
           <div style="display:flex;gap:10px;align-items:center">
-            <button class="ghostBtn" id="btnServerCancel">Cancelar</button>
-            <button class="ghostBtn" id="btnServerSave">Aceptar</button>
+            <button class="ghostBtn" id="btnServerCancel" data-i18n="common.cancel">Cancelar</button>
+            <button class="ghostBtn" id="btnServerSave" data-i18n="common.save">Guardar</button>
           </div>
         </div>
 
@@ -191,12 +229,50 @@
       </section>
     </div>
 
+    <!-- Modal sugerencia de dispositivo -->
+    <div class="modal" id="deviceModeModal" hidden>
+      <section class="card modalCard deviceModeModalCard">
+        <div class="topBar">
+          <div class="pill" data-i18n="device_mode.title">Modo de dispositivo</div>
+          <button class="ghostBtn" id="btnDeviceModeModalClose" data-i18n="common.close">Cerrar</button>
+        </div>
+        <div class="deviceModeModalBody">
+          <p id="deviceModeModalText"></p>
+          <div class="deviceModeModalActions">
+            <button class="btn" id="btnDeviceModeUseSuggested" type="button">Usar sugerido</button>
+            <button class="btn secondary" id="btnDeviceModeUseAlternative" type="button" data-i18n="misc.change">Cambiar</button>
+            <button class="ghostBtn" id="btnDeviceModeKeepAuto" type="button" data-i18n="device_mode.keep_auto">Seguir en auto</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal vincular con otro dispositivo -->
+    <div class="modal" id="linkDeviceModal" hidden>
+      <section class="card modalCard linkDeviceCard">
+        <div class="topBar">
+          <div class="pill" data-i18n="link.modal_title">Vincular con otro dispositivo</div>
+          <button class="ghostBtn" id="btnLinkClose" data-i18n="common.close">Cerrar</button>
+        </div>
+        <div class="linkDeviceBody">
+          <p class="linkDeviceText" id="linkDeviceText" data-i18n="link.modal_body">Abre URL e introduce el código.</p>
+          <p class="linkDeviceUrl mono" id="linkDeviceUrl">https://example.local/link</p>
+          <p class="linkDeviceCode mono" id="linkDeviceCode">----</p>
+          <p class="linkDeviceTimer mono" id="linkDeviceTimer">04:59</p>
+          <p class="linkDeviceStatus" id="linkDeviceStatus" data-i18n="link.pending">Esperando confirmación en móvil...</p>
+          <div class="linkDeviceActions">
+            <button class="btn secondary" id="btnLinkRetry" type="button" data-i18n="link.new_code">Generar nuevo código</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
     <!-- Modal novedades -->
     <div class="modal" id="whatsNewModal" hidden>
       <section class="card modalCard whatsNewCard">
         <div class="topBar">
           <div class="pill" id="whatsNewTitle">Mejoras en v...</div>
-          <button class="ghostBtn" id="btnCloseWhatsNew">Entendido</button>
+          <button class="ghostBtn" id="btnCloseWhatsNew" data-i18n="modal.whatsnew_ack">Entendido</button>
         </div>
         <div class="modalList whatsNewList" id="whatsNewList"></div>
       </section>
@@ -206,27 +282,34 @@
     <div class="modal modalTop" id="menuModal" hidden>
       <section class="card modalCard menuCard">
         <div class="topBar">
-          <div class="pill">Ajustes</div>
-          <button class="ghostBtn" id="btnCloseMenu">Cerrar</button>
+          <div class="pill" data-i18n="menu.settings">Ajustes</div>
+          <button class="ghostBtn" id="btnCloseMenu" data-i18n="common.close">Cerrar</button>
         </div>
         <div class="menuRows">
           <div class="menuRow">
-            <div class="menuLabel">Tema</div>
+            <div class="menuLabel" data-i18n="menu.theme">Tema</div>
             <div class="menuThemeOptions">
-              <button class="segBtn" id="btnThemeDay">Día</button>
-              <button class="segBtn" id="btnThemeNight">Noche</button>
-              <button class="segBtn" id="btnThemeAuto">Auto</button>
-              <button class="ghostBtn" id="btnThemeAutoConfig" title="Configurar auto">Configurar</button>
+              <button class="segBtn" id="btnThemeDay" data-i18n="menu.theme_day">Día</button>
+              <button class="segBtn" id="btnThemeNight" data-i18n="menu.theme_night">Noche</button>
+              <button class="segBtn" id="btnThemeAuto" data-i18n="menu.theme_auto">Auto</button>
+              <button class="ghostBtn" id="btnThemeAutoConfig" title="Configurar auto" data-i18n="menu.theme_config" data-i18n-title="menu.theme_config">Configurar</button>
             </div>
             <div class="menuHint mono" id="themeAutoHint" hidden></div>
           </div>
           <div class="menuRow">
-            <div class="menuLabel">Panel listas</div>
-            <button class="ghostBtn" id="btnPaneSide" title="Cambiar posición de listas">Dercha</button>
+            <div class="menuLabel" data-i18n="menu.list_pane">Panel listas</div>
+            <button class="ghostBtn" id="btnPaneSide" title="Cambiar posición de listas" data-i18n-title="menu.list_pane">Derecha</button>
           </div>
           <div class="menuRow">
-            <div class="menuLabel">Usuario</div>
-            <button class="ghostBtn" id="btnOpenProfiles" title="Cambiar usuario">Cambiar usuario</button>
+            <div class="menuLabel" data-i18n="menu.user">Usuario</div>
+            <button class="ghostBtn" id="btnOpenProfiles" title="Cambiar usuario" data-i18n="menu.switch_user" data-i18n-title="menu.switch_user">Cambiar usuario</button>
+          </div>
+          <div class="menuRow">
+            <div class="menuLabel" data-i18n="menu.language">Idioma</div>
+            <div class="menuThemeOptions">
+              <button class="segBtn" id="btnLangEs" type="button">ES</button>
+              <button class="segBtn" id="btnLangEn" type="button">EN</button>
+            </div>
           </div>
         </div>
       </section>
@@ -236,12 +319,12 @@
     <div class="modal modalTop" id="profilesModal" hidden>
       <section class="card modalCard">
         <div class="topBar">
-          <div class="pill">Perfiles</div>
-          <button class="ghostBtn" id="btnCloseProfiles">Cerrar</button>
+          <div class="pill" data-i18n="modal.profiles_title">Perfiles</div>
+          <button class="ghostBtn" id="btnCloseProfiles" data-i18n="common.close">Cerrar</button>
         </div>
         <div class="modalList" id="profilesList"></div>
         <div class="topBar">
-          <button class="ghostBtn" id="btnAddProfile">Añadir nuevo perfil</button>
+          <button class="ghostBtn" id="btnAddProfile" data-i18n="modal.profile_add">Añadir nuevo perfil</button>
         </div>
       </section>
     </div>
@@ -250,17 +333,17 @@
     <div class="modal modalTop" id="autoThemeModal" hidden>
       <section class="card modalCard autoThemeCard">
         <div class="topBar">
-          <div class="pill">Tema automático</div>
+          <div class="pill" data-i18n="modal.auto_theme_title">Tema automático</div>
         <div style="display:flex;gap:10px;align-items:center">
-          <button class="ghostBtn" id="btnAutoThemeCancel">Cancelar</button>
-          <button class="ghostBtn" id="btnAutoThemeSave">Guardar</button>
+          <button class="ghostBtn" id="btnAutoThemeCancel" data-i18n="common.cancel">Cancelar</button>
+          <button class="ghostBtn" id="btnAutoThemeSave" data-i18n="common.save">Guardar</button>
         </div>
       </div>
-      <label for="autoThemeTimezone">Zona horaria</label>
+      <label for="autoThemeTimezone" data-i18n="modal.timezone">Zona horaria</label>
       <select id="autoThemeTimezone"></select>
       <div class="autoTimeGridLabels">
-        <label for="autoThemeDayStart">Día</label>
-        <label for="autoThemeNightStart">Noche</label>
+        <label for="autoThemeDayStart" data-i18n="modal.day">Día</label>
+        <label for="autoThemeNightStart" data-i18n="modal.night">Noche</label>
       </div>
       <div class="autoTimeGridInputs">
         <input id="autoThemeDayStart" type="time" value="07:00" />

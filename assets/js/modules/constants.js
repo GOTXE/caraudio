@@ -8,6 +8,10 @@ export const STORAGE_KEYS = {
   quality: "carplayer.navidrome.quality",
   listPaneSide: "carplayer.navidrome.listPaneSide",
   rememberCreds: "carplayer.navidrome.rememberCreds",
+  deviceMode: "carplayer.navidrome.deviceMode",
+  deviceModePromptSeen: "carplayer.navidrome.deviceModePromptSeen",
+  language: "carplayer.navidrome.language",
+  brokerSession: "carplayer.navidrome.brokerSession",
   whatsNewSeen: "carplayer.navidrome.whatsNewSeen",
   profiles: "carplayer.navidrome.profiles",
   activeProfileId: "carplayer.navidrome.activeProfileId",
@@ -17,6 +21,8 @@ export const STORAGE_KEYS = {
 export const DEFAULTS = {
   listPaneSide: "right",
   rememberCreds: false,
+  deviceMode: "auto",
+  language: "es",
   quality: "low",
   themeMode: "day",
   autoTheme: {

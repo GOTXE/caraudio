@@ -96,6 +96,74 @@ export function setRememberCreds(enabled) {
   localStorage.setItem(STORAGE_KEYS.rememberCreds, enabled ? "1" : "0");
 }
 
+export function getDeviceMode() {
+  const value = localStorage.getItem(STORAGE_KEYS.deviceMode);
+  return value === "car" || value === "desktop" || value === "auto" ? value : DEFAULTS.deviceMode;
+}
+
+export function setDeviceMode(mode) {
+  const next = mode === "car" || mode === "desktop" ? mode : "auto";
+  localStorage.setItem(STORAGE_KEYS.deviceMode, next);
+  return next;
+}
+
+export function getDeviceModePromptSeen() {
+  return localStorage.getItem(STORAGE_KEYS.deviceModePromptSeen) === "1";
+}
+
+export function setDeviceModePromptSeen(seen) {
+  localStorage.setItem(STORAGE_KEYS.deviceModePromptSeen, seen ? "1" : "0");
+}
+
+export function getLanguage() {
+  const value = localStorage.getItem(STORAGE_KEYS.language);
+  return value === "es" || value === "en" ? value : "";
+}
+
+export function setLanguage(language) {
+  const next = language === "en" ? "en" : "es";
+  localStorage.setItem(STORAGE_KEYS.language, next);
+  return next;
+}
+
+export function getBrokerSession() {
+  const raw = localStorage.getItem(STORAGE_KEYS.brokerSession);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    if (!parsed.serverUrl || !parsed.username || !parsed.authSalt || !parsed.authToken) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function setBrokerSession(session) {
+  if (!session || !session.serverUrl || !session.username || !session.authSalt || !session.authToken) {
+    localStorage.removeItem(STORAGE_KEYS.brokerSession);
+    return null;
+  }
+  const safe = {
+    sessionId: session.sessionId || "",
+    serverUrl: normalizeServer(session.serverUrl),
+    username: String(session.username || "").trim(),
+    authSalt: String(session.authSalt || ""),
+    authToken: String(session.authToken || ""),
+    accessToken: String(session.accessToken || ""),
+    refreshToken: String(session.refreshToken || ""),
+    accessExpiresAt: Number(session.accessExpiresAt || 0),
+    refreshExpiresAt: Number(session.refreshExpiresAt || 0),
+    linkedAt: Number(session.linkedAt || Date.now()),
+  };
+  localStorage.setItem(STORAGE_KEYS.brokerSession, JSON.stringify(safe));
+  return safe;
+}
+
+export function clearBrokerSession() {
+  localStorage.removeItem(STORAGE_KEYS.brokerSession);
+}
+
 export function getStoredCredentials() {
   return {
     user: localStorage.getItem(STORAGE_KEYS.user) || "",
@@ -113,7 +181,7 @@ export function setStoredCredentials({ user, pass }, remember) {
 
 export function getListPaneSide() {
   const value = localStorage.getItem(STORAGE_KEYS.listPaneSide);
-  return value === "right" ? "right" : DEFAULTS.listPaneSide;
+  return value === "left" || value === "right" ? value : DEFAULTS.listPaneSide;
 }
 
 export function setListPaneSide(side) {
