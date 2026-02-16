@@ -1,4 +1,4 @@
-# W.I.P. [![tag](https://img.shields.io/badge/TAG-v0.1.0--alpha.5-00c8b6)](https://github.com/GOTXE/caraudio/releases/tag/v0.1.0-alpha.5)
+# W.I.P. [![tag](https://img.shields.io/badge/TAG-v1.0.0-00c8b6)](https://github.com/GOTXE/caraudio/releases/tag/v1.0.0)
 
 # Music Skin ND (Skin local para Navidrome)
 
@@ -21,6 +21,8 @@ Estado: **prueba / viabilidad (proof-of-concept)**. La UI y el flujo de reproduc
 ## Mantenimiento
 
 - Cada nueva funcionalidad visible para usuario debe añadirse tambien en `assets/js/modules/whats-new.js`.
+- Para sincronizar version de release en los archivos clave:
+  - `./scripts/set_version.sh v1.0.0`
 
 ## Requisitos mínimos
 

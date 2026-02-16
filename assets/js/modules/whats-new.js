@@ -2,6 +2,9 @@
 // Cada nueva funcionalidad visible para usuario debe quedar registrada aqui por version/tag.
 // (Se actualiza normalmente al preparar el PR/release que entra en produccion.)
 const WHATS_NEW_BY_VERSION = {
+  "v1.0.0": [
+    "No hay novedades registradas para esta version.",
+  ],
   "v0.1.0-alpha.6": [
     "Nueva cabecera de Music Skin ND con acceso directo a Novedades.",
     "Nuevo menu hamburguesa con Tema, lado de listas y cambio de usuario.",
