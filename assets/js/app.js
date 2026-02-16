@@ -1961,7 +1961,7 @@ function closeWhatsNewModal(markSeen = true) {
 function openWhatsNewModal() {
   whatsNewTitle.textContent = t("whatsnew.title", { version: APP_VERSION });
   whatsNewList.innerHTML = "";
-  const sections = getWhatsNewSections(APP_VERSION);
+  const sections = getWhatsNewSections(APP_VERSION, state.language);
   for (const section of sections) {
     const title = document.createElement("div");
     title.className = "whatsNewSectionTitle";
@@ -2681,7 +2681,7 @@ function init() {
     loginFooterUpd.hidden = false;
   });
   const seen = getWhatsNewSeenVersion();
-  if (seen !== APP_VERSION && getWhatsNewForVersion(APP_VERSION).length) {
+  if (seen !== APP_VERSION && getWhatsNewForVersion(APP_VERSION, state.language).length) {
     openWhatsNewModal();
   }
 
