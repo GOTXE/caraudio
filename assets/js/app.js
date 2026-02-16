@@ -522,7 +522,7 @@ function scheduleBrokerSessionRefresh() {
 function deriveLinkUrl() {
   const rawPath = String(window.location.pathname || "/");
   const basePath = rawPath.endsWith("/") ? rawPath : rawPath.replace(/\/[^/]*$/, "/");
-  return new URL(`link/index.html`, `${window.location.origin}${basePath}`).toString();
+  return new URL("link", `${window.location.origin}${basePath}`).toString();
 }
 
 function renderLinkDeviceCountdown() {
@@ -632,8 +632,9 @@ async function startLinkDeviceFlow() {
   }
   if (!linkDeviceModal || !linkDeviceUrl || !linkDeviceCode || !linkDeviceStatus || !linkDeviceText || !linkDeviceTimer) return;
   linkDeviceModal.hidden = false;
-  linkDeviceUrl.textContent = deriveLinkUrl();
-  linkDeviceText.textContent = t("link.url_with_value", { url: deriveLinkUrl() });
+  const linkUrl = deriveLinkUrl();
+  linkDeviceText.textContent = t("link.url_open_value", { url: linkUrl });
+  linkDeviceUrl.textContent = t("link.pin_hint");
   linkDeviceCode.textContent = "----";
   linkDeviceStatus.textContent = t("link.pending");
   linkDeviceTimer.textContent = "0:00";
