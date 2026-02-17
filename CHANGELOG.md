@@ -1,8 +1,13 @@
 # Changelog
 
-Formato inspirado en "Keep a Changelog". Este proyecto sigue SemVer en `0.x` con tags `vX.Y.Z-(alpha|beta|rc).N`.
+Formato inspirado en "Keep a Changelog". Este proyecto sigue SemVer con tags `vX.Y.Z` y pre-releases `vX.Y.Z-(alpha|beta|rc).N`.
 
 ## [Unreleased]
+- Player: la lista lateral muestra 5 canciones visibles para mejorar legibilidad en pantallas Car Unit 480px.
+- Player: avance automatico por bloques en la lista de canciones (1-5, 6-10, 11-15...) durante reproduccion continua.
+- Player: correccion de barra de progreso y buffer al cambiar manualmente de cancion desde la lista.
+- Nuevo ajuste "Ahorro de datos" en menu del player (transcode MP3 192 kbps para las siguientes pistas).
+- Menu del player compactado con controles rapidos: Tema (Config), Ahorro de datos, Panel listas, Idioma y Usuario.
 - Nuevo panel de ajustes con tema, posicion de panel y cambio de usuario.
 - Tema con tres modos: Dia, Noche y Auto.
 - Modo Auto configurable por zona horaria IANA y ciudad opcional de referencia para orto/ocaso.
