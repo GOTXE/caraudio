@@ -1,0 +1,82 @@
+name: Exposición web o fuga de archivos
+description: Reporta una ruta web o archivo sensible expuesto públicamente.
+title: "[Seguridad] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        No pegues contraseñas, tokens, claves privadas ni el contenido de archivos `.env`.
+        Describe el hallazgo con datos mínimos y adjunta solo evidencia redactada.
+
+  - type: input
+    id: asset
+    attributes:
+      label: Activo afectado
+      description: Dominio, servicio o identificador público afectado.
+      placeholder: https://ejemplo.example
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected_paths
+    attributes:
+      label: Rutas o recursos afectados
+      description: Indica las rutas accesibles y el código HTTP observado.
+      placeholder: |
+        /.env — HTTP 200
+        /.git/HEAD — HTTP 200
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impacto estimado
+      options:
+        - Alto — puede contener credenciales, tokens o datos personales
+        - Medio — expone configuración, estructura o información operativa
+        - Bajo — metadatos o archivos sin secretos conocidos
+        - Pendiente de confirmar
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidencia resumida
+      description: Incluye fecha, método, código HTTP, tipo MIME y tamaño. Redacta cualquier secreto.
+      placeholder: |
+        Fecha/hora:
+        Método:
+        Código HTTP:
+        Content-Type:
+        Tamaño:
+        Firma o comportamiento observado:
+    validations:
+      required: true
+
+  - type: textarea
+    id: remediation
+    attributes:
+      label: Remediación propuesta
+      description: Medida temporal y corrección permanente si se conocen.
+      placeholder: |
+        Medida temporal:
+        Corrección permanente:
+        Verificación posterior:
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Confirmaciones
+      options:
+        - label: He comprobado el hallazgo únicamente con autorización.
+          required: true
+        - label: He omitido credenciales, tokens, claves privadas y contenido de `.env`.
+          required: true
+        - label: He indicado si el resultado podría ser un falso positivo o un fallback de SPA.
+          required: true
